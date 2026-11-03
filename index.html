@@ -7,8 +7,8 @@
 <meta name="description" content="TeleSphere — коллекция красивых тем и полезных плагинов для Telegram: тёмные, светлые, амoled, анимированные. Установка в один клик.">
 <style>
   :root {
-    --bg: #04060a;
-    --bg-2: #07090d;
+    --bg: #000000;
+    --bg-2: #000000;
     --panel: rgba(255, 255, 255, 0.035);
     --panel-hover: rgba(255, 255, 255, 0.055);
     --panel-solid: #0b0e0c;
@@ -79,7 +79,7 @@
     z-index: 50;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    background: rgba(4, 6, 10, 0.6);
+    background: #000000;
     border-bottom: 1px solid var(--border-soft);
   }
 
@@ -159,7 +159,7 @@
     position: fixed;
     inset: 0;
     z-index: 60;
-    background: rgba(3, 5, 8, 0.95);
+    background: #000000;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     flex-direction: column;
@@ -1258,9 +1258,11 @@
 (function () {
   "use strict";
 
-  /* ================= Smooth animated background =================
-     Time-based motion (delta seconds), so speed is identical on any
-     refresh rate. No frame-based increments = no jitter/bugs.      */
+  /* ================= Smooth black background: star web =================
+     Pure black canvas. A sparse set of small white dots slowly drifting;
+     dots closer than a threshold are joined by a very faint line, making
+     a quiet "constellation web". Everything is time-based (delta seconds),
+     so motion is smooth and identical on any refresh rate.              */
   var canvas = document.getElementById("space");
   var ctx = canvas.getContext("2d");
   var W = window.innerWidth, H = window.innerHeight;
@@ -1279,121 +1281,73 @@
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
-  /* Aurora: a few very soft radial glows drifting on slow sine paths */
-  var auroras = [
-    { fx: 0.22, fy: 0.15, r: 0.55, c: "rgba(60,232,164,", a: 0.07, sx: 0.00005, sy: 0.00004, ph: 0 },
-    { fx: 0.76, fy: 0.3, r: 0.5, c: "rgba(43,199,184,", a: 0.055, sx: 0.00004, sy: 0.00006, ph: 2.1 },
-    { fx: 0.5, fy: 0.88, r: 0.6, c: "rgba(60,232,164,", a: 0.045, sx: 0.00006, sy: 0.00003, ph: 4.2 }
-  ];
+  var COUNT = 70;                 /* sparse, calm */
+  var LINK_DIST = 130;            /* connect dots closer than this (px) */
+  var MIN_SPEED = 2.5, MAX_SPEED = 7.5;
+  var nodes = [];
 
-  function drawAuroras(t) {
-    for (var i = 0; i < auroras.length; i++) {
-      var au = auroras[i];
-      var x = (au.fx + Math.sin(t * au.sx * 1000 + au.ph * 3) * 0.05) * W;
-      var y = (au.fy + Math.cos(t * au.sy * 800 + au.ph) * 0.05) * H;
-      var r = au.r * Math.max(W, H);
-      var g = ctx.createRadialGradient(x, y, 0, x, y, r);
-      g.addColorStop(0, au.c + au.a + ")");
-      g.addColorStop(1, au.c + "0)");
-      ctx.fillStyle = g;
-      ctx.fillRect(x - r, y - r, r * 2, r * 2);
-    }
-  }
-
-  /* Stars: fixed slow vertical drift + soft twinkle, time-based */
-  var STAR_COUNT = 130;
-  var stars = [];
-  function makeStars() {
-    stars = [];
-    for (var i = 0; i < STAR_COUNT; i++) {
-      var l = Math.random();
-      stars.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        r: 0.4 + l * 1.2,
-        baseA: 0.2 + l * 0.5,
-        twPh: Math.random() * Math.PI * 2,
-        twSp: 0.4 + Math.random() * 0.9,
-        drift: 3 + l * 5,          /* px per second */
-        ph: Math.random() * Math.PI * 2
+  function makeNodes() {
+    nodes = [];
+    for (var i = 0; i < COUNT; i++) {
+      var vx = rand(-1, 1), vy = rand(-1, 1);
+      var len = Math.hypot(vx, vy) || 1;
+      var speed = rand(MIN_SPEED, MAX_SPEED);
+      nodes.push({
+        x: rand(0, W),
+        y: rand(0, H),
+        vx: (vx / len) * speed,
+        vy: (vy / len) * speed,
+        r: rand(0.6, 1.8),
+        twPh: rand(0, Math.PI * 2),
+        twSp: rand(0.4, 1.2)
       });
     }
   }
-  makeStars();
-  window.addEventListener("resize", makeStars);
+  makeNodes();
+  window.addEventListener("resize", makeNodes);
 
-  function drawStars(t) {
-    for (var i = 0; i < stars.length; i++) {
-      var s = stars[i];
-      var y = (s.y + s.drift * t + s.ph) % H;
-      if (y < 0) y += H;
-      var tw = 0.5 + 0.5 * Math.sin(t * s.twSp + s.twPh);
-      ctx.globalAlpha = s.baseA * tw;
-      ctx.fillStyle = "#eafff4";
+  /* Draw the lines first (they look best under the dots), then dots */
+  function drawWeb(t, dt) {
+    ctx.clearRect(0, 0, W, H);
+
+    for (var i = 0; i < nodes.length; i++) {
+      var n = nodes[i];
+      n.x += n.vx * dt;
+      n.y += n.vy * dt;
+
+      /* wrap around edges */
+      if (n.x < -20) n.x = W + 20; else if (n.x > W + 20) n.x = -20;
+      if (n.y < -20) n.y = H + 20; else if (n.y > H + 20) n.y = -20;
+    }
+
+    /* links */
+    ctx.lineWidth = 1;
+    for (i = 0; i < nodes.length; i++) {
+      var a = nodes[i];
+      for (var j = i + 1; j < nodes.length; j++) {
+        var b = nodes[j];
+        var dx = a.x - b.x, dy = a.y - b.y;
+        var d2 = dx * dx + dy * dy;
+        if (d2 < LINK_DIST * LINK_DIST) {
+          var alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.16;
+          ctx.strokeStyle = "rgba(220, 235, 255, " + alpha.toFixed(3) + ")";
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.stroke();
+        }
+      }
+    }
+
+    /* dots */
+    for (i = 0; i < nodes.length; i++) {
+      var s = nodes[i];
+      var tw = 0.55 + 0.45 * Math.sin(t * s.twSp + s.twPh);
+      ctx.fillStyle = "rgba(228, 238, 250, " + (tw * 0.75).toFixed(3) + ")";
       ctx.beginPath();
-      ctx.arc(s.x, y, s.r, 0, Math.PI * 2);
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.globalAlpha = 1;
-  }
-
-  /* Shooting stars: rare, clean, time-based */
-  var meteors = [];
-  var lastMeteor = 0;
-  function maybeSpawnMeteor(t, dt) {
-    if (meteors.length >= 3) return;
-    if (t - lastMeteor > 6 && Math.random() < dt * 0.25) {
-      lastMeteor = t;
-      var fromX = rand(W * 0.15, W * 0.85);
-      meteors.push({
-        x: fromX,
-        y: rand(0, H * 0.2),
-        vx: rand(80, 140),
-        vy: rand(35, 65),
-        life: 0
-      });
-    }
-  }
-
-  function drawMeteors(t, dt) {
-    for (var i = meteors.length - 1; i >= 0; i--) {
-      var m = meteors[i];
-      m.x += m.vx * dt;
-      m.y += m.vy * dt;
-      m.life += dt;
-      if (m.life > 1.4 || m.x > W + 60 || m.y > H + 60) {
-        meteors.splice(i, 1);
-        continue;
-      }
-      var fade = 1 - m.life / 1.4;
-      ctx.strokeStyle = "rgba(180,255,225," + (fade * 0.7).toFixed(3) + ")";
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(m.x, m.y);
-      ctx.lineTo(m.x - m.vx * 0.12, m.y - m.vy * 0.12);
-      ctx.stroke();
-    }
-  }
-
-  /* One planet on a smooth circular orbit */
-  var planet = { cx: 0.88, cy: 0.24, radius: 17, orbitR: 26, speed: 0.12 };
-
-  function drawPlanet(t) {
-    var px = planet.cx * W + Math.cos(t * planet.speed) * planet.orbitR;
-    var py = planet.cy * H + Math.sin(t * planet.speed) * planet.orbitR * 0.45;
-    var g = ctx.createRadialGradient(px - 6, py - 6, 2, px, py, planet.radius);
-    g.addColorStop(0, "rgba(190,255,235,0.9)");
-    g.addColorStop(0.55, "rgba(43,199,184,0.55)");
-    g.addColorStop(1, "rgba(43,199,184,0)");
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(px, py, planet.radius, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "rgba(180,240,220,0.18)";
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.ellipse(px, py, planet.radius * 1.8, planet.radius * 0.5, -0.4, 0, Math.PI * 2);
-    ctx.stroke();
   }
 
   var T0 = performance.now();
@@ -1404,20 +1358,13 @@
     var t = (now - T0) / 1000;
     var dt = Math.min((now - last) / 1000, 0.05);
     last = now;
-    ctx.clearRect(0, 0, W, H);
-    drawAuroras(t);
-    drawStars(t);
-    maybeSpawnMeteor(t, dt);
-    drawMeteors(t, dt);
-    drawPlanet(t);
+    drawWeb(t, dt);
     raf = requestAnimationFrame(frame);
   }
 
   var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   if (prefersReduced) {
-    drawAuroras(0);
-    drawStars(0);
-    drawPlanet(0);
+    drawWeb(0, 0);
   } else {
     last = performance.now();
     raf = requestAnimationFrame(frame);
