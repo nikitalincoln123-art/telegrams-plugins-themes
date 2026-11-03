@@ -523,6 +523,45 @@
   }
   .card:hover::after { opacity: 1; }
 
+  /* Floating cards: gentle levitating motion (no hover-transform
+     conflict: the float animation owns `transform` for these) */
+  @keyframes floatCard {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-9px); }
+  }
+  .card.float-a { animation: floatCard 6s ease-in-out infinite; }
+  .card.float-b { animation: floatCard 7.5s ease-in-out infinite; animation-delay: -2.2s; }
+  .card.float-c { animation: floatCard 5.5s ease-in-out infinite; animation-delay: -4s; }
+  .card.float-a:hover, .card.float-b:hover, .card.float-c:hover {
+    transform: none;
+    border-color: rgba(60, 232, 164, 0.42);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Shimmering cards: slow color flow over the card */
+  @keyframes cardShimmer {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  .card.shimmer {
+    background:
+      linear-gradient(120deg,
+        rgba(60, 232, 164, 0.12),
+        rgba(43, 199, 184, 0.12),
+        rgba(255, 206, 107, 0.12),
+        rgba(60, 232, 164, 0.12));
+    background-size: 300% 300%;
+    animation: cardShimmer 9s ease-in-out infinite;
+  }
+  .card.shimmer .icon {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 0 22px rgba(60, 232, 164, 0.18);
+  }
+  .card.shimmer:hover { border-color: rgba(60, 232, 164, 0.4); }
+  .card.shimmer::after {
+    background: linear-gradient(90deg, var(--accent), var(--amber), var(--accent-2), transparent);
+  }
+
   .card .top {
     display: flex;
     align-items: flex-start;
@@ -923,7 +962,7 @@
     </div>
 
     <div class="bento" id="pluginGrid">
-      <article class="card wide reveal" data-pcat="useful">
+      <article class="card wide reveal float-b shimmer" data-pcat="useful">
         <div class="top">
           <span class="icon" style="background:rgba(60,232,164,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg></span>
           <span class="tag">Популярное</span>
@@ -934,7 +973,7 @@
         <button class="install-btn" data-code="LinguaFlow /translate — см. инструкцию в каталоге">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal float-b shimmer" data-pcat="useful">
         <div class="top">
           <span class="icon" style="background:rgba(87,240,172,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="4"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><path d="M12 8V5m-2-1.6h4M8.5 13v2.4m7-2.4v2.4M12 19v2.4"/></svg></span>
           <span class="tag teal">Автоответ</span>
@@ -945,7 +984,7 @@
         <button class="install-btn" data-code="ReplyBotTurbo">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal float-a" data-pcat="useful">
         <div class="top">
           <span class="icon" style="background:rgba(43,199,184,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.6-3 7.9-7 9.5-4-1.6-7-4.9-7-9.5V6l7-3z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg></span>
           <span class="tag teal">Защита</span>
@@ -956,7 +995,7 @@
         <button class="install-btn" data-code="GhostShield">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal float-c shimmer" data-pcat="useful">
         <div class="top">
           <span class="icon" style="background:rgba(255,206,107,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5z"/><path d="M9.5 8.5h5"/></svg></span>
           <span class="tag amber">Организация</span>
@@ -967,7 +1006,7 @@
         <button class="install-btn" data-code="BookmarkGalaxy">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="fun">
+      <article class="card reveal float-a shimmer" data-pcat="fun">
         <div class="top">
           <span class="icon" style="background:rgba(255,206,107,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10a5 5 0 0 1 4.9 6l-.6 3a2.6 2.6 0 0 1-4.6 1l-1.2-1.7a2 2 0 0 0-3.3 0L11 17a2.6 2.6 0 0 1-4.6-1l-.6-3A5 5 0 0 1 7 7z"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/></svg></span>
           <span class="tag amber">Игры</span>
@@ -978,7 +1017,7 @@
         <button class="install-btn" data-code="MiniGamesHub">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="fun">
+      <article class="card reveal float-b" data-pcat="fun">
         <div class="top">
           <span class="icon" style="background:rgba(60,232,164,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.8 2-1.8 0-.9-.5-1.4-.5-2.2 0-1 .8-1.7 1.9-1.7H17a4 4 0 0 0 4-4c0-4.6-4-8.3-9-8.3z"/><circle cx="7.5" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg></span>
           <span class="tag">Стиль</span>
@@ -989,7 +1028,7 @@
         <button class="install-btn" data-code="EmojiStorm">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal float-c shimmer" data-pcat="useful">
         <div class="top">
           <span class="icon" style="background:rgba(87,240,172,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2.5 4.5 13.5H11l-1 8 8.5-11H12l1-8z"/></svg></span>
           <span class="tag teal">Производительность</span>
@@ -1000,7 +1039,7 @@
         <button class="install-btn" data-code="TurboSync">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="fun">
+      <article class="card reveal float-a" data-pcat="fun">
         <div class="top">
           <span class="icon" style="background:rgba(43,199,184,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5V5.8l10-2v11.9"/><circle cx="6.8" cy="17.8" r="2.4"/><circle cx="16.8" cy="15.8" r="2.4"/></svg></span>
           <span class="tag teal">Музыка</span>
@@ -1011,7 +1050,7 @@
         <button class="install-btn" data-code="MelodyCore">Скопировать установку</button>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal float-b shimmer" data-pcat="useful">
         <div class="top">
           <span class="icon" style="background:rgba(255,206,107,.12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5.5" width="16" height="15" rx="2.5"/><path d="M4 9.5h16M8.5 3.5v3.4m7-3.4v3.4M8.5 14h2.4m-2.4 3h2.4M13 14h2.4M13 17h2.4"/></svg></span>
           <span class="tag amber">Планирование</span>
@@ -1072,7 +1111,7 @@
     </div>
 
     <div class="bento" id="themeGrid">
-      <article class="card reveal" data-tcat="dark">
+      <article class="card reveal float-a shimmer" data-tcat="dark">
         <div class="top">
           <span class="icon theme-preview" style="background:linear-gradient(135deg,#0a1410,#0d2017,#14361f)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M6.2 7.2c1.8 1.3 2 4.2.3 6.5M13.5 4.6c2.6 2.7 4 6 4 9.4M8 19.6c1.8-1.6 4.4-2 7-1.2"/><circle cx="17.8" cy="6.4" r="1.1" fill="currentColor" stroke="none"/><circle cx="6.6" cy="16.6" r=".9" fill="currentColor" stroke="none"/></svg></span>
           <span class="tag">AMOLED</span>
@@ -1083,7 +1122,7 @@
         <button class="install-btn" data-code="deep_space_theme">Скопировать тему</button>
       </article>
 
-      <article class="card reveal" data-tcat="dark">
+      <article class="card reveal float-c" data-tcat="dark">
         <div class="top">
           <span class="icon theme-preview" style="background:linear-gradient(135deg,#0c0f0e,#16241c,#1c3018)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4-3.4-6.5-6.6-6.5-10A6.5 6.5 0 0 1 12 4.5c3.6 0 6.5 2.9 6.5 6.5 0 3.4-2.5 6.6-6.5 10z"/><path d="M12 21V5.5m0 5c-1.6-1.5-3.4-1.6-5.2-.5m5.2.5c1.6-1.5 3.4-1.6 5.2-.5"/></svg></span>
           <span class="tag teal">Мягкая</span>
@@ -1094,7 +1133,7 @@
         <button class="install-btn" data-code="forest_glow_theme">Скопировать тему</button>
       </article>
 
-      <article class="card reveal" data-tcat="dark">
+      <article class="card reveal float-b shimmer" data-tcat="dark">
         <div class="top">
           <span class="icon theme-preview" style="background:linear-gradient(135deg,#14120b,#2c260e,#3d3a12)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="10.5" r="6.5"/><path d="M12 4V2.6M8.6 6C7 7.8 6.2 9.6 6.2 11.6M15.4 6c1.6 1.8 2.4 3.6 2.4 5.6"/></svg></span>
           <span class="tag amber">Тёплая</span>
@@ -1105,7 +1144,7 @@
         <button class="install-btn" data-code="amber_night_theme">Скопировать тему</button>
       </article>
 
-      <article class="card reveal" data-tcat="light">
+      <article class="card reveal float-a shimmer" data-tcat="light">
         <div class="top">
           <span class="icon theme-preview" style="background:linear-gradient(135deg,#f2fbff,#e2f7ee,#cdf5e6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m9.9 9.9 1.4 1.4m0-12.7-1.4 1.4M7 17l-1.4 1.4"/></svg></span>
           <span class="tag gray">Светлая</span>
@@ -1116,7 +1155,7 @@
         <button class="install-btn" data-code="morning_mint_theme">Скопировать тему</button>
       </article>
 
-      <article class="card reveal" data-tcat="light">
+      <article class="card reveal float-c" data-tcat="light">
         <div class="top">
           <span class="icon theme-preview" style="background:linear-gradient(135deg,#fffaf0,#ffedcf,#ffe3ad)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-1.6-1.4-5-1.2-6.6-4.2-1.2-2.3.1-5.1 2.2-6 .3-2.6 2.4-4.6 4.4-4.8 2 .2 4.1 2.2 4.4 4.8 2.1.9 3.4 3.7 2.2 6-1.6 3-5 2.8-6.6 4.2z"/><path d="M12 3.6c-.4-.9-1.6-1.1-2.4-.5"/></svg></span>
           <span class="tag amber">Светлая</span>
@@ -1127,7 +1166,7 @@
         <button class="install-btn" data-code="peach_paper_theme">Скопировать тему</button>
       </article>
 
-      <article class="card reveal" data-tcat="dark">
+      <article class="card reveal float-b shimmer" data-tcat="dark">
         <div class="top">
           <span class="icon theme-preview" style="background:linear-gradient(135deg,#08120f,#0c241c,#0f3a33)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6.8v10.4L12 21l7.5-3.8V6.8L12 3z"/><path d="M12 3v18M4.5 6.8 12 12l7.5-5.2M12 12l7.5 5.2M12 12 4.5 17.2"/></svg></span>
           <span class="tag teal">Холодная</span>
@@ -1229,7 +1268,7 @@
 
   <!-- CTA -->
   <section class="block wrap" id="cta">
-    <div class="cta-banner reveal">
+    <div class="cta-banner reveal shimmer">
       <h2>Готовы сделать Telegram <span class="grad-text">своим</span>?</h2>
       <p>Начните с популярных плагинов — это займёт меньше минуты. Всё остальное подстроится под вас.</p>
       <div class="hero-actions">
