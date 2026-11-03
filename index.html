@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TeleSphere — плагины и темы для Telegram</title>
-<meta name="description" content="TeleSphere — коллекция красивых тем и полезных плагинов для Telegram: тёмные, светлые, амoled, анимированные. Установка в один клик.">
+<title>Lincoln-Plugin — плагины и темы для Telegram</title>
+<meta name="description" content="Lincoln-Plugin — коллекция красивых тем и полезных плагинов для Telegram: тёмные, светлые, амoled, анимированные. Установка в один клик.">
 <style>
   :root {
     --bg: #000000;
@@ -271,161 +271,78 @@
   }
   .btn-ghost:hover { transform: translateY(-2px); border-color: rgba(60, 232, 164, 0.4); }
 
-  .hero-stats {
-    display: flex;
-    gap: clamp(22px, 4vw, 44px);
-    margin-top: 44px;
-    flex-wrap: wrap;
-  }
-  .stat { text-align: left; }
-  .stat b {
-    display: block;
-    font-size: 27px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    color: var(--text);
-  }
-  .stat span { color: var(--text-faint); font-size: 13px; }
-
-  /* ---------- Phone mockup ---------- */
-  .phone-wrap {
+  /* ---------- Terminal mockup ---------- */
+  .term-wrap {
     position: relative;
     display: flex;
     justify-content: center;
   }
 
-  .phone {
-    width: 276px;
-    aspect-ratio: 9 / 18.6;
-    border-radius: 34px;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: linear-gradient(180deg, #0b1712, #05080a 60%, #04100b);
+  .term {
+    width: 100%;
+    max-width: 460px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #05070c;
     box-shadow:
       0 34px 80px rgba(0, 0, 0, 0.65),
-      0 0 70px rgba(60, 232, 164, 0.1);
-    padding: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    transform: rotate(2.5deg);
-    position: relative;
+      0 0 60px rgba(60, 232, 164, 0.06);
+    overflow: hidden;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.7;
+    transform: rotate(1.4deg);
   }
-
-  .phone::before {
+  .term::after {
     content: "";
     position: absolute;
-    top: 7px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 88px;
-    height: 20px;
-    border-radius: 0 0 14px 14px;
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-top: none;
-    z-index: 2;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(60, 232, 164, 0.5), transparent);
   }
 
-  .phone .phone-head {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    padding: 14px 4px 2px;
-  }
-  .phone .avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    display: grid;
-    place-items: center;
-    color: #04231b;
-    font-weight: 800;
-    font-size: 14px;
-  }
-  .phone .av-name { font-size: 13px; font-weight: 700; }
-  .phone .av-sub { font-size: 10.5px; color: var(--text-faint); }
-
-  .phone .chat {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
-    flex: 1;
-  }
-  .bubble {
-    padding: 8px 11px;
-    border-radius: 13px;
-    font-size: 12px;
-    width: fit-content;
-    max-width: 84%;
-  }
-  .bubble.in {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid var(--border-soft);
-    align-self: flex-start;
-    border-bottom-left-radius: 4px;
-    color: var(--text-dim);
-  }
-  .bubble.out {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: #04231b;
-    align-self: flex-end;
-    border-bottom-right-radius: 4px;
-    font-weight: 600;
-  }
-  .bubble.small { font-size: 10.5px; opacity: 0.9; }
-
-  .phone .plugin-chip {
+  .term-head {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: rgba(60, 232, 164, 0.1);
-    border: 1px solid rgba(60, 232, 164, 0.35);
-    border-radius: 12px;
-    padding: 8px 10px;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .term-head .dot-r, .term-head .dot-y, .term-head .dot-g {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+  .term-head .dot-r { background: #ff5f57; opacity: 0.85; }
+  .term-head .dot-y { background: #febc2e; opacity: 0.85; }
+  .term-head .dot-g { background: #28c840; opacity: 0.85; }
+  .term-head .term-title {
+    margin-left: 8px;
     font-size: 11.5px;
-    font-weight: 600;
-    color: var(--accent);
+    color: var(--text-faint);
+    letter-spacing: 0.02em;
   }
-  .phone .plugin-chip svg { width: 15px; height: 15px; }
 
-  .float-chip {
-    position: absolute;
+  .term-body {
+    padding: 16px 18px 18px;
     display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 9px 13px;
-    border-radius: 999px;
-    background: rgba(10, 14, 12, 0.8);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(10px);
-    font-size: 12.5px;
-    font-weight: 600;
-    color: var(--text);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-    animation: floaty 6s ease-in-out infinite alternate;
-    white-space: nowrap;
-    z-index: 3;
+    flex-direction: column;
+    gap: 5px;
   }
-  .float-chip svg { width: 15px; height: 15px; color: var(--accent); }
-  .float-chip .star { color: var(--amber); }
-  .fc-1 { top: 8%; left: -14px; animation-delay: 0s; }
-  .fc-2 { bottom: 20%; right: -10px; animation-delay: -2s; }
-  .fc-3 { top: 46%; right: -18px; animation-delay: -4s; }
-
-  @keyframes floaty {
-    from { transform: translateY(-5px); }
-    to { transform: translateY(6px); }
+  .t-line { display: flex; gap: 10px; color: var(--text-dim); white-space: nowrap; }
+  .t-prompt { color: var(--accent); font-weight: 700; }
+  .t-out { color: var(--text-faint); }
+  .t-line.dim { color: var(--text-faint); }
+  .t-line.ok { color: var(--green); }
+  .t-caret {
+    color: var(--accent);
+    animation: caretBlink 1.1s steps(1) infinite;
+    font-size: 14px;
   }
+  @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
   @media (max-width: 960px) {
-    .float-chip { position: static; animation: none; }
-    .fc-2, .fc-3 { display: none; }
-    .fc-1 {
-      display: inline-flex;
-      margin-bottom: 10px;
-      align-self: flex-start;
-    }
-    .phone-wrap { flex-direction: column; align-items: center; }
+    .term { max-width: 100%; transform: none; }
   }
 
   /* ---------- Sections ---------- */
@@ -829,9 +746,7 @@
     .hero { grid-template-columns: 1fr; gap: 40px; text-align: center; }
     .hero p.sub { margin-left: auto; margin-right: auto; }
     .hero-actions { justify-content: center; }
-    .hero-stats { justify-content: center; }
-    .stat { text-align: center; }
-    .phone-wrap { order: -1; }
+    .term-wrap { order: -1; }
     .phone { transform: none; }
   }
   @media (max-width: 860px) {
@@ -861,11 +776,11 @@
 
 <header class="site">
   <div class="wrap nav">
-    <a class="brand" href="#top" aria-label="TeleSphere — на главную">
+    <a class="brand" href="#top" aria-label="Lincoln-Plugin — на главную">
       <span class="logo" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5c5.2 0 9.5 4.3 9.5 9.5s-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z" stroke="currentColor" stroke-width="1.8"/><path d="M12 6.5A5.5 5.5 0 0 1 17.5 12 5.5 5.5 0 0 1 12 17.5 5.5 5.5 0 0 1 6.5 12 5.5 5.5 0 0 1 12 6.5z" fill="currentColor"/></svg>
       </span>
-      Tele<em>Sphere</em>
+      Lincoln<em>-Plugin</em>
     </a>
     <nav aria-label="Основная навигация">
       <ul class="nav-links">
@@ -896,51 +811,30 @@
   <section class="hero wrap">
     <div>
       <span class="badge"><span class="dot"></span> Открытый каталог · обновляется еженедельно</span>
-      <h1>Telegram, который<br>работает <span class="grad-text">на тебя</span></h1>
-      <p class="sub">Темы и плагины от сообщества — с установкой в один клик и ручной проверкой каждого релиза. Никакого шума: только то, что реально пригодится.</p>
+      <h1>Сделано <span class="grad-text">от Lincoln</span></h1>
+      <p class="sub">Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.</p>
       <div class="hero-actions">
         <a href="#plugins" class="btn btn-primary">Выбрать плагин
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
         <a href="#install" class="btn btn-ghost">Как установить</a>
       </div>
-      <div class="hero-stats">
-        <div class="stat"><b>240+</b><span>плагинов</span></div>
-        <div class="stat"><b>85</b><span>тем оформления</span></div>
-        <div class="stat"><b>1.2M</b><span>установок</span></div>
-      </div>
     </div>
 
-    <div class="phone-wrap" aria-hidden="true">
-      <div class="float-chip fc-1">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l7 3v5.5c0 4.6-3 7.9-7 9.5-4-1.6-7-4.9-7-9.5V6l7-3z"/></svg>
-        Проверено
-      </div>
-      <div class="float-chip fc-2">
-        <svg class="star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9L12 2.6z"/></svg>
-        4.9 · 12 400 установок
-      </div>
-      <div class="float-chip fc-3">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17.5V5.8l10-2v11.9"/><circle cx="6.8" cy="17.8" r="2.4"/><circle cx="16.8" cy="15.8" r="2.4"/></svg>
-        Музыка включена
-      </div>
-
-      <div class="phone">
-        <div class="phone-head">
-          <span class="avatar">К</span>
-          <div>
-            <div class="av-name">КосмоЧат</div>
-            <div class="av-sub">онлайн · 128 друзей</div>
-          </div>
+    <div class="term-wrap" aria-hidden="true">
+      <div class="term">
+        <div class="term-head">
+          <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+          <span class="term-title">lincoln-plugin — install</span>
         </div>
-        <div class="chat">
-          <div class="bubble in">Привет! Скинешь плейлист на вечер?</div>
-          <div class="bubble out">Уже скинул — MelodyCore подхватил</div>
-          <div class="bubble in small">О, тема Deep Space тоже залетела 🔥</div>
-        </div>
-        <div class="plugin-chip">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg>
-          LinguaFlow · перевод включён
+        <div class="term-body">
+          <div class="t-line"><span class="t-prompt">$</span> curl -sS https://lincoln-plugin.ru/install</div>
+          <div class="t-line dim"><span class="t-out">→</span> получение пакета: linguaflow-v2.4.1</div>
+          <div class="t-line ok"><span class="t-out">✓</span> проверка подписи: OK</div>
+          <div class="t-line"><span class="t-prompt">$</span> lincoln install linguaflow</div>
+          <div class="t-line ok"><span class="t-out">✓</span> LinguaFlow установлен</div>
+          <div class="t-line dim bx"><span class="t-out">→</span> готово за 0.8 сек</div>
+          <div class="t-caret">▌</div>
         </div>
       </div>
     </div>
@@ -1245,7 +1139,7 @@
     <div class="faq">
       <details class="faq-item reveal">
         <summary>Это официальный каталог Telegram?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="answer">Нет, TeleSphere — независимый каталог сообщества. Мы не связаны с Telegram Messenger LLP: это наш подбор самых качественных тем и плагинов, которые уже использует большое сообщество.</div>
+        <div class="answer">Нет, Lincoln-Plugin — независимый каталог сообщества. Мы не связаны с Telegram Messenger LLP: это наш подбор самых качественных тем и плагинов, которые уже использует большое сообщество.</div>
       </details>
       <details class="faq-item reveal">
         <summary>Установка безопасна?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
@@ -1281,7 +1175,7 @@
 
 <footer class="site">
   <div class="wrap foot">
-    <span>© 2026 TeleSphere · Сделано для сообщества Telegram</span>
+    <span>© 2026 Lincoln-Plugin · Сделано для сообщества Telegram</span>
     <div class="links">
       <a href="#faq">FAQ</a>
       <a href="#install">Помощь</a>
