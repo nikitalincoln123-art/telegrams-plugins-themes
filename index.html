@@ -1228,6 +1228,21 @@
   var themeGrid = document.getElementById("themeGrid");
   var liveRegion = document.getElementById("liveRegion");
 
+  function applyThemeFilter() {
+    var activeBtn = themeGrid.closest("section").querySelector("[data-ttab].active") || themeTabs[0];
+    var cat = activeBtn.getAttribute("data-ttab");
+    var visible = 0;
+    themeGrid.querySelectorAll(".card").forEach(function (card) {
+      var match = card.getAttribute("data-tcat") === cat;
+      card.classList.toggle("hidden", !match);
+      if (match) {
+        card.classList.add("in");
+        visible++;
+      }
+    });
+    liveRegion.textContent = "Показано тем: " + visible;
+  }
+
   themeTabs.forEach(function (btn) {
     btn.addEventListener("click", function () {
       themeTabs.forEach(function (b) {
@@ -1236,16 +1251,11 @@
       });
       btn.classList.add("active");
       btn.setAttribute("aria-selected", "true");
-      var cat = btn.getAttribute("data-ttab");
-      var visible = 0;
-      themeGrid.querySelectorAll(".card").forEach(function (card) {
-        var match = card.getAttribute("data-tcat") === cat;
-        card.classList.toggle("hidden", !match);
-        if (match) visible++;
-      });
-      liveRegion.textContent = "Показано тем: " + visible;
+      applyThemeFilter();
     });
   });
+
+  applyThemeFilter();
 
   /* ================= Copy-to-clipboard ================= */
   var toast = document.getElementById("toast");
