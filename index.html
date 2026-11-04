@@ -403,6 +403,22 @@
     box-shadow: 0 4px 14px rgba(60, 232, 164, 0.3);
   }
 
+  .jump-btns {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  @keyframes btnFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .float-btn {
+    animation: btnFloat 5s ease-in-out infinite;
+  }
+  .float-btn:nth-child(2) {
+    animation-delay: -2.5s;
+  }
+
   /* ---------- Bento grid ---------- */
   .bento {
     display: grid;
@@ -857,10 +873,9 @@
         <h2>Plugin-ExtraGram</h2>
         <p>Делает работу комфортной, плавной. И не только...)</p>
       </div>
-      <div class="section-tabs" role="tablist" aria-label="Категории плагинов">
-        <button role="tab" aria-selected="true" data-cat="all" class="active">Все</button>
-        <button role="tab" aria-selected="false" data-cat="useful">Полезные</button>
-        <button role="tab" aria-selected="false" data-cat="fun">Развлечения</button>
+      <div class="jump-btns">
+        <a href="#pluginGrid" class="btn btn-primary float-btn">Plugin</a>
+        <a href="#themes" class="btn btn-ghost float-btn">Темы/Функции</a>
       </div>
     </div>
 
@@ -941,7 +956,7 @@
         <p>Перекрасьте Telegram под себя: от глубокого космоса до мягкого света. Всё совместимо с актуальными версиями.</p>
       </div>
       <div class="section-tabs" role="tablist" aria-label="Типы тем">
-        <button role="tab" aria-selected="true" data-ttab="dark" class="active">Тёмные</button>
+        <button role="tab" aria-selected="true" data-ttab="dark" class="active">Черные</button>
         <button role="tab" aria-selected="false" data-ttab="light">Светлые</button>
       </div>
     </div>
@@ -955,19 +970,7 @@
         <p class="card-note">В процессе разработки</p>
       </article>
 
-      <article class="card reveal float shimmer" data-tcat="dark">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
       <article class="card reveal float shimmer" data-tcat="light">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-tcat="light">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-tcat="dark">
         <p class="card-note">В процессе разработки</p>
       </article>
     </div>
@@ -1220,33 +1223,10 @@
     a.addEventListener("click", function () { setMenu(false); });
   });
 
-  /* ================= Category tabs: plugins ================= */
-  var pluginTabs = document.querySelectorAll("[data-cat]");
-  var pluginGrid = document.getElementById("pluginGrid");
-  var liveRegion = document.getElementById("liveRegion");
-
-  pluginTabs.forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      pluginTabs.forEach(function (b) {
-        b.classList.remove("active");
-        b.setAttribute("aria-selected", "false");
-      });
-      btn.classList.add("active");
-      btn.setAttribute("aria-selected", "true");
-      var cat = btn.getAttribute("data-cat");
-      var visible = 0;
-      pluginGrid.querySelectorAll(".card").forEach(function (card) {
-        var match = cat === "all" || card.getAttribute("data-pcat") === cat;
-        card.classList.toggle("hidden", !match);
-        if (match) visible++;
-      });
-      liveRegion.textContent = "Показано плагинов: " + visible;
-    });
-  });
-
   /* ================= Tabs: themes ================= */
   var themeTabs = document.querySelectorAll("[data-ttab]");
   var themeGrid = document.getElementById("themeGrid");
+  var liveRegion = document.getElementById("liveRegion");
 
   themeTabs.forEach(function (btn) {
     btn.addEventListener("click", function () {
