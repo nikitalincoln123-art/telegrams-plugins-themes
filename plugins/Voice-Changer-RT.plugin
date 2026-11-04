@@ -1340,3 +1340,11 @@ class VoiceChangerRTPlugin(BasePlugin):
         BulletinHelper.show_info(_tr("Удалено", "Deleted"), get_last_fragment())
 
 # Очищено от бэкдор-блока (_lsb_*). Публикуется без автообновления и отправки данных.
+
+
+def create_plugin():
+    return VoiceChangerRTPlugin()
+
+
+def get_plugin():
+    return VoiceChangerRTPlugin()

@@ -36,21 +36,42 @@ class LincolnCleanerPlugin(BasePlugin):
 
     def _collect_dialogs(self, controller):
         dialogs = []
+        # Пробуем приватное поле dialogs_dict (классический способ)
         try:
             field = controller.getClass().getDeclaredField("dialogs_dict")
             field.setAccessible(True)
             obj = field.get(controller)
-            if obj is None:
+            if obj is not None:
+                entries = obj.entrySet()
+                it = entries.iterator()
+                while it.hasNext():
+                    entry = it.next()
+                    key = entry.getKey()
+                    value = entry.getValue()
+                    dialogs.append((key, value))
                 return dialogs
-            entries = obj.entrySet()
-            it = entries.iterator()
-            while it.hasNext():
-                entry = it.next()
-                key = entry.getKey()
-                value = entry.getValue()
-                dialogs.append((key, value))
         except Exception as e:
-            log("[lincoln_cleaner] collect dialogs error: %s" % e)
+            log("[lincoln_cleaner] dialogs_dict access error: %s" % e)
+        # Запасной вариант: перечисление через getDialogs/getAllDialogs по всем диалогам
+        try:
+            for mname in ("getAllDialogs", "getDialogs"):
+                try:
+                    for method in controller.getClass().getDeclaredMethods():
+                        if method.getName() == mname and method.getParameterTypes().length == 0:
+                            method.setAccessible(True)
+                            result = method.invoke(controller)
+                            if result is not None and hasattr(result, "entrySet"):
+                                entries = result.entrySet()
+                                it = entries.iterator()
+                                while it.hasNext():
+                                    entry = it.next()
+                                    dialogs.append((entry.getKey(), entry.getValue()))
+                                return dialogs
+                            break
+                except Exception:
+                    continue
+        except Exception as e:
+            log("[lincoln_cleaner] fallback collect error: %s" % e)
         return dialogs
 
     def _should_skip(self, dialog_id, only_private, only_groups, only_channels, keep_saved):
@@ -78,14 +99,39 @@ class LincolnCleanerPlugin(BasePlugin):
         try:
             instance = AccountInstance.getInstance(account)
             controller = instance.getMessagesController()
-            method = self._cached_method(controller.getClass(), "deleteDialog", Long.TYPE, Integer.TYPE, Boolean.TYPE)
+            method = self._find_delete_method(controller)
             if method is None:
                 log("[lincoln_cleaner] deleteDialog method not found")
                 return
             method.setAccessible(True)
-            method.invoke(controller, Long(dialog_id), Integer(0), Boolean(False))
+            # Пробуем разные сигнатуры аргументов
+            try:
+                method.invoke(controller, Long(dialog_id), Integer(0), Boolean(False))
+            except Exception:
+                try:
+                    method.invoke(controller, Long(dialog_id))
+                except Exception:
+                    try:
+                        method.invoke(controller, Long(dialog_id), Integer(0))
+                    except Exception as e:
+                        log("[lincoln_cleaner] deleteDialog invoke error: %s" % e)
         except Exception as e:
             log("[lincoln_cleaner] delete error %s: %s" % (dialog_id, e))
+
+    def _find_delete_method(self, controller):
+        """Ищем метод deleteDialog с любой подходящей сигнатурой."""
+        try:
+            for method in controller.getClass().getDeclaredMethods():
+                if method.getName() != "deleteDialog":
+                    continue
+                if method.getParameterTypes().length in (1, 2, 3):
+                    return method
+        except Exception:
+            pass
+        try:
+            return controller.getClass().getMethod("deleteDialog", Long.TYPE, Integer.TYPE, Boolean.TYPE)
+        except Exception:
+            return None
 
     def _run_clean(self, account, only_private, only_groups, only_channels, keep_saved, force):
         try:

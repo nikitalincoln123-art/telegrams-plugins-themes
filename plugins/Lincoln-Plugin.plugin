@@ -1660,21 +1660,18 @@ class plugin_unlimited_pins(cls_host_forwarder):
         try:
             MC = jclass('org.telegram.messenger.MessagesController')
             try:
-                pin_method = MC.getClass().getDeclaredMethod('pinDialog', JLong.TYPE, JBoolean.TYPE, jclass('org.telegram.tgnet.TLRPC$InputPeer'), JLong.TYPE)
-                pin_method.setAccessible(True)
-                self._hook_refs.append(self.hook_method(pin_method, plugin_unlimited_pins._PinDialogHook(self)))
+                refs = self.hook_all_methods(MC.getClass(), 'pinDialog', plugin_unlimited_pins._PinDialogHook(self))
+                self._hook_refs.extend(refs or [])
             except Exception as e:
                 log(f'[UnlimitedPins] hook pinDialog failed: {e}')
             try:
-                reorder_method = MC.getClass().getDeclaredMethod('reorderPinnedDialogs', Integer.TYPE, jclass('java.util.ArrayList'), JLong.TYPE)
-                reorder_method.setAccessible(True)
-                self._hook_refs.append(self.hook_method(reorder_method, plugin_unlimited_pins._ReorderPinnedHook(self)))
+                refs = self.hook_all_methods(MC.getClass(), 'reorderPinnedDialogs', plugin_unlimited_pins._ReorderPinnedHook(self))
+                self._hook_refs.extend(refs or [])
             except Exception as e:
                 log(f'[UnlimitedPins] hook reorderPinnedDialogs failed: {e}')
             try:
-                get_dialogs_method = MC.getClass().getDeclaredMethod('getDialogs', Integer.TYPE)
-                get_dialogs_method.setAccessible(True)
-                self._hook_refs.append(self.hook_method(get_dialogs_method, plugin_unlimited_pins._GetDialogsHook(self)))
+                refs = self.hook_all_methods(MC.getClass(), 'getDialogs', plugin_unlimited_pins._GetDialogsHook(self))
+                self._hook_refs.extend(refs or [])
             except Exception as e:
                 log(f'[UnlimitedPins] hook getDialogs failed: {e}')
         except Exception as e:
@@ -4430,10 +4427,8 @@ class Plugin(BasePlugin):
         self.set_amount(self.get_setting(SETTING_KEY_STARS_AMOUNT, '1000'), ignore=False, ton=False)
         if STARS_CONTROLLER_HAS_TON_FIELD:
             self.set_amount(self.get_setting(SETTING_KEY_TON_AMOUNT, '10'), ignore=True, ton=True)
-        getBalance = StarsController.getClass().getDeclaredMethod('getBalance', Boolean.TYPE, Runnable.getClass(), Boolean.TYPE)
-        ref = self.hook_method(getBalance, replace_stars_balance(self))
-        if ref is not None:
-            self._hooks.append(ref)
+        refs = self.hook_all_methods(StarsController, 'getBalance', replace_stars_balance(self)) or []
+        self._hooks.extend(refs)
 
     def _load_fake_nft(self):
         global active_fake_nft_plugin
