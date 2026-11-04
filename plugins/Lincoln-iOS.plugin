@@ -1,8 +1,8 @@
 __id__ = "lincoln_ios"
 __name__ = "Lincoln iOS"
-__description__ = "Профиль в стиле iPhone 16: NFT-подарки в профиле и дарение другим, свой номер и юзернейм, скрытие «прочитано/в сети/печатает», звёзды и TON, уровень Telegram, буст профиля, сообщения в каналы от своего имени — всё визуально и локально."
+__description__ = "Профиль в стиле Telegram: свой номер и юзернейм, скрытие «в сети/печатает/прочитано», звёзды и TON, премиум, своё «был(а)…», визуальная NFT-плашка. Работает локально, без отправки данных."
 __author__ = "Lincoln"
-__version__ = "1.1"
+__version__ = "2.0"
 __icon__ = "msg_profile"
 __app_version__ = ">=12.5.1"
 __sdk_version__ = ">=1.4.4.3"
@@ -12,15 +12,15 @@ from decimal import Decimal, getcontext
 from typing import Any, List
 
 from base_plugin import BasePlugin, MethodHook, HookResult, HookStrategy
-from ui.settings import Header, Switch, Input, Divider, Text
-from android_utils import log
+from ui.settings import Header, Switch, Input, Divider, Text, Button
+from android_utils import log, run_on_ui_thread
 from hook_utils import find_class
 
 getcontext().prec = 12
 
 
 class MutateCurrentUser(MethodHook):
-    """После получения своего User подменяем локальные поля (номер, username, premium, level)."""
+    """После получения своего User подменяем локальные поля (номер, username, premium)."""
 
     def __init__(self, plugin):
         super().__init__()
@@ -49,20 +49,12 @@ class MutateCurrentUser(MethodHook):
                     user.premium = True
                 except Exception:
                     pass
-            if self.plugin.get_setting("fake_level", True):
-                try:
-                    level = int(self.plugin.get_setting("level", "7") or "7")
-                    if hasattr(user, "level"):
-                        user.level = level
-                except Exception:
-                    pass
         except Exception:
             pass
 
 
 class MutateOtherUser(MethodHook):
-    """Безопасная подмена номера/юзернейма у выбранных пользователей.
-    Метод выполняется как обычно, мы только меняем поля объекта — не заменяем результат."""
+    """Безопасная подмена номера/юзернейма у выбранных пользователей (визуально, только у вас)."""
 
     def __init__(self, plugin):
         super().__init__()
@@ -140,6 +132,39 @@ class ReplaceStarsBalance(MethodHook):
             pass
 
 
+class FakeLastSeen(MethodHook):
+    """Подменяет строку «был(а)…» / «в сети» в профиле."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("fake_lastseen", True):
+                try:
+                    param.setResult(str(self.plugin.get_setting("lastseen_text", "был(а) только что") or ""))
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+class BoostTrue(MethodHook):
+    """Визуальный буст: isPremium возвращает True."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("boost_profile", True):
+                param.setResult(True)
+        except Exception:
+            pass
+
+
 class LincolnIOSPlugin(BasePlugin):
 
     def on_plugin_load(self):
@@ -165,7 +190,7 @@ class LincolnIOSPlugin(BasePlugin):
             except Exception:
                 pass
 
-            # Чужие профили: безопасный MethodHook (мутация после выполнения)
+            # Чужие профили
             try:
                 mc = find_class("org.telegram.messenger.MessagesController")
                 if mc is not None:
@@ -187,13 +212,13 @@ class LincolnIOSPlugin(BasePlugin):
             except Exception:
                 pass
 
-            # Своё «был(а)…» — только LocaleController (безопасно)
+            # Своё «был(а)…»
             try:
                 cls = find_class("org.telegram.messenger.LocaleController")
                 if cls is not None:
                     for mname in ("formatLastSeen", "formatDateOnline"):
                         try:
-                            refs = self.hook_all_methods(cls, mname, _FakeLastSeen(self), priority=100)
+                            refs = self.hook_all_methods(cls, mname, FakeLastSeen(self), priority=100)
                             if refs:
                                 self._refs.extend(refs)
                         except Exception:
@@ -201,17 +226,14 @@ class LincolnIOSPlugin(BasePlugin):
             except Exception:
                 pass
 
-            # Буст профиля: визуальная пометка Premium-статуса у себя
+            # Буст (визуальный premium)
             try:
                 if self.get_setting("boost_profile", True):
-                    try:
-                        uc = find_class("org.telegram.messenger.UserConfig")
-                        if uc is not None:
-                            refs = self.hook_all_methods(uc, "isPremium", _BoostTrue(self), priority=100)
-                            if refs:
-                                self._refs.extend(refs)
-                    except Exception:
-                        pass
+                    uc = find_class("org.telegram.messenger.UserConfig")
+                    if uc is not None:
+                        refs = self.hook_all_methods(uc, "isPremium", BoostTrue(self), priority=100)
+                        if refs:
+                            self._refs.extend(refs)
             except Exception:
                 pass
 
@@ -239,12 +261,33 @@ class LincolnIOSPlugin(BasePlugin):
             pass
         return HookResult()
 
+    # -------------------- NFT-плашка (визуальная, декоративная) --------------------
+
+    def _nft_badge_text(self):
+        return str(self.get_setting("nft_text", "NFT Collectible") or "").strip()
+
+    def on_nft_row_click(self, *args):
+        try:
+            from ui.alert import AlertDialogBuilder
+            from android_utils import get_last_fragment
+            fragment = get_last_fragment()
+            activity = fragment.getParentActivity() if fragment else None
+            if activity is None:
+                return
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("NFT-подарок")
+            builder.set_message("Это визуальная плашка в вашем профиле.\n\nНастоящие NFT-подарки приходят только с сервера Telegram.")
+            builder.set_positive_button("OK", lambda b, w: b.dismiss())
+            builder.show()
+        except Exception:
+            pass
+
     # -------------------- настройки --------------------
 
     def create_settings(self):
         return [
-            Header(text="Профиль в стиле iOS"),
-            Text(text="iPhone 16", subtext="Локальные визуальные настройки · ничего не отправляется на сервер", icon="msg_info"),
+            Header(text="Lincoln iOS"),
+            Text(text="Локальные визуальные настройки профиля", subtext="Работает только в вашем клиенте · ничего не отправляется", icon="msg_info"),
             Divider(),
 
             Header(text="Мой профиль"),
@@ -252,8 +295,6 @@ class LincolnIOSPlugin(BasePlugin):
             Input(key="phone", text="Номер телефона", default="79990000000"),
             Switch(key="fake_username", text="Изменить username", default=True),
             Input(key="usernames", text="Юзернеймы (через запятую)", default="lincoln, lincoln2"),
-            Switch(key="fake_level", text="Уровень Telegram", default=True),
-            Input(key="level", text="Уровень (1-99)", default="7"),
             Switch(key="fake_premium", text="Premium (значок)", default=True),
             Switch(key="boost_profile", text="Буст профиля (визуально)", default=True),
             Divider(),
@@ -264,8 +305,15 @@ class LincolnIOSPlugin(BasePlugin):
             Input(key="ton_balance", text="TON", default="1.5"),
             Divider(),
 
-            Header(text="Подарки и NFT (визуально)"),
-            Text(text="NFT-подарки", subtext="Показывается в профиле и при дарении. Работает через подмену отображения.", icon="msg_gift"),
+            Header(text="NFT-плашка (визуально)"),
+            Switch(key="fake_nft_badge", text="Показывать NFT-плашку в профиле", default=False),
+            Input(key="nft_text", text="Текст плашки", default="NFT Collectible"),
+            Button(
+                text="Предпросмотр",
+                subtext="Что показывает плашка",
+                on_click=self.on_nft_row_click,
+                icon="msg_gift",
+            ),
             Divider(),
 
             Header(text="Статус (приватность)"),
@@ -289,36 +337,6 @@ class LincolnIOSPlugin(BasePlugin):
                 icon="msg_info",
             ),
         ]
-
-
-class _FakeLastSeen(MethodHook):
-    """Подменяет строку «был(а)…» / «в сети» в профиле."""
-
-    def __init__(self, plugin):
-        super().__init__()
-        self.plugin = plugin
-
-    def after_hooked_method(self, param):
-        try:
-            if self.plugin.get_setting("fake_lastseen", True):
-                param.setResult(str(self.plugin.get_setting("lastseen_text", "был(а) только что") or ""))
-        except Exception:
-            pass
-
-
-class _BoostTrue(MethodHook):
-    """Визуальный буст: isPremium возвращает True."""
-
-    def __init__(self, plugin):
-        super().__init__()
-        self.plugin = plugin
-
-    def after_hooked_method(self, param):
-        try:
-            if self.plugin.get_setting("boost_profile", True):
-                param.setResult(True)
-        except Exception:
-            pass
 
 
 def create_plugin():
