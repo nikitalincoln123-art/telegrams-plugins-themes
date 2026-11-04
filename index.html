@@ -1150,6 +1150,36 @@
   }
   .rule p { margin: 0; }
 
+  .giveaway-bonus {
+    margin-top: 16px;
+    padding: 22px 26px;
+    border: 1px solid rgba(237, 201, 160, 0.35);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(237, 201, 160, 0.12), rgba(237, 201, 160, 0.04));
+    position: relative;
+    overflow: hidden;
+  }
+  .giveaway-bonus::before {
+    content: "";
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(224, 177, 120, 0.22), transparent 70%);
+    pointer-events: none;
+  }
+  .giveaway-bonus p {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    color: var(--creme);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.6;
+  }
+
   @media (max-width: 860px) {
     .giveaway-rules { padding: 22px 20px; }
   }
@@ -1892,10 +1922,14 @@
     <div class="giveaway-rules reveal">
       <div class="eyebrow" style="margin-bottom:10px;">Как проходит розыгрыш</div>
       <div class="rules-grid">
-        <div class="rule"><b>1</b><p>Подпишитесь на канал и выполните условия поста (репост, реакция, комментарий).</p></div>
-        <div class="rule"><b>2</b><p>Дождитесь завершения — победителей определяет встроенный розыгрыш Telegram.</p></div>
-        <div class="rule"><b>3</b><p>Итоги публикуются в канале, призы высылаются ботом или вручную.</p></div>
+        <div class="rule"><b>1</b><p>Подписаться на Telegram канал и поставить реакцию на последний пост.</p></div>
+        <div class="rule"><b>2</b><p>По табличке «Активно» на самом сайте начать писать мне в лс.</p></div>
+        <div class="rule"><b>3</b><p>По итогу розыгрыша все первые 10 человек получат свои подарки.</p></div>
       </div>
+    </div>
+
+    <div class="giveaway-bonus reveal">
+      <p>С каждым розыгрышем призов будет все больше и дороже. За использование Plugin — ваш подарок будет удваиваться.</p>
     </div>
   </section>
 
