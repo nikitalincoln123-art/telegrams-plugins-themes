@@ -1394,6 +1394,17 @@
     transition: all 0.3s var(--ease);
   }
   .about-links a:hover { color: var(--creme); border-color: rgba(237, 201, 160, 0.4); transform: translateY(-2px); }
+  .donate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    margin-top: 14px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .donate-btn svg { transition: transform 0.3s var(--ease); }
+  .donate-btn:hover svg { transform: scale(1.2); }
 
   @media (max-width: 640px) {
     .about { grid-template-columns: 1fr; text-align: center; justify-items: center; }
@@ -2229,6 +2240,11 @@
           <a href="https://github.com/nikitalincoln123-art" target="_blank" rel="noopener">GitHub</a>
           <a href="https://exteragram.app/" target="_blank" rel="noopener">exteraGram</a>
         </div>
+        <!-- ЗАМЕНИТЕ ССЫЛКУ НА СВОЮ СТРАНИЦУ DONATIONALERTS -->
+        <a class="btn btn-warm donate-btn" href="https://www.donationalerts.com/r/lincoln" target="_blank" rel="noopener" data-i18n="donate_btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="17" height="17" aria-hidden="true"><path d="M12 21s-7-4.6-9.3-9A5.4 5.4 0 0 1 12 5.6 5.4 5.4 0 0 1 21.3 12C19 16.4 12 21 12 21z"/></svg>
+          Поддержать автора
+        </a>
       </div>
     </div>
   </section>
@@ -2317,6 +2333,7 @@
       </a>
       <a href="#faq">FAQ</a>
       <a href="#install" data-i18n="foot_help">Помощь</a>
+      <a href="https://www.donationalerts.com/r/lincoln" target="_blank" rel="noopener" data-i18n="donate_btn_foot">Поддержать</a>
       <a href="#top" data-i18n="foot_top">Наверх</a>
     </div>
   </div>
@@ -3119,6 +3136,7 @@
       about_eyebrow: "О проекте", about_title: "Сделано от Lincoln", about_h3: "Lincoln-Plugin — каталог плагинов для exteraGram", about_p: "Привет! Я Lincoln. Собираю и делаю плагины для exteraGram: локальная кастомизация профиля, ghost-режим, визуальные фейки и инструменты для комфорта. Всё, что здесь есть, проверено вручную и очищено от скрытых сетевых блоков.",
       cta_title: "Готовы сделать Telegram <span class='grad-text'>своим</span>?", cta_sub: "Начните с популярных плагинов — это займёт меньше минуты.", cta_pick: "Выбрать плагин", cta_howto: "Как установить",
       foot_help: "Помощь", foot_top: "Наверх",
+      donate_btn: "Поддержать автора", donate_btn_foot: "Поддержать",
       dl: "Скачать", copy: "Копировать", details: "Подробнее", mcopy: "Копировать ссылку"
     },
     en: {
@@ -3156,6 +3174,7 @@
       about_eyebrow: "About", about_title: "Made by Lincoln", about_h3: "Lincoln-Plugin — plugin catalog for exteraGram", about_p: "Hi! I'm Lincoln. I collect and build exteraGram plugins: local profile customization, ghost mode, visual fakes and comfort tools. Everything here is manually verified and cleaned from hidden network blocks.",
       cta_title: "Ready to make Telegram <span class='grad-text'>yours</span>?", cta_sub: "Start with the popular plugins — it takes less than a minute.", cta_pick: "Pick a plugin", cta_howto: "How to install",
       foot_help: "Help", foot_top: "Top",
+      donate_btn: "Support the author", donate_btn_foot: "Support",
       dl: "Download", copy: "Copy", details: "Details", mcopy: "Copy link"
     }
   };
