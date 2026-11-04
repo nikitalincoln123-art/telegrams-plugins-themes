@@ -9,6 +9,7 @@ __sdk_version__ = ">=1.4.4.3"
 
 from decimal import Decimal, getcontext
 from datetime import datetime
+from typing import Any, List
 
 from base_plugin import BasePlugin, MethodHook, MethodReplacement, HookStrategy, HookResult
 from ui.settings import Header, Switch, Input, Divider, Text
