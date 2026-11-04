@@ -1264,6 +1264,93 @@
     .giveaway-rules { padding: 22px 20px; }
   }
 
+  /* ---------- Канал ---------- */
+  .channel-embed {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--panel-hover), var(--panel));
+    overflow: hidden;
+  }
+  .channel-banner {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 22px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .channel-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    flex: none;
+    display: grid;
+    place-items: center;
+    font-size: 22px;
+    font-weight: 800;
+    background: linear-gradient(135deg, #f8f2e6, #e3cba8);
+    color: #0b0a08;
+    box-shadow: 0 0 24px rgba(224, 177, 120, 0.25);
+  }
+  .channel-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .channel-info b { color: var(--creme); font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .channel-info span { color: var(--text-dim); font-size: 13px; }
+  .channel-posts {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 22px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+  .ch-note { color: var(--text-dim); font-size: 14px; text-align: center; padding: 18px 0; }
+  .channel-post {
+    padding: 16px 18px;
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    background: rgba(255, 250, 240, 0.03);
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .channel-post:hover { border-color: rgba(237, 201, 160, 0.3); background: rgba(255, 250, 240, 0.05); }
+  .channel-post a { text-decoration: none; color: inherit; display: block; }
+  .cp-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    color: var(--text-faint);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .cp-text {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .cp-date { margin-top: 8px; color: var(--text-faint); font-size: 12px; }
+  .channel-foot {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    align-items: center;
+    padding: 14px 22px;
+    border-top: 1px solid var(--border-soft);
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .channel-foot a { color: var(--peach); text-decoration: none; font-weight: 600; }
+  .channel-foot a:hover { text-decoration: underline; }
+  @media (max-width: 600px) {
+    .channel-banner { flex-wrap: wrap; }
+    .channel-banner .btn { width: 100%; justify-content: center; }
+    .channel-posts { padding: 14px 14px; }
+  }
+
   /* ---------- О проекте ---------- */
   .about {
     display: grid;
@@ -1633,6 +1720,7 @@
         <li><a href="#plugins" data-i18n="nav_cat">Каталог</a></li>
         <li><a href="#themes" data-i18n="nav_themes">Темы</a></li>
         <li><a href="#giveaways" data-i18n="nav_ga">Розыгрыши</a></li>
+        <li><a href="#channel" data-i18n="nav_ch">Канал</a></li>
         <li><a href="#faq" data-i18n="nav_faq">FAQ</a></li>
         <li><a href="#install" class="btn nav-cta" data-i18n="nav_install">Установить</a></li>
       </ul>
@@ -1662,6 +1750,7 @@
   <a href="#plugins" data-i18n="nav_cat">Каталог плагинов</a>
   <a href="#themes" data-i18n="nav_themes">Темы</a>
   <a href="#giveaways" data-i18n="nav_ga">Розыгрыши</a>
+  <a href="#channel" data-i18n="nav_ch">Канал</a>
   <a href="#faq" data-i18n="nav_faq">FAQ</a>
   <a href="#install" data-i18n="nav_install">Установить</a>
 </div>
@@ -2152,6 +2241,56 @@
       <div class="hero-actions">
         <a href="#plugins" class="btn btn-warm" data-i18n="cta_pick">Выбрать плагин</a>
         <a href="#install" class="btn" data-i18n="cta_howto">Как установить</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHANNEL -->
+  <section class="block wrap" id="channel">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow" data-i18n="ch_eyebrow">Канал</div>
+        <h2 data-i18n="ch_title">Lincoln · Логово</h2>
+        <p data-i18n="ch_sub">Новости, анонсы розыгрышей и полезные материалы — подписывайтесь, чтобы ничего не пропустить.</p>
+      </div>
+      <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener" class="btn float-btn" data-i18n="ch_join">Подписаться</a>
+    </div>
+
+    <div class="channel-embed reveal">
+      <div class="channel-banner">
+        <span class="channel-avatar" aria-hidden="true">L</span>
+        <div class="channel-info">
+          <b>Lincoln · Логово</b>
+          <span>@AdapterLincoln</span>
+        </div>
+        <a class="btn btn-warm" href="https://t.me/AdapterLincoln" target="_blank" rel="noopener" data-i18n="ch_join_btn">Подписаться</a>
+      </div>
+      <div class="channel-posts" id="channelPosts">
+        <article class="channel-post">
+          <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener">
+            <div class="cp-meta">💥 Анонс</div>
+            <p class="cp-text">В продаже действуют виртуальные номера для Telegram. Хочешь второй аккаунт, но нет номера? Можно просто купить виртуальный номер, который работает не хуже физического.</p>
+            <div class="cp-date">Недавно · в канале</div>
+          </a>
+        </article>
+        <article class="channel-post">
+          <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener">
+            <div class="cp-meta">✉️ Услуги</div>
+            <p class="cp-text">В продаже Steam аккаунты на любые предпочтения и желания. Они находятся в общем доступе. Для подробной информации — @LincolnWasted.</p>
+            <div class="cp-date">Недавно · в канале</div>
+          </a>
+        </article>
+        <article class="channel-post">
+          <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener">
+            <div class="cp-meta">🌐 Сайты</div>
+            <p class="cp-text">Делаю сайты под ваши пожелания и задачи. Так же предоставляю Plugin / Темы / Функции для Telegram/ExteraGram — индивидуально и только для вас.</p>
+            <div class="cp-date">Недавно · в канале</div>
+          </a>
+        </article>
+      </div>
+      <div class="channel-foot">
+        <span data-i18n="ch_more">Больше постов:</span>
+        <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener">@AdapterLincoln →</a>
       </div>
     </div>
   </section>
@@ -2946,7 +3085,7 @@
   /* ================= Переключатель языка RU/EN ================= */
   var I18N = {
     ru: {
-      nav_cat: "Каталог", nav_themes: "Темы", nav_ga: "Розыгрыши", nav_faq: "FAQ", nav_install: "Установить",
+      nav_cat: "Каталог", nav_themes: "Темы", nav_ga: "Розыгрыши", nav_ch: "Канал", nav_faq: "FAQ", nav_install: "Установить",
       hero_badge: "Открытый каталог · обновляется еженедельно",
       hero_h1: "Сделано <span class='grad-text'>от Lincoln</span>",
       hero_sub: "Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.",
@@ -2965,6 +3104,8 @@
       themes_dark: "Черные", themes_light: "Светлые",
       ga_eyebrow: "Призы для сообщества", ga_title: "Розыгрыши", ga_sub: "Периодически разыгрываем подарки среди подписчиков: мишки Telegram, Premium, звёзды и не только.",
       ga_channel: "Канал с розыгрышами",
+      ch_eyebrow: "Канал", ch_title: "Lincoln · Логово", ch_sub: "Новости, анонсы розыгрышей и полезные материалы — подписывайтесь, чтобы ничего не пропустить.",
+      ch_join: "Подписаться", ch_join_btn: "Подписаться", ch_more: "Больше постов:",
       inst_eyebrow: "Начало работы", inst_title: "Как установить", inst_sub: "Простые шаги для любой платформы — от десктопа до телефона.",
       inst_s1t: "Скачайте ExtraGram", inst_s1s: "Перейдите на официальный сайт exteragram.app и установите клиент на Android (APK или RuStore).",
       inst_s2t: "Скачайте плагин", inst_s2s: "Нажмите «Скачать» на нужной карточке — файл с расширением .plugin сохранится на устройство.",
@@ -2981,7 +3122,7 @@
       dl: "Скачать", copy: "Копировать", details: "Подробнее", mcopy: "Копировать ссылку"
     },
     en: {
-      nav_cat: "Catalog", nav_themes: "Themes", nav_ga: "Giveaways", nav_faq: "FAQ", nav_install: "Install",
+      nav_cat: "Catalog", nav_themes: "Themes", nav_ga: "Giveaways", nav_ch: "Channel", nav_faq: "FAQ", nav_install: "Install",
       hero_badge: "Open catalog · updated weekly",
       hero_h1: "Made <span class='grad-text'>by Lincoln</span>",
       hero_sub: "Themes and plugins for Telegram — hand-picked, verified and ready to install in one click. No noise.",
@@ -3000,6 +3141,8 @@
       themes_dark: "Dark", themes_light: "Light",
       ga_eyebrow: "Community prizes", ga_title: "Giveaways", ga_sub: "We regularly give away prizes among subscribers: Telegram bears, Premium, stars and more.",
       ga_channel: "Giveaway channel",
+      ch_eyebrow: "Channel", ch_title: "Lincoln · Lair", ch_sub: "News, giveaway announcements and useful stuff — subscribe so you don't miss anything.",
+      ch_join: "Subscribe", ch_join_btn: "Subscribe", ch_more: "More posts:",
       inst_eyebrow: "Getting started", inst_title: "How to install", inst_sub: "Simple steps for any platform — from desktop to phone.",
       inst_s1t: "Download ExtraGram", inst_s1s: "Go to exteragram.app and install the client on Android (APK or RuStore).",
       inst_s2t: "Download the plugin", inst_s2s: "Press «Download» on the card — the .plugin file is saved to your device.",
