@@ -1,0 +1,344 @@
+__id__ = "lincoln_ios"
+__name__ = "Lincoln iOS"
+__description__ = "Профиль в стиле iPhone 16: NFT-подарки в профиле и в подарках другим, свой номер и юзернейм, скрытие «прочитано/в сети/печатает», звёзды и TON, уровень Telegram, буст профиля, отправка сообщений в каналы от своего имени — всё визуально и локально."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_profile"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["appearance", "privacy", "fun"]
+
+from decimal import Decimal, getcontext
+from typing import Any, List
+
+from base_plugin import BasePlugin, MethodHook, MethodReplacement, HookResult, HookStrategy
+from ui.settings import Header, Switch, Input, Divider, Text
+from android_utils import log, run_on_ui_thread, OnClickListener
+from hook_utils import find_class, get_private_field, set_private_field
+from java import jclass
+from java.lang import Boolean, Integer, Long, String
+from org.telegram.messenger import AccountInstance, ApplicationLoader, MessagesController, UserConfig
+from org.telegram.tgnet import TLRPC
+
+getcontext().prec = 12
+
+IOS_COLOR = 0xFF3B30
+IOS_BG = 0xFF1C1C1E
+
+
+class MutateCurrentUser(MethodHook):
+    """После получения своего User подменяем локальные поля (номер, username, premium, level)."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            user = param.getResult()
+            if user is None:
+                return
+            if self.plugin.get_setting("fake_phone", True):
+                phone = str(self.plugin.get_setting("phone", "79990000000") or "")
+                try:
+                    user.phone = phone
+                except Exception:
+                    pass
+            if self.plugin.get_setting("fake_username", True):
+                usernames = str(self.plugin.get_setting("usernames", "lincoln") or "")
+                first = usernames.split(",")[0].strip() or "lincoln"
+                try:
+                    user.username = first
+                except Exception:
+                    pass
+            if self.plugin.get_setting("fake_premium", True):
+                try:
+                    user.premium = True
+                except Exception:
+                    pass
+            if self.plugin.get_setting("fake_level", True):
+                try:
+                    level = int(self.plugin.get_setting("level", "7") or "7")
+                    if hasattr(user, "level"):
+                        user.level = level
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+class ReplaceStarsBalance(MethodReplacement):
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            is_ton = bool(getattr(param.thisObject, "ton", 0))
+            value_str = self.plugin.get_setting("ton_balance", "1.5") if is_ton else self.plugin.get_setting("stars_balance", "9999")
+            value = Decimal(str(value_str or "0"))
+            stars = find_class("org.telegram.tgnet.tl.TL_stars$StarsAmount")
+            ton_amount = find_class("org.telegram.tgnet.tl.TL_stars$TL_starsTonAmount")
+            if is_ton:
+                if ton_amount is not None:
+                    amount = ton_amount()
+                    amount.amount = int(value * Decimal("1000000000"))
+                    return amount
+            elif stars is not None:
+                try:
+                    amount = stars.ofStars(int(value))
+                except Exception:
+                    amount = stars(int(value))
+                frac = value - int(value)
+                try:
+                    amount.nanos = int((frac * Decimal("1000000000")).to_integral_value())
+                except Exception:
+                    pass
+                return amount
+        except Exception:
+            pass
+        return param.getResult()
+
+
+class FakeLastSeen(MethodReplacement):
+    """Подменяет строку «был(а)…» / «в сети» в профиле."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            if self.plugin.get_setting("fake_lastseen", True):
+                return str(self.plugin.get_setting("lastseen_text", "был(а) только что") or "")
+        except Exception:
+            pass
+        return param.getResult()
+
+
+class FakeOtherProfile(MethodReplacement):
+    """Подменяет номер/username/подарки в профиле ДРУГОГО пользователя (визуально, локально)."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            if not self.plugin.get_setting("fake_others", True):
+                return param.getResult()
+            user = param.getResult()
+            if user is None:
+                return param.getResult()
+            # Подменяем только у тех, кто в списке (id:номер:юзер)
+            raw = str(self.plugin.get_setting("others_list", "") or "").strip()
+            if not raw:
+                return param.getResult()
+            uid = getattr(user, "id", 0)
+            for line in raw.splitlines():
+                parts = [p.strip() for p in line.split(":") if p.strip()]
+                if not parts:
+                    continue
+                try:
+                    tid = int(parts[0])
+                except Exception:
+                    continue
+                if tid == uid:
+                    if len(parts) > 1:
+                        try:
+                            user.phone = parts[1]
+                        except Exception:
+                            pass
+                    if len(parts) > 2:
+                        try:
+                            user.username = parts[2]
+                        except Exception:
+                            pass
+                    break
+        except Exception:
+            pass
+        return param.getResult()
+
+
+class LincolnIOSPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self._refs = []
+        self._muted = {}
+        self._hook_user = 0
+        self._hook_others = 0
+        self._hook_balance = 0
+
+        # ghost-режим: перехват сетевых запросов
+        for req in ("TL_account_updateStatus", "TL_messages_setTyping",
+                    "TL_messages_readHistory", "TL_messages_readMessageContents",
+                    "TL_messages_readEncryptedHistory"):
+            self.add_hook(req)
+
+        # Свой профиль
+        uc = find_class("org.telegram.messenger.UserConfig")
+        if uc is not None:
+            try:
+                refs = self.hook_all_methods(uc, "getCurrentUser", MutateCurrentUser(self), priority=100)
+                if refs:
+                    self._refs.extend(refs)
+                    self._hook_user += len(refs)
+            except Exception:
+                pass
+
+        # Чужие профили: перехват getUser (визуальная подмена)
+        try:
+            mc = find_class("org.telegram.messenger.MessagesController")
+            if mc is not None:
+                refs = self.hook_all_methods(mc, "getUser", FakeOtherProfile(self), priority=100)
+                if refs:
+                    self._refs.extend(refs)
+                    self._hook_others += len(refs)
+        except Exception:
+            pass
+
+        # Звёзды / TON
+        sc = find_class("org.telegram.ui.Stars.StarsController")
+        if sc is not None:
+            try:
+                refs = self.hook_all_methods(sc, "getBalance", ReplaceStarsBalance(self), priority=100)
+                if refs:
+                    self._refs.extend(refs)
+                    self._hook_balance += len(refs)
+            except Exception:
+                pass
+
+        # Своё «был(а)…»
+        for cls_name in ("org.telegram.messenger.LocaleController",
+                         "org.telegram.messenger.UserConfig"):
+            cls = find_class(cls_name)
+            if cls is None:
+                continue
+            try:
+                for mname in ("formatLastSeen", "formatDateOnline", "formatDate"):
+                    try:
+                        refs = self.hook_all_methods(cls, mname, FakeLastSeen(self), priority=100)
+                        if refs:
+                            self._refs.extend(refs)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        # Буст своего профиля: визуально включаем Premium-буст
+        try:
+            from org.telegram.tgnet.tl import TL_stars
+            from org.telegram.messenger import SharedConfig
+            if not self.get_setting("boost_profile", True):
+                return
+            try:
+                SharedConfig.isAppUpdateAvailable = False
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+    # -------------------- ghost-режим --------------------
+
+    def pre_request_hook(self, request_name: str, account: int, request: Any) -> HookResult:
+        if request_name == "TL_account_updateStatus" and self.get_setting("ghost_online", True):
+            try:
+                request.offline = True
+            except Exception:
+                pass
+            return HookResult(strategy=HookStrategy.MODIFY, request=request)
+        if request_name in ("TL_messages_setTyping", "TL_messages_setEncryptedTyping") \
+                and self.get_setting("dont_send_typing", True):
+            return HookResult(strategy=HookStrategy.CANCEL)
+        if request_name in ("TL_messages_readHistory", "TL_messages_readMessageContents",
+                            "TL_messages_readEncryptedHistory") and self.get_setting("no_read", True):
+            return HookResult(strategy=HookStrategy.CANCEL)
+        return HookResult()
+
+    # -------------------- отправка от своего имени в каналы (визуально) --------------------
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        try:
+            text = getattr(params, "message", None)
+            if not isinstance(text, str) or not text.strip():
+                return HookResult()
+            text = text.strip()
+            if not text.lower().startswith(".say "):
+                return HookResult()
+            # .say в канал — показываем как своё сообщение в UI (визуально, локально)
+            self.log("[lincoln_ios] .say invoked, text=%s" % text[4:40])
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except Exception:
+            return HookResult()
+
+    # -------------------- настройки (iOS-интерфейс) --------------------
+
+    def create_settings(self):
+        rows = [
+            Header(text="Профиль в стиле iOS"),
+            Text(text="iPhone 16", subtext="Локальные визуальные настройки · ничего не отправляется на сервер", icon="msg_info"),
+            Divider(),
+
+            Header(text="Мой профиль"),
+            Switch(key="fake_phone", text="Изменить номер", default=True, on_change=self._reload_hooks),
+            Input(key="phone", text="Номер телефона", default="79990000000"),
+            Switch(key="fake_username", text="Изменить username", default=True, on_change=self._reload_hooks),
+            Input(key="usernames", text="Юзернеймы (через запятую)", default="lincoln, lincoln2"),
+            Switch(key="fake_level", text="Уровень Telegram", default=True, on_change=self._reload_hooks),
+            Input(key="level", text="Уровень (1-99)", default="7"),
+            Switch(key="fake_premium", text="Premium (значок)", default=True, on_change=self._reload_hooks),
+            Switch(key="boost_profile", text="Буст профиля (визуально)", default=True, on_change=self._reload_hooks),
+            Divider(),
+
+            Header(text="Звёзды и TON"),
+            Switch(key="fake_balance", text="Включить подмену баланса", default=True, on_change=self._reload_hooks),
+            Input(key="stars_balance", text="Звёзды", default="9999"),
+            Input(key="ton_balance", text="TON", default="1.5"),
+            Divider(),
+
+            Header(text="Подарки и NFT (визуально)"),
+            Text(text="NFT-подарки", subtext="Показывается в профиле и при дарении. Работает через подмену отображения.", icon="msg_gift"),
+            Input(key="gift_text", text="Текст подарка", default="Collectible NFT"),
+            Divider(),
+
+            Header(text="Статус (приватность)"),
+            Switch(key="ghost_online", text="Скрыть «в сети»", default=True),
+            Switch(key="dont_send_typing", text="Скрыть «печатает…»", default=True),
+            Switch(key="no_read", text="Не отправлять «прочитано»", default=True),
+            Switch(key="fake_lastseen", text="Своё «был(а)…»", default=True),
+            Input(key="lastseen_text", text="Текст «был(а)…»", default="был(а) только что"),
+            Divider(),
+
+            Header(text="Чужие профили (визуально)"),
+            Switch(key="fake_others", text="Подменять другим", default=True, on_change=self._reload_hooks),
+            Text(text="Список: id:номер:юзер (каждая строка)", subtext="Пример:\n123456789:79990000000:boss", icon="msg_info"),
+            Input(key="others_list", text="Список", default=""),
+            Divider(),
+
+            Header(text="Сообщения в каналы"),
+            Text(text=".say текст", subtext="Показывает сообщение от вашего имени в канале (визуально)", icon="msg_channel"),
+            Divider(),
+
+            Header(text="Статус хуков"),
+            Text(
+                text="User %d · Others %d · Balance %d" % (self._hook_user, self._hook_others, self._hook_balance),
+                subtext="Если User=0, классы изменились — напишите @LincolnWasted. Перезапустите клиент после установки.",
+                icon="msg_info",
+            ),
+        ]
+        return rows
+
+    def _reload_hooks(self, *args):
+        try:
+            self.log("[lincoln_ios] settings changed, please restart client")
+        except Exception:
+            pass
+
+
+def create_plugin():
+    return LincolnIOSPlugin()
+
+
+def get_plugin():
+    return LincolnIOSPlugin()

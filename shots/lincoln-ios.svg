@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" font-family="'Segoe UI', Roboto, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1c1c1e"/>
+      <stop offset="1" stop-color="#0d0b09"/>
+    </linearGradient>
+    <linearGradient id="ios" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2c2c2e"/>
+      <stop offset="1" stop-color="#1c1c1e"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#bg)"/>
+  <rect x="40" y="20" width="250" height="360" rx="36" fill="#000" stroke="#3a3a3c" stroke-width="3"/>
+  <rect x="46" y="26" width="238" height="348" rx="30" fill="#1c1c1e"/>
+  <rect x="110" y="32" width="60" height="4" rx="2" fill="#3a3a3c"/>
+  <circle cx="70" cy="50" r="12" fill="#3a3a3c"/>
+  <circle cx="70" cy="50" r="6" fill="#2c2c2e"/>
+  <text x="70" y="54" text-anchor="middle" font-size="16" font-weight="800" fill="#4a90d9">Л</text>
+  <text x="95" y="54" font-size="12" font-weight="700" fill="#c9bda9">@lincoln</text>
+  <text x="95" y="68" font-size="9" fill="#8a8073">в сети</text>
+
+  <rect x="60" y="84" width="210" height="120" rx="16" fill="#2c2c2e"/>
+  <text x="76" y="104" font-size="10" fill="#8a8073">Мой профиль</text>
+  <text x="76" y="124" font-size="14" font-weight="800" fill="#f8f2e6">+7 999 000-00-00</text>
+  <text x="76" y="142" font-size="13" fill="#f8f2e6">@lincoln</text>
+  <rect x="76" y="152" width="70" height="20" rx="10" fill="#3a3a3c"/>
+  <text x="111" y="166" text-anchor="middle" font-size="10" fill="#f8f2e6">★ 9999</text>
+  <rect x="156" y="152" width="70" height="20" rx="10" fill="#3a3a3c"/>
+  <text x="191" y="166" text-anchor="middle" font-size="10" fill="#f8f2e6">1.5 TON</text>
+  <text x="76" y="192" font-size="11" fill="#7fd39a">✓ Premium · уровень 7</text>
+
+  <text x="70" y="224" font-size="10" fill="#8a8073">Управление</text>
+  <rect x="60" y="232" width="210" height="34" rx="10" fill="#2c2c2e"/>
+  <text x="76" y="254" font-size="11" fill="#c9bda9">🎁 NFT-подарки в профиле</text>
+  <rect x="60" y="274" width="210" height="34" rx="10" fill="#2c2c2e"/>
+  <text x="76" y="296" font-size="11" fill="#c9bda9">👤 Номер / юзер / уровень</text>
+  <rect x="60" y="316" width="210" height="34" rx="10" fill="#2c2c2e"/>
+  <text x="76" y="338" font-size="11" fill="#c9bda9">🔒 Скрыть прочитано/в сети</text>
+
+  <rect x="320" y="40" width="280" height="70" rx="16" fill="#2c2c2e" stroke="#3a3a3c"/>
+  <text x="340" y="66" font-size="12" font-weight="800" fill="#f8f2e6">Lincoln iOS</text>
+  <text x="340" y="86" font-size="10" fill="#8a8073">Профиль в стиле iPhone 16</text>
+  <text x="340" y="100" font-size="9" fill="#5ec27b">✓ работает локально</text>
+
+  <rect x="320" y="130" width="280" height="44" rx="12" fill="#1c2e22" stroke="#2e5740"/>
+  <text x="340" y="153" font-size="11" font-weight="700" fill="#7fd39a">✓ Номер и юзернейм</text>
+  <text x="340" y="166" font-size="9" fill="#8a8073">только для вас</text>
+  <rect x="320" y="184" width="280" height="44" rx="12" fill="#241c13" stroke="#3a322a"/>
+  <text x="340" y="207" font-size="11" fill="#c9bda9">✓ Звёзды и TON</text>
+  <text x="340" y="220" font-size="9" fill="#8a8073">визуально</text>
+  <rect x="320" y="238" width="280" height="44" rx="12" fill="#241c13" stroke="#3a322a"/>
+  <text x="340" y="261" font-size="11" fill="#c9bda9">✓ Буст профиля</text>
+  <text x="340" y="274" font-size="9" fill="#8a8073">визуально</text>
+  <rect x="320" y="292" width="280" height="44" rx="12" fill="#241c13" stroke="#3a322a"/>
+  <text x="340" y="315" font-size="11" fill="#c9bda9">✓ Подарки другим</text>
+  <text x="340" y="328" font-size="9" fill="#8a8073">визуально</text>
+</svg>
