@@ -1,0 +1,123 @@
+__id__ = "lincoln_tools"
+__name__ = "Lincoln Tools"
+__description__ = "Локальная визуальная подмена баланса звёзд и TON в профиле. Работает только в интерфейсе, ничего не отправляет и не изменяет на сервере."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_star"
+__min_version__ = "11.9.0"
+
+from decimal import Decimal, getcontext
+
+from base_plugin import BasePlugin, MethodReplacement
+from ui.settings import Header, Switch, Input, Text, Divider
+
+from org.telegram.tgnet.tl import TL_stars
+from org.telegram.ui.Stars import StarsController
+
+getcontext().prec = 12
+
+STARS_AMOUNT_CLASS_IS_ABSTRACT = hasattr(TL_stars.StarsAmount, "ofStars")
+
+
+class ReplaceBalance(MethodReplacement):
+    """Подменяет возвращаемое значение StarsController.getBalance."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            is_ton = bool(getattr(param.thisObject, "ton", False))
+            value = Decimal(self.plugin.fr_stars if not is_ton else self.plugin.fr_ton)
+            if is_ton:
+                amount = TL_stars.TL_starsTonAmount()
+                amount.amount = int(value * Decimal("1000000000"))
+                return amount
+            frac = value - int(value)
+            nanos = int((frac * Decimal("1000000000")).to_integral_value())
+            if STARS_AMOUNT_CLASS_IS_ABSTRACT:
+                amount = TL_stars.StarsAmount.ofStars(int(value))
+            else:
+                amount = TL_stars.StarsAmount(int(value))
+            amount.nanos = nanos
+            return amount
+        except Exception:
+            return param.getDefaultReturnValue()
+
+
+class LincolnToolsPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self.fr_stars = Decimal(self.get_setting("stars", "9999"))
+        self.fr_ton = Decimal(self.get_setting("ton", "1.5"))
+        try:
+            stars_controller = StarsController.class_
+            for method in stars_controller.getDeclaredMethods():
+                if method.getName() == "getBalance" and method.getParameterTypes().length == 0:
+                    method.setAccessible(True)
+                    self.hook_method(method, ReplaceBalance(self))
+                    break
+        except Exception:
+            pass
+
+    def create_settings(self):
+        def on_stars_change(value):
+            try:
+                self.fr_stars = Decimal(str(value).strip() or "0")
+                self.set_setting("stars", str(self.fr_stars))
+            except Exception:
+                pass
+
+        def on_ton_change(value):
+            try:
+                self.fr_ton = Decimal(str(value).strip() or "0")
+                self.set_setting("ton", str(self.fr_ton))
+            except Exception:
+                pass
+
+        return [
+            Header(text="Lincoln Tools"),
+            Switch(
+                key="enabled",
+                text="Включить",
+                subtext="Подменять баланс в профиле",
+                default=True,
+                icon="msg_switcher_off",
+            ),
+            Divider(),
+            Header(text="Баланс звёзд"),
+            Input(
+                key="stars",
+                text="Количество звёзд",
+                default="9999",
+                subtext="Целое число, видимое в профиле",
+                icon="msg_star",
+                on_change=on_stars_change,
+            ),
+            Divider(),
+            Header(text="Баланс TON"),
+            Input(
+                key="ton",
+                text="Количество TON",
+                default="1.5",
+                subtext="Дробное число с точкой",
+                icon="msg_toncoin",
+                on_change=on_ton_change,
+            ),
+            Divider(),
+            Text(
+                text="Как это работает",
+                subtext="Плагин меняет только то, что показывает интерфейс. Серверный баланс не изменяется — это локальная визуальная настройка.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnToolsPlugin()
+
+
+def get_plugin():
+    return LincolnToolsPlugin()
