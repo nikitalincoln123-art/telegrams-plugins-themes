@@ -121,12 +121,10 @@ class LincolnProPlugin(BasePlugin):
         uc = find_class("org.telegram.messenger.UserConfig")
         if uc is not None:
             try:
-                m = uc.getDeclaredMethod("getCurrentUser")
-                m.setAccessible(True)
-                r = self.hook_method(m, MutateCurrentUser(self), priority=100)
-                if r:
-                    self._refs.append(r)
-                    self._hook_user += 1
+                refs = self.hook_all_methods(uc, "getCurrentUser", MutateCurrentUser(self), priority=100)
+                if refs:
+                    self._refs.extend(refs)
+                    self._hook_user += len(refs)
             except Exception:
                 pass
 
@@ -134,13 +132,9 @@ class LincolnProPlugin(BasePlugin):
         sc = find_class("org.telegram.ui.Stars.StarsController")
         if sc is not None:
             try:
-                for m in sc.getDeclaredMethods():
-                    if m.getName() == "getBalance" and m.getParameterTypes().length == 0:
-                        m.setAccessible(True)
-                        r = self.hook_method(m, ReplaceStarsBalance(self), priority=100)
-                        if r:
-                            self._refs.append(r)
-                        break
+                refs = self.hook_all_methods(sc, "getBalance", ReplaceStarsBalance(self), priority=100)
+                if refs:
+                    self._refs.extend(refs)
             except Exception:
                 pass
 
@@ -154,12 +148,13 @@ class LincolnProPlugin(BasePlugin):
             if cls is None:
                 continue
             try:
-                for m in cls.getDeclaredMethods():
-                    if "lastSeen" in m.getName() or "formatDate" in m.getName():
-                        m.setAccessible(True)
-                        r = self.hook_method(m, FakeLastSeen(self), priority=100)
-                        if r:
-                            self._refs.append(r)
+                for mname in ("formatLastSeen", "formatDateOnline", "formatDate"):
+                    try:
+                        refs = self.hook_all_methods(cls, mname, FakeLastSeen(self), priority=100)
+                        if refs:
+                            self._refs.extend(refs)
+                    except Exception:
+                        pass
             except Exception:
                 pass
 
@@ -276,7 +271,7 @@ class LincolnProPlugin(BasePlugin):
             Divider(),
             Text(
                 text="Статус хуков",
-                subtext="User %d · ghost-режим работает на уровне запросов (не зависит от версии). Перезапустите клиент после установки." % self._hook_user,
+                subtext="User %d · ghost-режим работает на уровне запросов (не зависит от версии). Если User = 0, классы изменились — напишите @LincolnWasted." % self._hook_user,
                 icon="msg_info",
             ),
         ]
