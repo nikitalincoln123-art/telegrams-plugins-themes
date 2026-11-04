@@ -304,6 +304,44 @@
     .theme-toggle { display: inline-flex; }
   }
 
+  .support-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 12px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s var(--ease);
+    white-space: nowrap;
+  }
+  .support-badge:hover {
+    color: var(--creme);
+    border-color: rgba(237, 201, 160, 0.4);
+    transform: translateY(-1px);
+  }
+  .support-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #4fae6a;
+    box-shadow: 0 0 10px rgba(79, 174, 106, 0.7);
+    animation: supportPing 2s ease-in-out infinite;
+    flex: none;
+  }
+  @keyframes supportPing {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(79, 174, 106, 0.5); }
+    50% { box-shadow: 0 0 0 5px rgba(79, 174, 106, 0); }
+  }
+  @media (max-width: 860px) {
+    .support-badge .support-text { display: none; }
+    .support-badge { padding: 8px; }
+  }
+
   .mobile-menu {
     display: none;
     position: fixed;
@@ -706,6 +744,31 @@
   .card-actions .btn { padding: 9px 16px; font-size: 13px; border-radius: 999px; }
   .btn-info { background: transparent; color: var(--text-dim); }
   .btn-info:hover { color: var(--creme); border-color: rgba(255, 245, 230, 0.3); background: var(--panel-hover); }
+
+  /* Метка «уже ставил(а)» */
+  .installed-tag {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(79, 174, 106, 0.12);
+    color: #5ec27b;
+    border: 1px solid rgba(79, 174, 106, 0.3);
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+    pointer-events: none;
+    z-index: 5;
+  }
+  .card.has-installed .installed-tag { opacity: 1; transform: none; }
 
   /* ---------- Панель каталога ---------- */
   .catalog-bar {
@@ -1171,6 +1234,7 @@
   .foot .links { display: flex; gap: 24px; }
   .foot a { color: var(--text-dim); text-decoration: none; transition: color 0.25s; }
   .foot a:hover { color: var(--creme); }
+  .support-link { display: inline-flex; align-items: center; gap: 7px; }
 
   /* ---------- Toast ---------- */
   #toast {
@@ -1315,6 +1379,10 @@
     <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     </button>
+    <a class="support-badge" href="https://t.me/LincolnWasted" target="_blank" rel="noopener" aria-label="Написать в саппорт">
+      <span class="support-dot" aria-hidden="true"></span>
+      <span class="support-text">пиши @LincolnWasted</span>
+    </a>
     <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему сайта">
       <svg class="icon-moon" viewBox="0 0 24 24" fill="none"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
       <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m9.9 9.9 1.4 1.4m0-12.7-1.4 1.4M7 17l-1.4 1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
@@ -1425,6 +1493,7 @@
       <article class="card reveal" data-pcat="useful" data-name="Lincoln-Plugin" data-version="2.0" data-date="2026-11-04"
           data-changelog="v2.0 — актуализация под SDK 1.4.4.3, удалён бэкдор"
           data-long="NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник с красивой карточкой, визуальная вставка collectible NFT-подарков в чат, анимации отправки подарков и звёзд. Полностью локально, на сервер ничего не отправляется.">
+        <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/></svg></span>
           <span class="tag">Плагин</span>
@@ -1441,6 +1510,7 @@
       <article class="card reveal" data-pcat="useful" data-name="Fake Editor" data-version="2.0" data-date="2026-11-03"
           data-changelog="v2.0 — актуализация под SDK 1.4.4.3, очищен от бэкдора"
           data-long="Визуальный редактор сообщений: локальные правки текста, фейковые сообщения, генератор NFT-аватарок и многое другое. Все эффекты применяются только в вашем клиенте.">
+        <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 9h16M4 13h10M4 17h7"/><circle cx="18" cy="16" r="2.6"/><circle cx="18" cy="16" r="1" fill="currentColor"/></svg></span>
           <span class="tag amber">Редактор</span>
@@ -1457,6 +1527,7 @@
       <article class="card reveal" data-pcat="useful" data-name="Voice Changer RT" data-version="2.0.0" data-date="2026-11-03"
           data-changelog="v2.0.0 — sdk 1.4.4.3, обновлены метаданные"
           data-long="Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых сообщений. Включает нативный аудио-движок, вшитый в плагин.">
+        <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4.3 12.5c.6.5.9 1.2.9 2V21h6.8v-3.5c0-.8.3-1.5.9-2A7 7 0 0 0 12 3z"/><path d="M10 21v-2h4v2"/></svg></span>
           <span class="tag amber">Аудио</span>
@@ -1473,6 +1544,7 @@
       <article class="card reveal" data-pcat="useful" data-name="Lincoln Tools" data-version="2.0" data-date="2026-11-04"
           data-changelog="v2.0 — SDK 1.4.4.3, совместимость с 12.5.1+"
           data-long="Локальная визуальная подмена баланса звёзд и TON в профиле. Полностью локально: ничего не отправляется и не изменяется на сервере.">
+        <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9L12 3z"/></svg></span>
           <span class="tag">Свой</span>
@@ -1489,6 +1561,7 @@
       <article class="card reveal" data-pcat="useful" data-name="Lincoln Ghost" data-version="2.0" data-date="2026-11-04"
           data-changelog="v2.0 — ghost-режим переведён на перехват запросов"
           data-long="Скрывает статус «в сети», «печатает» и «прочитано». Работает на уровне сетевых запросов (TL_account_updateStatus, TL_messages_readHistory), поэтому не зависит от версии клиента.">
+        <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 10.5a6 6 0 1 0-11.6 2 6 6 0 0 0 9.7 2.4M14 12v4M12 13l1.5 2M14 19.5h4M14 21.5h2"/></svg></span>
           <span class="tag amber">Ghost</span>
@@ -1505,6 +1578,7 @@
       <article class="card reveal" data-pcat="useful" data-name="Lincoln Holl" data-version="2.1" data-date="2026-11-04"
           data-changelog="v2.1 — переименован из Lincoln Pro, добавлен перехват запросов"
           data-long="Всё в одном: телефон, несколько юзернеймов, звёзды, TON, премиум, скрытие «в сети»/«печатает»/«прочитано», своё «был(а)…», мут командой .mut, визуальные подарки. Локальная кастомизация профиля.">
+        <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5c0 5.2-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z"/><path d="M8.5 9.5 12 13l3.5-3.5"/></svg></span>
           <span class="tag">Warm</span>
@@ -1688,6 +1762,9 @@
   <div class="wrap foot">
     <span>© 2026 Lincoln-Plugin · Сделано для сообщества Telegram · <span id="visitCount">0</span> визитов</span>
     <div class="links">
+      <a href="https://t.me/LincolnWasted" target="_blank" rel="noopener" class="support-link">
+        <span class="support-dot" aria-hidden="true"></span> @LincolnWasted
+      </a>
       <a href="#faq">FAQ</a>
       <a href="#install">Помощь</a>
       <a href="#top">Наверх</a>
@@ -2395,6 +2472,41 @@
     var visitEl = document.getElementById("visitCount");
     if (visitEl) visitEl.textContent = visits;
   } catch (e) {}
+
+  /* ================= История установок ================= */
+  function getHistory() {
+    try { return JSON.parse(localStorage.getItem("lincoln-installs") || "[]"); }
+    catch (e) { return []; }
+  }
+  function saveHistory(arr) {
+    try { localStorage.setItem("lincoln-installs", JSON.stringify(arr)); } catch (e) {}
+  }
+  function markInstalled(href) {
+    var hist = getHistory();
+    var now = new Date().toISOString();
+    var idx = hist.findIndex(function (h) { return h.href === href; });
+    if (idx !== -1) { hist[idx].date = now; }
+    else {
+      hist.push({ href: href, date: now });
+      if (hist.length > 50) hist = hist.slice(-50);
+    }
+    saveHistory(hist);
+  }
+  function applyHistory() {
+    var hist = getHistory();
+    var hrefs = hist.map(function (h) { return h.href; });
+    document.querySelectorAll(".card").forEach(function (c) {
+      var dl = c.querySelector("a[download]");
+      if (dl && hrefs.indexOf(dl.getAttribute("href")) !== -1) {
+        c.classList.add("has-installed");
+      }
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var dl = e.target && e.target.closest ? e.target.closest("a[download]") : null;
+    if (dl) markInstalled(dl.getAttribute("href"));
+  });
+  applyHistory();
 
   /* ================= Шторка секций при скролле ================= */
   try {
