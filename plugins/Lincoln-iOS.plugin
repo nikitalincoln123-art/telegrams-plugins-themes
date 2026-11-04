@@ -1,8 +1,8 @@
 __id__ = "lincoln_ios"
 __name__ = "Lincoln iOS"
-__description__ = "Профиль в стиле Telegram: свой номер и юзернейм, скрытие «в сети/печатает/прочитано», звёзды и TON, премиум, своё «был(а)…», визуальная NFT-плашка. Работает локально, без отправки данных."
+__description__ = "Профиль и чаты: свой номер, юзернейм, био, эмодзи-статус, звёзды и TON, премиум, буст, ghost-режим, своё «был(а)…», скрытие просмотров в каналах, «умный» статус по расписанию, режим самолёт, эффект «печатает», NFT-плашка. Всё локально."
 __author__ = "Lincoln"
-__version__ = "2.0"
+__version__ = "3.0"
 __icon__ = "msg_profile"
 __app_version__ = ">=12.5.1"
 __sdk_version__ = ">=1.4.4.3"
@@ -10,6 +10,7 @@ __category__ = ["appearance", "privacy", "fun"]
 
 from decimal import Decimal, getcontext
 from typing import Any, List
+from datetime import datetime
 
 from base_plugin import BasePlugin, MethodHook, HookResult, HookStrategy
 from ui.settings import Header, Switch, Input, Divider, Text, Button
@@ -20,7 +21,7 @@ getcontext().prec = 12
 
 
 class MutateCurrentUser(MethodHook):
-    """После получения своего User подменяем локальные поля (номер, username, premium)."""
+    """После получения своего User подменяем локальные поля (номер, username, био, премиум)."""
 
     def __init__(self, plugin):
         super().__init__()
@@ -49,6 +50,14 @@ class MutateCurrentUser(MethodHook):
                     user.premium = True
                 except Exception:
                     pass
+            # Своя био-подпись
+            if self.plugin.get_setting("fake_bio", True):
+                bio = str(self.plugin.get_setting("bio_text", "") or "").strip()
+                if bio:
+                    try:
+                        user.about = bio
+                    except Exception:
+                        pass
         except Exception:
             pass
 
@@ -165,6 +174,62 @@ class BoostTrue(MethodHook):
             pass
 
 
+class HideViews(MethodHook):
+    """Скрывает счётчик просмотров в каналах — подменяет views на 0/скрывает."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            if not self.plugin.get_setting("hide_views", True):
+                return
+            result = param.getResult()
+            if result is None:
+                return
+            # Если метод вернул число просмотров — обнуляем
+            try:
+                param.setResult(0)
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+
+class SetEmojiStatus(MethodHook):
+    """Визуальный эмодзи-статус рядом с ником (подмена поля emoji_status)."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            if not self.plugin.get_setting("fake_emoji_status", True):
+                return
+            user = param.getResult()
+            if user is None:
+                return
+            emoji = str(self.plugin.get_setting("emoji_status", "🔥") or "").strip()
+            if not emoji:
+                return
+            try:
+                # Пробуем задать текстовый эмодзи-статус (если поле поддерживает)
+                if hasattr(user, "emoji_status"):
+                    st = user.emoji_status
+                    if st is None:
+                        from org.telegram.tgnet import TLRPC
+                        st = TLRPC.TL_emojiStatus()
+                    if hasattr(st, "emoji"):
+                        st.emoji = emoji
+                    user.emoji_status = st
+            except Exception:
+                pass
+        except Exception:
+            pass
+
+
 class LincolnIOSPlugin(BasePlugin):
 
     def on_plugin_load(self):
@@ -179,7 +244,7 @@ class LincolnIOSPlugin(BasePlugin):
                         "TL_messages_readHistory", "TL_messages_readMessageContents"):
                 self.add_hook(req)
 
-            # Свой профиль
+            # Свой профиль (+ био, эмодзи-статус)
             try:
                 uc = find_class("org.telegram.messenger.UserConfig")
                 if uc is not None:
@@ -187,6 +252,9 @@ class LincolnIOSPlugin(BasePlugin):
                     if refs:
                         self._refs.extend(refs)
                         self._hook_user += len(refs)
+                    refs = self.hook_all_methods(uc, "getCurrentUser", SetEmojiStatus(self), priority=90)
+                    if refs:
+                        self._refs.extend(refs)
             except Exception:
                 pass
 
@@ -237,14 +305,115 @@ class LincolnIOSPlugin(BasePlugin):
             except Exception:
                 pass
 
+            # Скрытие просмотров в каналах
+            try:
+                if self.get_setting("hide_views", True):
+                    for cls_name in ("org.telegram.messenger.MessageObject",
+                                     "org.telegram.ui.Cells.ChatMessageCell"):
+                        cls2 = find_class(cls_name)
+                        if cls2 is not None:
+                            try:
+                                refs = self.hook_all_methods(cls2, "getViews", HideViews(self), priority=100)
+                                if refs:
+                                    self._refs.extend(refs)
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+
+            # Эффект «печатает»: фоновые типинг-запросы
+            try:
+                self._typing_running = False
+                if self.get_setting("fake_typing", False):
+                    self._start_typing_effect()
+            except Exception:
+                pass
+
             self.log("[lincoln_ios] loaded, hooks: user=%d others=%d balance=%d" % (self._hook_user, self._hook_others, self._hook_balance))
         except Exception as e:
             self.log("[lincoln_ios] load error: %s" % e)
 
-    # -------------------- ghost-режим --------------------
+    # -------------------- fake typing (эффект «печатает…») --------------------
+
+    def _start_typing_effect(self):
+        """Периодически отправляет «печатает…» в активный диалог."""
+        try:
+            if getattr(self, "_typing_running", False):
+                return
+            self._typing_running = True
+            import threading
+            from org.telegram.messenger import AccountInstance
+            from org.telegram.tgnet import TLRPC, ConnectionsManager
+
+            def _tick():
+                try:
+                    if not self.get_setting("fake_typing", False):
+                        self._typing_running = False
+                        return
+                    try:
+                        fragment = None
+                        try:
+                            from client_utils import get_last_fragment
+                            fragment = get_last_fragment()
+                        except Exception:
+                            pass
+                        if fragment is not None:
+                            dialog_id = None
+                            try:
+                                dialog_id = fragment.getDialogId()
+                            except Exception:
+                                try:
+                                    dialog_id = fragment.getCurrentDialogId()
+                                except Exception:
+                                    dialog_id = None
+                            if dialog_id is not None:
+                                try:
+                                    account = AccountInstance.getInstance(0)
+                                    cm = account.getConnectionsManager()
+                                    req = TLRPC.TL_messages_setTyping()
+                                    req.peer = account.getMessagesController().getInputPeer(int(dialog_id))
+                                    req.action = TLRPC.TL_sendMessageTypingAction()
+                                    cm.sendRequest(req, lambda res, err: None)
+                                except Exception:
+                                    pass
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+                if getattr(self, "_typing_running", False):
+                    threading.Timer(5.0, _tick).start()
+
+            _tick()
+        except Exception:
+            self._typing_running = False
+
+    # -------------------- ghost + умный статус + самолёт --------------------
 
     def pre_request_hook(self, request_name: str, account: int, request: Any) -> HookResult:
         try:
+            # Режим самолёт: блокируем сетевые запросы
+            if self.get_setting("airplane", False):
+                return HookResult(strategy=HookStrategy.CANCEL)
+
+            # «Умный» статус по расписанию: ночью всегда офлайн
+            if request_name == "TL_account_updateStatus" and self.get_setting("smart_offline", False):
+                try:
+                    now = datetime.now().hour
+                    start = int(self.get_setting("offline_from", "22") or "22")
+                    end = int(self.get_setting("offline_to", "8") or "8")
+                    if start <= end:
+                        is_offline_hours = start <= now < end
+                    else:
+                        is_offline_hours = now >= start or now < end
+                    if is_offline_hours:
+                        try:
+                            request.offline = True
+                        except Exception:
+                            pass
+                        return HookResult(strategy=HookStrategy.MODIFY, request=request)
+                except Exception:
+                    pass
+
             if request_name == "TL_account_updateStatus" and self.get_setting("ghost_online", True):
                 try:
                     request.offline = True
@@ -261,15 +430,12 @@ class LincolnIOSPlugin(BasePlugin):
             pass
         return HookResult()
 
-    # -------------------- NFT-плашка (визуальная, декоративная) --------------------
-
-    def _nft_badge_text(self):
-        return str(self.get_setting("nft_text", "NFT Collectible") or "").strip()
+    # -------------------- NFT-плашка (визуальная) --------------------
 
     def on_nft_row_click(self, *args):
         try:
             from ui.alert import AlertDialogBuilder
-            from android_utils import get_last_fragment
+            from client_utils import get_last_fragment
             fragment = get_last_fragment()
             activity = fragment.getParentActivity() if fragment else None
             if activity is None:
@@ -287,7 +453,7 @@ class LincolnIOSPlugin(BasePlugin):
     def create_settings(self):
         return [
             Header(text="Lincoln iOS"),
-            Text(text="Локальные визуальные настройки профиля", subtext="Работает только в вашем клиенте · ничего не отправляется", icon="msg_info"),
+            Text(text="Локальные визуальные настройки профиля и чатов", subtext="Ничего не отправляется на сервер", icon="msg_info"),
             Divider(),
 
             Header(text="Мой профиль"),
@@ -295,6 +461,10 @@ class LincolnIOSPlugin(BasePlugin):
             Input(key="phone", text="Номер телефона", default="79990000000"),
             Switch(key="fake_username", text="Изменить username", default=True),
             Input(key="usernames", text="Юзернеймы (через запятую)", default="lincoln, lincoln2"),
+            Switch(key="fake_bio", text="Своя био-подпись", default=True),
+            Input(key="bio_text", text="Текст био", default=""),
+            Switch(key="fake_emoji_status", text="Эмодзи-статус", default=True),
+            Input(key="emoji_status", text="Эмодзи", default="🔥"),
             Switch(key="fake_premium", text="Premium (значок)", default=True),
             Switch(key="boost_profile", text="Буст профиля (визуально)", default=True),
             Divider(),
@@ -303,6 +473,34 @@ class LincolnIOSPlugin(BasePlugin):
             Switch(key="fake_balance", text="Включить подмену баланса", default=True),
             Input(key="stars_balance", text="Звёзды", default="9999"),
             Input(key="ton_balance", text="TON", default="1.5"),
+            Divider(),
+
+            Header(text="Статус (приватность)"),
+            Switch(key="ghost_online", text="Скрыть «в сети»", default=True),
+            Switch(key="dont_send_typing", text="Скрыть «печатает…»", default=True),
+            Switch(key="no_read", text="Не отправлять «прочитано»", default=True),
+            Switch(key="fake_lastseen", text="Своё «был(а)…»", default=True),
+            Input(key="lastseen_text", text="Текст «был(а)…»", default="был(а) только что"),
+            Divider(),
+
+            Header(text="Режим самолёт"),
+            Switch(key="airplane", text="Блокировать сетевые запросы", default=False),
+            Text(text="Все запросы к серверу блокируются — вы «офлайн». Отключите, чтобы вернуться в сеть.", subtext="", icon="msg_info"),
+            Divider(),
+
+            Header(text="«Умный» статус по расписанию"),
+            Switch(key="smart_offline", text="Ночью всегда «не в сети»", default=False),
+            Input(key="offline_from", text="С (час, 0-23)", default="22"),
+            Input(key="offline_to", text="До (час, 0-23)", default="8"),
+            Divider(),
+
+            Header(text="Каналы"),
+            Switch(key="hide_views", text="Скрыть счётчик просмотров", default=True),
+            Divider(),
+
+            Header(text="Эффект «печатает»"),
+            Switch(key="fake_typing", text="Показывать «печатает…» (реально)", default=False),
+            Text(text="Включает отправку статуса набора текста. Видно собеседнику. Требует перезапуска.", subtext="", icon="msg_info"),
             Divider(),
 
             Header(text="NFT-плашка (визуально)"),
@@ -314,14 +512,6 @@ class LincolnIOSPlugin(BasePlugin):
                 on_click=self.on_nft_row_click,
                 icon="msg_gift",
             ),
-            Divider(),
-
-            Header(text="Статус (приватность)"),
-            Switch(key="ghost_online", text="Скрыть «в сети»", default=True),
-            Switch(key="dont_send_typing", text="Скрыть «печатает…»", default=True),
-            Switch(key="no_read", text="Не отправлять «прочитано»", default=True),
-            Switch(key="fake_lastseen", text="Своё «был(а)…»", default=True),
-            Input(key="lastseen_text", text="Текст «был(а)…»", default="был(а) только что"),
             Divider(),
 
             Header(text="Чужие профили (визуально)"),
