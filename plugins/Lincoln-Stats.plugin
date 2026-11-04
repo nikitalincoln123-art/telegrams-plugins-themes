@@ -1,0 +1,129 @@
+__id__ = "lincoln_stats"
+__name__ = "Lincoln Stats"
+__description__ = "Статистика аккаунта: ваш ID, возраст аккаунта, страна/локаль, где «сидит» аккаунт и служебная информация локально — без отправки данных куда-либо."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_profile"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["tools"]
+
+from typing import Any, List
+
+from base_plugin import BasePlugin
+from ui.settings import Header, Button, Divider, Text
+from android_utils import run_on_ui_thread, log
+
+from client_utils import get_last_fragment, get_user_config
+from ui.alert import AlertDialogBuilder
+
+
+class LincolnStatsPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self._acc = None
+
+    def _get_account(self):
+        try:
+            cfg = get_user_config()
+            if cfg is not None:
+                return cfg.getCurrentUser()
+        except Exception:
+            return None
+        return None
+
+    def _human_date(self, ts):
+        import datetime
+        try:
+            return datetime.datetime.utcfromtimestamp(ts).strftime("%d.%m.%Y")
+        except Exception:
+            return "—"
+
+    @run_on_ui_thread
+    def _show_stats(self):
+        fragment = get_last_fragment()
+        activity = fragment.getParentActivity() if fragment else None
+        if activity is None:
+            log("[lincoln_stats] no activity to show dialog")
+            return
+
+        user = self._get_account()
+        if user is None:
+            AlertDialogBuilder(activity).set_title("Lincoln Stats").set_message(
+                "Не удалось получить данные аккаунта.").set_positive_button(
+                "OK", lambda b, w: b.dismiss()).show()
+            return
+
+        user_id = getattr(user, "id", None)
+        first_name = getattr(user, "first_name", "") or ""
+        last_name = getattr(user, "last_name", "") or ""
+        username = getattr(user, "username", None) or "—"
+        phone = getattr(user, "phone", None) or "—"
+        dc_id = getattr(user, "dc_id", 0)
+
+        # Возраст аккаунта: считаем от первой записи в UserConfig (локально)
+        age_text = "—"
+        try:
+            cfg = get_user_config()
+            reg_date = getattr(cfg, "registrationDate", None) or getattr(cfg, "registration_date", None)
+            if reg_date:
+                import datetime
+                now = datetime.datetime.utcnow()
+                reg = datetime.datetime.utcfromtimestamp(reg_date)
+                days = (now - reg).days
+                if days >= 0:
+                    years = days // 365
+                    months = (days % 365) // 30
+                    age_text = "%d лет %d мес" % (years, months) if years else "%d мес" % months
+        except Exception:
+            pass
+
+        # Локаль / страна
+        locale_text = "—"
+        try:
+            from java.util import Locale
+            loc = Locale.getDefault()
+            locale_text = "%s (%s)" % (loc.getDisplayCountry(), loc.getCountry())
+        except Exception:
+            pass
+
+        lines = [
+            "👤 %s %s" % (first_name, last_name),
+            "🆔 ID: %s" % (user_id if user_id is not None else "—"),
+            "🏷 @%s" % username,
+            "📱 +%s" % phone,
+            "🎂 Возраст аккаунта: %s" % age_text,
+            "🌍 Локаль: %s" % locale_text,
+            "🖥 DC (сервер): %s" % dc_id,
+        ]
+
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("Lincoln Stats")
+        builder.set_message("\n".join(lines))
+        builder.set_positive_button("OK", lambda b, w: b.dismiss())
+        builder.show()
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Lincoln Stats"),
+            Button(
+                text="Показать статистику",
+                subtext="ID, возраст аккаунта, локаль, сервер",
+                on_click=self._show_stats,
+                icon="msg_profile",
+            ),
+            Divider(),
+            Text(
+                text="Приватность",
+                subtext="Все данные читаются локально с устройства и никуда не отправляются.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnStatsPlugin()
+
+
+def get_plugin():
+    return LincolnStatsPlugin()

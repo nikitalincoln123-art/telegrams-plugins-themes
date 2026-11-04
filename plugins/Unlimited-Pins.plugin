@@ -1,0 +1,235 @@
+__id__ = "lincoln_unlimited_pins"
+__name__ = "Unlimited Pins"
+__description__ = "Снятие лимита закреплённых чатов: убирает клиентское ограничение на количество пинов в диалогах, папках и фильтрах. Оригинальная реализация от Lincoln."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_pin"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["tools"]
+
+from typing import Any, Dict, List
+
+from base_plugin import AppEvent, BasePlugin, HookResult, MethodHook
+from hook_utils import get_private_field, set_private_field
+from java import jclass
+from java.lang import Integer, Long
+from org.telegram.messenger import MessagesController, UserConfig
+from ui.settings import Divider, Header, Input, Switch, Text
+from android_utils import log
+
+DEFAULT_MAX = 100000
+MAX_SAFE = 2147483647
+
+LIMIT_FIELDS = (
+    "maxPinnedDialogsCountDefault",
+    "maxPinnedDialogsCountPremium",
+    "maxFolderPinnedDialogsCountDefault",
+    "maxFolderPinnedDialogsCountPremium",
+    "dialogFiltersPinnedLimitDefault",
+    "dialogFiltersPinnedLimitPremium",
+)
+
+
+class LincolnUnlimitedPinsPlugin(BasePlugin):
+
+    def __init__(self):
+        super().__init__()
+        self._original_limits: Dict[str, List[int]] = {}
+        self._hook_refs: List[Any] = []
+        self._loaded = False
+
+    # ---------- helpers ----------
+
+    def _parse_max(self, raw=None) -> int:
+        try:
+            value = int(str(raw if raw is not None else self.get_setting("max_value", DEFAULT_MAX)).strip())
+        except Exception:
+            return DEFAULT_MAX
+        if value < 1:
+            return DEFAULT_MAX
+        return min(value, MAX_SAFE)
+
+    def _list_accounts(self) -> List[int]:
+        accounts = []
+        try:
+            for acc in range(UserConfig.MAX_ACCOUNT_COUNT):
+                try:
+                    if UserConfig.getInstance(acc).isClientActivated():
+                        accounts.append(acc)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+        if not accounts:
+            try:
+                accounts = [int(UserConfig.selectedAccount)]
+            except Exception:
+                accounts = [0]
+        return accounts
+
+    def _controller(self, account_id: int):
+        try:
+            return MessagesController.getInstance(int(account_id))
+        except Exception:
+            return None
+
+    def _read_limits(self, controller: Any) -> List[int]:
+        return [int(getattr(controller, f, 0) or 0) for f in LIMIT_FIELDS]
+
+    def _write_limits(self, controller: Any, values: List[int]) -> None:
+        for field, value in zip(LIMIT_FIELDS, values):
+            try:
+                if not set_private_field(controller, field, Integer(int(value))):
+                    setattr(controller, field, int(value))
+            except Exception:
+                try:
+                    setattr(controller, field, int(value))
+                except Exception:
+                    log("[unlimited_pins] failed to set %s" % field)
+
+    # ---------- apply / restore ----------
+
+    def _apply_to_account(self, account_id: int, value: int) -> None:
+        controller = self._controller(account_id)
+        if controller is None:
+            return
+        key = str(account_id)
+        if key not in self._original_limits:
+            self._original_limits[key] = self._read_limits(controller)
+        self._write_limits(controller, [value] * len(LIMIT_FIELDS))
+
+    def _apply(self, value: int) -> None:
+        for acc in self._list_accounts():
+            try:
+                self._apply_to_account(acc, value)
+            except Exception as e:
+                log("[unlimited_pins] apply error acc=%s: %s" % (acc, e))
+
+    def _restore(self) -> None:
+        for key, values in list(self._original_limits.items()):
+            try:
+                controller = self._controller(int(key))
+                if controller is not None and len(values) == len(LIMIT_FIELDS):
+                    self._write_limits(controller, values)
+            except Exception as e:
+                log("[unlimited_pins] restore error acc=%s: %s" % (key, e))
+
+    # ---------- hooks ----------
+
+    class _AppConfigHook(MethodHook):
+        def __init__(self, plugin: "LincolnUnlimitedPinsPlugin"):
+            self.plugin = plugin
+
+        def after_hooked_method(self, param):
+            try:
+                if self.plugin._loaded:
+                    self.plugin._apply(self.plugin._parse_max())
+            except Exception:
+                pass
+
+    def _install_method_hooks(self) -> None:
+        try:
+            mc = jclass("org.telegram.messenger.MessagesController")
+            json_object = jclass("org.telegram.tgnet.TLRPC$TL_jsonObject")
+            method = mc.getClass().getDeclaredMethod("applyAppConfig", json_object)
+            method.setAccessible(True)
+            ref = self.hook_method(method, LincolnUnlimitedPinsPlugin._AppConfigHook(self))
+            if ref is not None:
+                self._hook_refs.append(ref)
+        except Exception as e:
+            log("[unlimited_pins] applyAppConfig hook error: %s" % e)
+
+    # ---------- lifecycle ----------
+
+    def on_plugin_load(self):
+        self._loaded = True
+        try:
+            for acc in self._list_accounts():
+                controller = self._controller(acc)
+                if controller is not None:
+                    self._original_limits[str(acc)] = self._read_limits(controller)
+            self.add_hook("TL_help_getAppConfig")
+            self._install_method_hooks()
+            if self.get_setting("enabled", True):
+                self._apply(self._parse_max())
+            log("[unlimited_pins] loaded")
+        except Exception as e:
+            log("[unlimited_pins] load error: %s" % e)
+
+    def on_plugin_unload(self):
+        self._loaded = False
+        try:
+            for ref in list(self._hook_refs):
+                try:
+                    self.unhook_method(ref)
+                except Exception:
+                    pass
+            self._hook_refs.clear()
+            self.remove_hook("TL_help_getAppConfig")
+            if self.get_setting("restore_on_unload", True):
+                self._restore()
+            self._original_limits.clear()
+            log("[unlimited_pins] unloaded")
+        except Exception as e:
+            log("[unlimited_pins] unload error: %s" % e)
+
+    def on_app_event(self, event_type: AppEvent):
+        try:
+            if event_type in (AppEvent.START, AppEvent.RESUME) and self._loaded and self.get_setting("enabled", True):
+                self._apply(self._parse_max())
+        except Exception:
+            pass
+
+    def post_request_hook(self, request_name: str, account: int, response: Any, error: Any) -> HookResult:
+        if request_name == "TL_help_getAppConfig" and self._loaded and self.get_setting("enabled", True):
+            self._apply(self._parse_max())
+        return HookResult()
+
+    def _on_max_change(self, value):
+        try:
+            if self._loaded and self.get_setting("enabled", True):
+                self._apply(self._parse_max(value))
+        except Exception:
+            pass
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Unlimited Pins"),
+            Switch(
+                key="enabled",
+                text="Убрать лимит пинов",
+                subtext="Разрешить больше закреплённых чатов",
+                default=True,
+                icon="msg_pin",
+            ),
+            Input(
+                key="max_value",
+                text="Максимум пинов",
+                default=str(DEFAULT_MAX),
+                subtext="Лимит, который подставляется вместо стандартного",
+                icon="msg_settings",
+                on_change=self._on_max_change,
+            ),
+            Divider(),
+            Switch(
+                key="restore_on_unload",
+                text="Вернуть лимиты при выключении",
+                default=True,
+                icon="msg_switcher_off",
+            ),
+            Divider(),
+            Text(
+                text="Как работает",
+                subtext="Плагин поднимает клиентские поля лимитов в MessagesController для всех аккаунтов и возвращает их обратно при выгрузке. Оригинальный код Lincoln.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnUnlimitedPinsPlugin()
+
+
+def get_plugin():
+    return LincolnUnlimitedPinsPlugin()

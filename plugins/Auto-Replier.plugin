@@ -1,0 +1,148 @@
+__id__ = "lincoln_autoreply"
+__name__ = "Auto-Replier"
+__description__ = "Автоответы по триггерам: когда в личном чате или группе приходит сообщение с ключевым словом, плагин автоматически отправляет заданный ответ (цитатой на сообщение)."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_reply"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["tools"]
+
+import time
+from typing import Any, Dict, List
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from ui.settings import Header, Switch, Input, Divider, Text
+from android_utils import log
+from client_utils import send_text, run_on_queue
+
+
+class LincolnAutoReplierPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self.add_hook("TL_updateNewChannelMessage")
+        self._last_reply: Dict[str, float] = {}
+
+    def _parse_rules(self):
+        rules = []
+        raw = self.get_setting("rules", "привет,добрый день\n" "как дела?,хорошо")
+        for line in raw.splitlines():
+            line = line.strip()
+            if not line or "," not in line:
+                continue
+            trigger, _, reply = line.partition(",")
+            trigger = trigger.strip().lower()
+            reply = reply.strip()
+            if trigger and reply:
+                rules.append((trigger, reply))
+        return rules
+
+    def _dedup(self, chat_id, text) -> bool:
+        key = "%s|%s" % (chat_id, text[:60].lower())
+        now = time.time()
+        prev = self._last_reply.get(key, 0)
+        if now - prev < int(self.get_setting("cooldown", 15)):
+            return False
+        self._last_reply[key] = now
+        if len(self._last_reply) > 200:
+            self._last_reply = dict(list(self._last_reply.items())[-100:])
+        return True
+
+    def on_update_hook(self, update_name: str, account: int, update: Any) -> HookResult:
+        try:
+            if not self.get_setting("enabled", True):
+                return HookResult()
+            message = getattr(update, "message", None)
+            if message is None:
+                return HookResult()
+            # Ответ только чужим сообщениям
+            try:
+                from_user = getattr(message, "from_id", None)
+                user_id = getattr(from_user, "user_id", None)
+            except Exception:
+                user_id = None
+            if user_id is None:
+                return HookResult()
+
+            text = getattr(message, "message", "") or ""
+            if not text or not text.strip():
+                return HookResult()
+            lower = text.lower()
+
+            rules = self._parse_rules()
+            reply = None
+            for trigger, r in rules:
+                if trigger in lower:
+                    reply = r
+                    break
+            if reply is None:
+                return HookResult()
+
+            peer = getattr(message, "peer_id", None)
+            peer_val = getattr(peer, "chat_id", None) or getattr(peer, "user_id", None) or getattr(peer, "channel_id", None)
+            if peer_val is None and peer is not None:
+                peer_val = int(peer)
+            if peer_val is None:
+                return HookResult()
+
+            # Проверяем входящие/исходящие: отвечаем, только если сообщение входящее
+            msg_id = getattr(message, "id", 0)
+            out = getattr(message, "out", False)
+            if out:
+                return HookResult()
+
+            only_private = self.get_setting("only_private", False)
+            if only_private and peer_val < 0:
+                return HookResult()
+
+            if not self._dedup(peer_val, text):
+                return HookResult()
+
+            self.log("[lincoln_autoreply] trigger '%s' -> '%s' in %s" % (trigger, reply, peer_val))
+            try:
+                send_text(peer_val, reply, replyToMsg=msg_id, notify=False)
+            except Exception as e:
+                self.log("[lincoln_autoreply] send error: %s" % e)
+        except Exception as e:
+            self.log("[lincoln_autoreply] hook error: %s" % e)
+        return HookResult()
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Auto-Replier"),
+            Switch(key="enabled", text="Включить", default=True, icon="msg_switcher_on"),
+            Divider(),
+            Header(text="Правила"),
+            Input(
+                key="rules",
+                text="Триггер,ответ",
+                default="привет,добрый день\nкак дела?,хорошо",
+                subtext="Каждая строка: что искать (через запятую) и что ответить",
+                icon="msg_edit",
+                multiline=True,
+            ),
+            Divider(),
+            Switch(key="only_private", text="Только личные чаты", default=False, icon="msg_user"),
+            Input(
+                key="cooldown",
+                text="Задержка между ответами (сек)",
+                default="15",
+                subtext="Анти-спам: не чаще раза в N секунд в одном чате",
+                icon="msg_timer",
+            ),
+            Divider(),
+            Text(
+                text="Как работает",
+                subtext="Триггер ищется в тексте входящего сообщения. Ответ отправляется цитатой. Плагин работает локально, правила не покидают устройство.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnAutoReplierPlugin()
+
+
+def get_plugin():
+    return LincolnAutoReplierPlugin()

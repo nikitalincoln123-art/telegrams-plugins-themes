@@ -1,0 +1,142 @@
+__id__ = "lincoln_notify"
+__name__ = "Lincoln Notify"
+__description__ = "Уведомления о важных чатах: следит за новыми сообщениями по выбранным диалогам или ключевым словам и присылает системное уведомление, даже если для чата отключены звуки."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_notification"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["tools"]
+
+from typing import Any, List
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from ui.settings import Header, Switch, Input, Divider, Text
+from android_utils import log, run_on_ui_thread
+from org.telegram.messenger import ApplicationLoader, BuildVars
+from android.app import Notification, NotificationChannel, NotificationManager, PendingIntent
+from android.content import Context, Intent
+from android.os import Build
+
+
+class LincolnNotifyPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self.add_hook("TL_updateNewChannelMessage")
+
+    def _chat_matches(self, chat_id: int, text: str) -> bool:
+        try:
+            important = self.get_setting("important_chats", "").strip()
+            if important:
+                parts = [p.strip() for p in important.replace(";", ",").split(",") if p.strip()]
+                for p in parts:
+                    if p.isdigit() and str(chat_id) == p:
+                        return True
+                    if p.startswith("@") and p in text:
+                        return True
+            keywords = self.get_setting("keywords", "").strip()
+            if keywords:
+                for kw in keywords.replace(";", ",").split(","):
+                    kw = kw.strip().lower()
+                    if kw and kw in text.lower():
+                        return True
+        except Exception:
+            pass
+        return False
+
+    def _send(self, title: str, body: str):
+        def _do():
+            try:
+                context = ApplicationLoader.applicationContext
+                manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+                channel_id = "lincoln_notify_channel"
+                if Build.VERSION.SDK_INT >= Build.VERSION_CODES.O:
+                    channel = NotificationChannel(channel_id, "Lincoln Notify", NotificationManager.IMPORTANCE_HIGH)
+                    manager.createNotificationChannel(channel)
+                intent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName())
+                pending = None
+                if intent:
+                    flags = PendingIntent.FLAG_UPDATE_CURRENT
+                    if Build.VERSION.SDK_INT >= Build.VERSION_CODES.M:
+                        flags |= PendingIntent.FLAG_IMMUTABLE
+                    pending = PendingIntent.getActivity(context, 0, intent, flags)
+                if Build.VERSION.SDK_INT >= Build.VERSION_CODES.O:
+                    builder = Notification.Builder(context, channel_id)
+                else:
+                    builder = Notification.Builder(context)
+                builder.setContentTitle(title)
+                builder.setContentText(body)
+                builder.setAutoCancel(True)
+                if pending:
+                    builder.setContentIntent(pending)
+                icon = context.getApplicationInfo().icon
+                builder.setSmallIcon(icon if icon != 0 else 17301648)
+                nid = hash((title, body)) & 2147483647
+                manager.notify(nid, builder.build())
+            except Exception as e:
+                log("[lincoln_notify] notification error: %s" % e)
+        run_on_ui_thread(_do)
+
+    def on_update_hook(self, update_name: str, account: int, update: Any) -> HookResult:
+        try:
+            if not self.get_setting("enabled", True):
+                return HookResult()
+            message = getattr(update, "message", None)
+            if message is None:
+                return HookResult()
+            chat_id = getattr(message, "peer_id", None)
+            try:
+                chat_id = getattr(chat_id, "chat_id", None) or getattr(chat_id, "user_id", None) or getattr(chat_id, "channel_id", None)
+            except Exception:
+                pass
+            text = getattr(message, "message", "") or ""
+            self.log("[lincoln_notify] new msg in %s: %s" % (chat_id, text[:40]))
+            if self._chat_matches(chat_id, text):
+                title = "Lincoln Notify"
+                try:
+                    title = "Важный чат"
+                except Exception:
+                    pass
+                self._send(title, text[:120] if text else "(вложение)")
+        except Exception as e:
+            self.log("[lincoln_notify] hook error: %s" % e)
+        return HookResult()
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Lincoln Notify"),
+            Switch(key="enabled", text="Включить", default=True, icon="msg_switcher_on"),
+            Divider(),
+            Header(text="Важные чаты"),
+            Input(
+                key="important_chats",
+                text="ID чатов",
+                default="",
+                subtext="Через запятую: ID чата или @username",
+                icon="msg_chat",
+            ),
+            Divider(),
+            Header(text="Ключевые слова"),
+            Input(
+                key="keywords",
+                text="Слова-триггеры",
+                default="",
+                subtext="Сообщение с таким словом вызовет уведомление",
+                icon="msg_search",
+            ),
+            Divider(),
+            Text(
+                text="Как работает",
+                subtext="Плагин перехватывает новые сообщения и шлёт системное уведомление, если чат или текст совпадает. Ничего не отправляется на сервер.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnNotifyPlugin()
+
+
+def get_plugin():
+    return LincolnNotifyPlugin()
