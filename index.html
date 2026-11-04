@@ -908,6 +908,41 @@
   }
   .card .new-badge { margin: 0; }
 
+  /* ---------- Плашка-предупреждение владельца ---------- */
+  .owner-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin: 0 0 22px;
+    padding: 18px 20px;
+    border: 1px solid rgba(214, 96, 77, 0.4);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(214, 96, 77, 0.12), rgba(214, 96, 77, 0.04));
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .owner-warning-icon {
+    flex: none;
+    font-size: 20px;
+    line-height: 1.3;
+  }
+  .owner-warning-text b {
+    display: block;
+    color: #e88b7a;
+    font-weight: 700;
+    margin-bottom: 3px;
+    letter-spacing: 0.01em;
+  }
+  .owner-warning-text a {
+    color: var(--peach);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .owner-warning-text a:hover { text-decoration: underline; }
+  [data-theme="light"] .owner-warning { color: #7a4a3e; }
+  [data-theme="light"] .owner-warning-text b { color: #b0533f; }
+
   /* ---------- Панель каталога ---------- */
   .catalog-bar {
     display: flex;
@@ -2097,6 +2132,14 @@
       <div class="jump-btns">
         <a href="#pluginGrid" class="btn float-btn">Plugin</a>
         <a href="#themes" class="btn float-btn" data-i18n="themes_functions">Темы/Функции</a>
+      </div>
+    </div>
+
+    <div class="owner-warning reveal" role="note">
+      <span class="owner-warning-icon" aria-hidden="true">⚠️</span>
+      <div class="owner-warning-text">
+        <b>Предупреждение от Владельца.</b>
+        Если кто-то пытался вас обмануть/обманул путём использования плагина с NFT-подарками — немедленно сообщите мне в личные сообщения. Пользователь будет наказан.
       </div>
     </div>
 
