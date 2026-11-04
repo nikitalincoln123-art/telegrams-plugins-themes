@@ -4,30 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lincoln-Plugin — плагины и темы для Telegram</title>
-<meta name="description" content="Lincoln-Plugin — коллекция красивых тем и полезных плагинов для Telegram: тёмные, светлые, амoled, анимированные. Установка в один клик.">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233ce8a4'/%3E%3Cstop offset='1' stop-color='%232bc7b8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='url(%23g)'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='%2304231b' stroke-width='4.5'/%3E%3Ccircle cx='32' cy='32' r='6.5' fill='%2304231b'/%3E%3C/svg%3E">
+<meta name="description" content="Lincoln-Plugin — коллекция красивых тем и полезных плагинов для Telegram. Установка в один клик, локальная кастомизация профиля.">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23e3cba8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='%230b0a08'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='url(%23g)' stroke-width='4.5'/%3E%3Ccircle cx='32' cy='32' r='6.5' fill='%23f7f1e7'/%3E%3C/svg%3E">
 <style>
   :root {
-    --bg: #000000;
-    --bg-2: #000000;
-    --panel: rgba(255, 255, 255, 0.035);
-    --panel-hover: rgba(255, 255, 255, 0.055);
-    --panel-solid: #0b0e0c;
-    --border: rgba(255, 255, 255, 0.09);
-    --border-soft: rgba(255, 255, 255, 0.055);
-    --text: #eaf2ee;
-    --text-dim: #9fb0a7;
-    --text-faint: #62726a;
-    --accent: #3ce8a4;
-    --accent-2: #2bc7b8;
-    --accent-3: #ffce6b;
-    --green: #57f0ac;
-    --amber: #ffce6b;
-    --red: #ff7d8f;
-    --radius: 14px;
-    --radius-sm: 10px;
+    --bg: #070604;
+    --bg-soft: #0d0b08;
+    --panel: rgba(255, 250, 240, 0.035);
+    --panel-hover: rgba(255, 250, 240, 0.06);
+    --panel-solid: #12100b;
+    --border: rgba(255, 245, 230, 0.10);
+    --border-soft: rgba(255, 245, 230, 0.06);
+    --text: #f5efe4;
+    --text-dim: #b3a897;
+    --text-faint: #6d6355;
+    --creme: #f8f2e6;
+    --peach: #edc9a0;
+    --gold: #e0b178;
+    --warm: #fff8ec;
+    --radius: 20px;
+    --radius-sm: 12px;
     --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
     --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", monospace;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -38,20 +37,31 @@
     font-family: var(--font);
     background: var(--bg);
     color: var(--text);
-    line-height: 1.55;
+    line-height: 1.6;
     overflow-x: hidden;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    cursor: default;
   }
 
-  ::selection { background: rgba(60, 232, 164, 0.28); }
+  ::selection { background: rgba(232, 185, 138, 0.3); color: #fff; }
 
-  /* ---------- Canvas backdrop: smooth aurora + stars ---------- */
+  /* ---------- Canvas backdrop: quiet warm star web ---------- */
   #space {
     position: fixed;
     inset: 0;
     z-index: 0;
     pointer-events: none;
+  }
+
+  .warm-glow {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(900px 500px at 50% -10%, rgba(224, 177, 120, 0.10), transparent 65%),
+      radial-gradient(700px 400px at 85% 110%, rgba(237, 201, 160, 0.05), transparent 60%);
   }
 
   .vignette {
@@ -60,9 +70,27 @@
     z-index: 1;
     pointer-events: none;
     background:
-      radial-gradient(120% 90% at 50% 8%, transparent 42%, rgba(0, 0, 0, 0.6) 100%),
-      linear-gradient(180deg, rgba(0, 0, 0, 0.35), transparent 28%);
+      radial-gradient(120% 90% at 50% 10%, transparent 45%, rgba(0, 0, 0, 0.55) 100%),
+      linear-gradient(180deg, rgba(0,0,0,0.35), transparent 26%);
   }
+
+  /* ---------- Custom cursor warm glow ---------- */
+  #cursorGlow {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 5;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, rgba(237, 201, 160, 0.075), rgba(224, 177, 120, 0.03) 38%, transparent 68%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    will-change: transform;
+  }
+  body.show-cursor #cursorGlow { opacity: 1; }
 
   /* ---------- Layout ---------- */
   .wrap {
@@ -78,9 +106,9 @@
     position: sticky;
     top: 0;
     z-index: 50;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    background: #000000;
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    background: rgba(7, 6, 4, 0.6);
     border-bottom: 1px solid var(--border-soft);
   }
 
@@ -88,101 +116,118 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 66px;
+    height: 68px;
   }
 
   .brand {
     display: flex;
     align-items: center;
-    gap: 11px;
+    gap: 12px;
     text-decoration: none;
     color: var(--text);
     font-weight: 800;
     font-size: 19px;
     letter-spacing: -0.01em;
   }
-
   .brand .logo {
-    width: 36px;
-    height: 36px;
-    border-radius: 11px;
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff, #e3cba8);
     display: grid;
     place-items: center;
-    box-shadow: 0 0 22px rgba(60, 232, 164, 0.35);
+    box-shadow: 0 0 26px rgba(237, 201, 160, 0.28);
     flex: none;
   }
+  .brand .logo svg { width: 21px; height: 21px; color: #0b0a08; }
+  .brand-text { display: inline; white-space: nowrap; }
+  .brand .brand-text em { font-style: normal; color: var(--peach); }
 
-  .brand .logo svg { width: 20px; height: 20px; color: #04231b; }
-  .brand .brand-text { display: inline; white-space: nowrap; }
-  .brand em { font-style: normal; color: var(--accent); }
-
-  .nav-links {
-    display: flex;
-    align-items: center;
-    gap: 26px;
-    list-style: none;
-  }
-
+  .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
   .nav-links a {
     color: var(--text-dim);
     text-decoration: none;
     font-size: 14.5px;
     font-weight: 500;
-    transition: color 0.2s;
+    transition: color 0.25s;
   }
-  .nav-links a:hover { color: var(--text); }
+  .nav-links a:hover { color: var(--creme); }
 
-  .nav-cta {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: #03241a !important;
-    padding: 9px 18px;
-    border-radius: var(--radius-sm);
-    font-weight: 700;
-    box-shadow: 0 4px 18px rgba(60, 232, 164, 0.3);
-    transition: transform 0.2s, box-shadow 0.2s !important;
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 13px 24px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: #0b0a08;
+    color: var(--creme);
+    font-family: var(--font);
+    transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    white-space: nowrap;
   }
-  .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 26px rgba(60, 232, 164, 0.45); }
+  .btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(245, 239, 228, 0.3);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: #14110c;
+  }
+  .btn svg { flex: none; }
+
+  .btn-warm {
+    background: linear-gradient(135deg, #f8f2e6, #e7c9a2);
+    color: #100d08;
+    border: none;
+    box-shadow: 0 6px 28px rgba(224, 177, 120, 0.25);
+  }
+  .btn-warm:hover {
+    background: linear-gradient(135deg, #fffdf6, #eed3ae);
+    color: #100d08;
+    border: none;
+    box-shadow: 0 12px 40px rgba(224, 177, 120, 0.38);
+  }
+
+  .nav-cta { padding: 10px 20px; font-size: 14px; }
 
   .burger {
     display: none;
     background: none;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: 12px;
     padding: 8px 10px;
     color: var(--text);
     cursor: pointer;
   }
   .burger svg { width: 20px; height: 20px; display: block; }
 
-  /* Mobile menu */
   .mobile-menu {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 60;
-    background: #000000;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: rgba(7, 6, 4, 0.96);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 26px;
   }
   .mobile-menu.open { display: flex; }
-  .mobile-menu a {
-    color: var(--text);
-    text-decoration: none;
-    font-size: 22px;
-    font-weight: 600;
-  }
+  .mobile-menu a { color: var(--text); text-decoration: none; font-size: 23px; font-weight: 600; }
   .mobile-menu .close {
     position: absolute;
     top: 22px;
     right: 22px;
     background: none;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: 12px;
     padding: 8px 10px;
     color: var(--text);
     cursor: pointer;
@@ -190,206 +235,306 @@
 
   /* ---------- Hero ---------- */
   .hero {
-    padding: 84px 0 60px;
+    padding: 90px 0 44px;
     display: grid;
-    grid-template-columns: 1.15fr 0.85fr;
-    gap: 48px;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 56px;
     align-items: center;
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    padding: 7px 14px;
+    gap: 9px;
+    padding: 7px 15px;
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--panel);
     color: var(--text-dim);
     font-size: 13.5px;
-    margin-bottom: 24px;
+    margin-bottom: 26px;
+    backdrop-filter: blur(8px);
   }
   .badge .dot {
     width: 8px; height: 8px;
     border-radius: 50%;
-    background: var(--green);
-    box-shadow: 0 0 10px var(--green);
-    animation: pulse 2.2s ease-in-out infinite;
+    background: var(--peach);
+    box-shadow: 0 0 12px var(--peach);
+    animation: pulse 2.4s ease-in-out infinite;
   }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 
   .hero h1 {
-    font-size: clamp(36px, 5.4vw, 60px);
-    line-height: 1.07;
-    letter-spacing: -0.03em;
+    font-size: clamp(38px, 5.8vw, 66px);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
     font-weight: 800;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 
   .grad-text {
-    background: linear-gradient(100deg, var(--accent) 15%, var(--accent-2) 60%, var(--accent-3) 100%);
+    background: linear-gradient(100deg, var(--creme) 10%, var(--peach) 48%, var(--gold) 90%);
+    background-size: 200% 200%;
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
+    animation: shimmerText 6s ease-in-out infinite;
+  }
+  @keyframes shimmerText {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
   }
 
   .hero p.sub {
-    max-width: 560px;
-    margin-bottom: 32px;
+    max-width: 540px;
+    margin-bottom: 34px;
     color: var(--text-dim);
-    font-size: clamp(15.5px, 2vw, 17.5px);
+    font-size: clamp(15.5px, 2vw, 18px);
   }
 
-  .hero-actions {
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  @keyframes btnFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  .float-btn { animation: btnFloat 5.5s ease-in-out infinite; }
+  .float-btn:nth-child(2) { animation-delay: -1.8s; }
+  .float-btn:nth-child(3) { animation-delay: -3.6s; }
+  .float-btn:hover { animation-play-state: paused; }
+
+  /* ---------- Marquee ribbon ---------- */
+  .ribbon {
+    grid-column: 1 / -1;
+    margin-top: 46px;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+    border-top: 1px solid var(--border-soft);
+    border-bottom: 1px solid var(--border-soft);
+    padding: 16px 0;
+  }
+  .ribbon-track {
     display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+    gap: 48px;
+    width: max-content;
+    animation: marquee 30s linear infinite;
+  }
+  .ribbon span {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    white-space: nowrap;
+  }
+  .ribbon span b { color: var(--peach); font-weight: 600; }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
   }
 
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 9px;
-    padding: 13px 24px;
-    border-radius: var(--radius-sm);
-    font-size: 15.5px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
-    cursor: pointer;
-    border: none;
-    font-family: var(--font);
-  }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: #03241a;
-    box-shadow: 0 8px 28px rgba(60, 232, 164, 0.32);
-  }
-  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(60, 232, 164, 0.45); }
-  .btn-ghost {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-  .btn-ghost:hover { transform: translateY(-2px); border-color: rgba(60, 232, 164, 0.4); }
-  .btn-download {
-    background: linear-gradient(135deg, var(--accent-3), #ffb347);
-    color: #241500;
-    box-shadow: 0 8px 28px rgba(255, 199, 84, 0.3);
-  }
-  .btn-download:hover { transform: translateY(-2px); box-shadow: 0 12px 36px rgba(255, 199, 84, 0.45); }
-
-  /* ---------- Terminal mockup ---------- */
-  .term-wrap {
-    position: relative;
-    display: flex;
-    justify-content: center;
-  }
+  /* ---------- Terminal ---------- */
+  .term-wrap { position: relative; display: flex; justify-content: center; }
 
   .term {
     width: 100%;
     max-width: 460px;
-    border-radius: 14px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    background: #05070c;
-    box-shadow:
-      0 34px 80px rgba(0, 0, 0, 0.65),
-      0 0 60px rgba(60, 232, 164, 0.06);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 245, 230, 0.10);
+    background: linear-gradient(180deg, #0e0c08, #070604 70%);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 80px rgba(224, 177, 120, 0.06);
     overflow: hidden;
     font-family: var(--mono);
     font-size: 13px;
-    line-height: 1.7;
-    transform: rotate(1.4deg);
+    line-height: 1.75;
+    transform: perspective(1200px) rotateY(-3deg) rotateX(1deg);
+    transition: transform 0.6s var(--ease);
   }
-  .term::after {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(60, 232, 164, 0.5), transparent);
-  }
+  .term-wrap:hover .term { transform: perspective(1200px) rotateY(0deg) rotateX(0deg); }
 
   .term-head {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 14px;
+    padding: 11px 15px;
     background: rgba(255, 255, 255, 0.03);
     border-bottom: 1px solid var(--border-soft);
   }
   .term-head .dot-r, .term-head .dot-y, .term-head .dot-g {
-    width: 10px; height: 10px;
-    border-radius: 50%;
+    width: 10px; height: 10px; border-radius: 50%;
   }
-  .term-head .dot-r { background: #ff5f57; opacity: 0.85; }
-  .term-head .dot-y { background: #febc2e; opacity: 0.85; }
-  .term-head .dot-g { background: #28c840; opacity: 0.85; }
-  .term-head .term-title {
-    margin-left: 8px;
-    font-size: 11.5px;
-    color: var(--text-faint);
-    letter-spacing: 0.02em;
-  }
+  .term-head .dot-r { background: #ff6d60; opacity: 0.8; }
+  .term-head .dot-y { background: #f2c469; opacity: 0.8; }
+  .term-head .dot-g { background: #6fcf97; opacity: 0.8; }
+  .term-head .term-title { margin-left: 8px; font-size: 11.5px; color: var(--text-faint); letter-spacing: 0.02em; }
 
-  .term-body {
-    padding: 16px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-  }
+  .term-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; }
   .t-line { display: flex; gap: 10px; color: var(--text-dim); white-space: nowrap; }
-  .t-prompt { color: var(--accent); font-weight: 700; }
+  .t-prompt { color: var(--peach); font-weight: 700; }
   .t-out { color: var(--text-faint); }
-  .t-line.dim { color: var(--text-faint); }
-  .t-line.ok { color: var(--green); }
-  .t-caret {
-    color: var(--accent);
-    animation: caretBlink 1.1s steps(1) infinite;
-    font-size: 14px;
-  }
+  .t-line.ok { color: #d8e8c8; }
+  .t-caret { color: var(--peach); animation: caretBlink 1.1s steps(1) infinite; font-size: 14px; }
   @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
-  @media (max-width: 960px) {
-    .term { max-width: 100%; transform: none; }
-  }
-
   /* ---------- Sections ---------- */
-  section.block { padding: 68px 0; }
+  section.block { padding: 76px 0; }
 
   .section-head {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     gap: 20px;
-    margin-bottom: 30px;
+    margin-bottom: 34px;
     flex-wrap: wrap;
   }
   .section-head h2 {
-    font-size: clamp(25px, 3.2vw, 34px);
+    font-size: clamp(25px, 3.2vw, 36px);
     letter-spacing: -0.02em;
     font-weight: 800;
+    background: linear-gradient(120deg, var(--creme), var(--peach));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
   }
-  .section-head p {
-    color: var(--text-dim);
-    max-width: 460px;
-    font-size: 15px;
-  }
+  .section-head p { color: var(--text-dim); max-width: 480px; font-size: 15px; }
   .eyebrow {
     font-size: 12px;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 8px;
+    color: var(--gold);
+    margin-bottom: 9px;
   }
 
+  .jump-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  /* ---------- Cards: bento with 3D tilt ---------- */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    perspective: 1600px;
+  }
+
+  .card {
+    position: relative;
+    background: linear-gradient(180deg, var(--panel-hover), var(--panel));
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 26px 24px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transform-style: preserve-3d;
+    transition: border-color 0.35s, box-shadow 0.5s var(--ease);
+    will-change: transform;
+    overflow: hidden;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(600px 260px at var(--mx, 50%) var(--my, 0%),
+        rgba(237, 201, 160, 0.09), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.45s ease;
+    pointer-events: none;
+  }
+  .card:hover::before { opacity: 1; }
+  .card:hover {
+    border-color: rgba(255, 245, 230, 0.2);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+  .card > * { transform: translateZ(22px); }
+
+  .card .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card .icon {
+    width: 48px; height: 48px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    font-size: 0;
+    flex: none;
+    background: linear-gradient(145deg, rgba(255, 250, 240, 0.08), rgba(255, 250, 240, 0.02));
+    border: 1px solid rgba(255, 245, 230, 0.12);
+    color: var(--creme);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .card .icon svg { width: 23px; height: 23px; display: block; }
+
+  .tag {
+    display: inline-block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    padding: 4px 11px;
+    border-radius: 999px;
+    background: rgba(237, 201, 160, 0.09);
+    color: var(--peach);
+    border: 1px solid rgba(237, 201, 160, 0.22);
+    white-space: nowrap;
+  }
+  .tag.amber { background: rgba(224, 177, 120, 0.1); color: var(--gold); border-color: rgba(224, 177, 120, 0.3); }
+  .tag.gray { background: rgba(179, 168, 151, 0.1); color: var(--text-dim); border-color: rgba(179, 168, 151, 0.2); }
+
+  .card h3 { font-size: 18px; letter-spacing: -0.01em; font-weight: 700; color: var(--creme); }
+  .card .desc { color: var(--text-dim); font-size: 14px; flex: 1; }
+  .card .card-note {
+    margin: auto;
+    color: var(--text-faint);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .card-download {
+    align-self: flex-start;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    border-radius: 999px;
+    margin-top: 4px;
+  }
+
+  .hidden { display: none !important; }
+
+  /* ---------- Why ---------- */
+  .feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+  .feat {
+    background: var(--panel);
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    padding: 26px 24px;
+    transition: transform 0.4s var(--ease), border-color 0.35s, background 0.35s;
+    position: relative;
+    overflow: hidden;
+  }
+  .feat::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; top: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0;
+    transition: opacity 0.4s;
+  }
+  .feat:hover { transform: translateY(-5px); border-color: rgba(255, 245, 230, 0.18); background: var(--panel-hover); }
+  .feat:hover::after { opacity: 1; }
+  .feat .num { font-family: var(--mono); font-size: 13px; color: var(--gold); letter-spacing: 0.12em; }
+  .feat h3 { font-size: 17px; margin: 10px 0 8px; color: var(--creme); }
+  .feat p { color: var(--text-dim); font-size: 14px; }
+
+  /* ---------- Themes ---------- */
   .section-tabs {
     display: inline-flex;
     gap: 4px;
     background: var(--panel);
     border: 1px solid var(--border-soft);
     padding: 4px;
-    border-radius: var(--radius-sm);
+    border-radius: 999px;
   }
   .section-tabs button {
     background: none;
@@ -398,223 +543,58 @@
     font-family: var(--font);
     font-size: 13.5px;
     font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 8px;
+    padding: 8px 18px;
+    border-radius: 999px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s var(--ease);
   }
   .section-tabs button.active {
-    background: linear-gradient(135deg, var(--accent), var(--accent-2));
-    color: #03241a;
-    box-shadow: 0 4px 14px rgba(60, 232, 164, 0.3);
+    background: #0b0a08;
+    color: var(--creme);
+    box-shadow: inset 0 0 0 1px var(--border), 0 4px 16px rgba(0, 0, 0, 0.5);
   }
 
-  .jump-btns {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-  }
-  @keyframes btnFloat {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-6px); }
-  }
-  .float-btn {
-    animation: btnFloat 5s ease-in-out infinite;
-  }
-  .float-btn:nth-child(2) {
-    animation-delay: -2.5s;
-  }
-
-  /* ---------- Bento grid ---------- */
-  .bento {
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 14px;
-  }
-
-  .card {
-    background: linear-gradient(180deg, var(--panel-hover), var(--panel));
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius);
-    padding: 20px;
-    min-height: 168px;
-    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    position: relative;
-    overflow: hidden;
-    grid-column: span 2;
-  }
-  .card::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent-2), transparent);
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .card.wide { grid-column: span 3; }
-  .card:hover {
-    transform: translateY(-3px);
-    border-color: rgba(60, 232, 164, 0.32);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
-  }
-  .card:hover::after { opacity: 1; }
-
-  /* Floating cards: gentle levitating motion (no hover-transform
-     conflict: the float animation owns `transform` for these) */
-  @keyframes floatCard {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-7px); }
-  }
-  .card.float { animation: floatCard 7s ease-in-out infinite; }
-  .card.float:hover {
-    transform: none;
-    border-color: rgba(60, 232, 164, 0.42);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
-  }
-
-  /* Shimmering cards: slow color flow over the card */
-  @keyframes cardShimmer {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-  }
-  .card.shimmer {
-    background:
-      linear-gradient(120deg,
-        rgba(60, 232, 164, 0.12),
-        rgba(43, 199, 184, 0.12),
-        rgba(255, 206, 107, 0.12),
-        rgba(60, 232, 164, 0.12));
-    background-size: 300% 300%;
-    animation: cardShimmer 9s ease-in-out infinite;
-  }
-  .card.shimmer .icon {
-    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.09), 0 0 22px rgba(60, 232, 164, 0.18);
-  }
-  .card.shimmer:hover { border-color: rgba(60, 232, 164, 0.4); }
-  .card.shimmer::after {
-    background: linear-gradient(90deg, var(--accent), var(--amber), var(--accent-2), transparent);
-  }
-
-  .card .top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-  }
-  .card .icon {
-    width: 44px; height: 44px;
-    border-radius: 12px;
+  .theme-preview {
+    height: 96px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 245, 230, 0.1);
     display: grid;
     place-items: center;
-    font-size: 0;
-    flex: none;
-    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+    font-size: 26px;
+    margin-bottom: -6px;
   }
-  .card .icon svg { width: 22px; height: 22px; display: block; color: #fff; }
-  .card h3 { font-size: 17px; letter-spacing: -0.01em; }
-  .card .desc {
-    color: var(--text-dim);
-    font-size: 14px;
-    flex: 1;
-  }
-  .card .card-note {
-    margin: auto;
-    color: var(--text-faint);
-    font-size: 15px;
-    font-weight: 600;
-    letter-spacing: 0.01em;
-    text-align: center;
-  }
-  .card .card-download {
-    align-self: flex-start;
-    padding: 10px 18px;
-    font-size: 14px;
-    border-radius: var(--radius-sm);
-  }
-  .card .meta {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    color: var(--text-faint);
-    font-size: 12.5px;
-  }
-  .card .meta .rate { color: var(--amber); font-weight: 700; }
-  .card .meta .star { width: 12px; height: 12px; vertical-align: -1px; }
 
-  .tag {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 4px 10px;
-    border-radius: 999px;
-    background: rgba(87, 240, 172, 0.1);
-    color: var(--green);
-    border: 1px solid rgba(87, 240, 172, 0.24);
-    white-space: nowrap;
-  }
-  .tag.teal { background: rgba(43, 199, 184, 0.1); color: var(--accent-2); border-color: rgba(43, 199, 184, 0.26); }
-  .tag.amber { background: rgba(255, 206, 107, 0.1); color: var(--amber); border-color: rgba(255, 206, 107, 0.26); }
-  .tag.gray { background: rgba(159, 176, 167, 0.1); color: var(--text-dim); border-color: rgba(159, 176, 167, 0.2); }
-
-  .install-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 16px;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: var(--text);
-    background: rgba(255, 255, 255, 0.03);
-    cursor: pointer;
-    font-family: var(--font);
-    transition: all 0.2s;
-  }
-  .install-btn:hover { background: rgba(60, 232, 164, 0.12); border-color: rgba(60, 232, 164, 0.42); color: var(--accent); }
-  .install-btn.copied { background: rgba(87, 240, 172, 0.14); border-color: rgba(87, 240, 172, 0.44); color: var(--green); }
-
-  .hidden { display: none !important; }
-
-  .sr-only {
+  /* ---------- Timeline (instruction) ---------- */
+  .timeline { position: relative; max-width: 660px; margin: 0 auto; }
+  .timeline::before {
+    content: "";
     position: absolute;
-    width: 1px; height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
+    left: 21px;
+    top: 12px;
+    bottom: 12px;
+    width: 2px;
+    background: linear-gradient(180deg, rgba(224, 177, 120, 0.55), rgba(224, 177, 120, 0.04));
   }
-
-  /* ---------- Why ---------- */
-  .feats { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-  .feat {
-    background: var(--panel);
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius);
-    padding: 24px 22px;
-    transition: transform 0.25s, border-color 0.25s;
-  }
-  .feat:hover { transform: translateY(-3px); border-color: rgba(60, 232, 164, 0.3); }
-  .feat .num {
+  .step { position: relative; padding: 0 0 28px 64px; }
+  .step:last-child { padding-bottom: 0; }
+  .step .tick {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: var(--panel-solid);
+    border: 1px solid rgba(224, 177, 120, 0.35);
+    color: var(--gold);
+    display: grid;
+    place-items: center;
     font-family: var(--mono);
-    font-size: 12.5px;
-    color: var(--accent-2);
-    letter-spacing: 0.1em;
+    font-size: 14px;
+    font-weight: 700;
+    box-shadow: 0 0 22px rgba(224, 177, 120, 0.14);
   }
-  .feat h3 { font-size: 17px; margin: 10px 0 7px; }
-  .feat p { color: var(--text-dim); font-size: 14px; }
+  .step b { font-size: 17px; display: block; color: var(--creme); margin-bottom: 4px; }
+  .step p { color: var(--text-dim); font-size: 14.5px; }
 
   /* ---------- Categories ---------- */
   .cats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
@@ -623,57 +603,18 @@
     align-items: center;
     gap: 9px;
     padding: 12px 20px;
-    border-radius: var(--radius-sm);
+    border-radius: 999px;
     border: 1px solid var(--border-soft);
     background: var(--panel);
     color: var(--text);
     text-decoration: none;
     font-weight: 600;
     font-size: 14px;
-    transition: all 0.2s;
+    transition: all 0.3s var(--ease);
   }
-  .cat-chip:hover { border-color: rgba(60, 232, 164, 0.45); transform: translateY(-2px); background: rgba(60, 232, 164, 0.07); }
-  .cat-chip .emoji {
-    width: 24px; height: 24px;
-    flex: none;
-    color: var(--accent-2);
-  }
-  .cat-chip .emoji svg { width: 24px; height: 24px; display: block; }
-
-  /* ---------- Install timeline ---------- */
-  .timeline { position: relative; max-width: 640px; margin: 0 auto; padding-left: 4px; }
-  .timeline::before {
-    content: "";
-    position: absolute;
-    left: 19px;
-    top: 10px;
-    bottom: 10px;
-    width: 2px;
-    background: linear-gradient(180deg, rgba(60, 232, 164, 0.5), rgba(60, 232, 164, 0.05));
-  }
-  .step {
-    position: relative;
-    padding: 0 0 26px 56px;
-  }
-  .step:last-child { padding-bottom: 0; }
-  .step .tick {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--panel-solid);
-    border: 1px solid rgba(60, 232, 164, 0.4);
-    color: var(--accent);
-    display: grid;
-    place-items: center;
-    font-family: var(--mono);
-    font-size: 13px;
-    font-weight: 700;
-    box-shadow: 0 0 18px rgba(60, 232, 164, 0.15);
-  }
-  .step b { font-size: 16px; display: block; }
-  .step p { color: var(--text-dim); font-size: 14px; }
+  .cat-chip:hover { border-color: rgba(237, 201, 160, 0.4); transform: translateY(-3px); background: rgba(237, 201, 160, 0.06); }
+  .cat-chip .emoji { width: 22px; height: 22px; flex: none; color: var(--peach); }
+  .cat-chip .emoji svg { width: 22px; height: 22px; display: block; }
 
   /* ---------- FAQ ---------- */
   .faq { display: flex; flex-direction: column; gap: 10px; max-width: 780px; margin: 0 auto; }
@@ -682,59 +623,60 @@
     border: 1px solid var(--border-soft);
     border-radius: var(--radius-sm);
     overflow: hidden;
+    transition: border-color 0.3s;
   }
+  details.faq-item[open] { border-color: rgba(237, 201, 160, 0.25); }
   details.faq-item summary {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 18px 20px;
+    padding: 19px 22px;
     font-weight: 600;
     font-size: 15.5px;
     cursor: pointer;
     list-style: none;
     user-select: none;
+    color: var(--creme);
   }
   details.faq-item summary::-webkit-details-marker { display: none; }
   details.faq-item summary svg {
     width: 18px; height: 18px;
     flex: none;
     color: var(--text-dim);
-    transition: transform 0.25s;
+    transition: transform 0.3s var(--ease);
   }
-  details.faq-item[open] summary svg { transform: rotate(45deg); color: var(--accent); }
-  details.faq-item .answer {
-    padding: 0 20px 18px;
-    color: var(--text-dim);
-    font-size: 14px;
-  }
-  details.faq-item[open] .answer { animation: fadeIn 0.3s; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+  details.faq-item[open] summary svg { transform: rotate(45deg); color: var(--gold); }
+  details.faq-item .answer { padding: 0 22px 20px; color: var(--text-dim); font-size: 14.5px; }
+  details.faq-item[open] .answer { animation: fadeIn 0.35s var(--ease); }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
   /* ---------- CTA ---------- */
   .cta-banner {
     background:
-      radial-gradient(560px 240px at 50% 0%, rgba(60, 232, 164, 0.12), transparent 70%),
-      var(--panel);
+      radial-gradient(560px 260px at 50% 0%, rgba(224, 177, 120, 0.10), transparent 70%),
+      linear-gradient(180deg, var(--panel-hover), var(--panel));
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 54px 32px;
+    border-radius: 28px;
+    padding: 64px 32px;
     text-align: center;
+    position: relative;
+    overflow: hidden;
   }
   .cta-banner h2 {
-    font-size: clamp(25px, 3.4vw, 36px);
+    font-size: clamp(26px, 3.6vw, 40px);
     letter-spacing: -0.02em;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
     font-weight: 800;
   }
-  .cta-banner p { color: var(--text-dim); font-size: 15.5px; max-width: 520px; margin: 0 auto 28px; }
+  .cta-banner p { color: var(--text-dim); font-size: 16px; max-width: 520px; margin: 0 auto 32px; }
   .cta-banner .hero-actions { justify-content: center; }
 
   /* ---------- Footer ---------- */
   footer.site {
     border-top: 1px solid var(--border-soft);
     margin-top: 40px;
-    padding: 42px 0 48px;
+    padding: 44px 0 50px;
   }
   .foot {
     display: flex;
@@ -745,27 +687,27 @@
     color: var(--text-faint);
     font-size: 13px;
   }
-  .foot .links { display: flex; gap: 22px; }
-  .foot a { color: var(--text-dim); text-decoration: none; }
-  .foot a:hover { color: var(--text); }
+  .foot .links { display: flex; gap: 24px; }
+  .foot a { color: var(--text-dim); text-decoration: none; transition: color 0.25s; }
+  .foot a:hover { color: var(--creme); }
 
   /* ---------- Toast ---------- */
   #toast {
     position: fixed;
-    bottom: 26px;
+    bottom: 28px;
     left: 50%;
-    transform: translateX(-50%) translateY(80px);
+    transform: translateX(-50%) translateY(90px);
     background: var(--panel-solid);
-    border: 1px solid rgba(87, 240, 172, 0.4);
-    color: var(--green);
-    padding: 12px 22px;
+    border: 1px solid rgba(237, 201, 160, 0.4);
+    color: var(--peach);
+    padding: 12px 24px;
     border-radius: 999px;
     font-size: 14px;
     font-weight: 600;
     z-index: 100;
     opacity: 0;
-    transition: all 0.35s cubic-bezier(0.2, 0.8, 0.3, 1);
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.7);
+    transition: all 0.4s var(--ease);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
     pointer-events: none;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -773,31 +715,28 @@
   /* ---------- Reveal ---------- */
   .reveal {
     opacity: 0;
-    transform: translateY(24px);
-    transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.3, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.3, 1);
+    transform: translateY(28px);
+    transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
   }
   .reveal.in { opacity: 1; transform: none; }
 
   /* ---------- Responsive ---------- */
   @media (max-width: 960px) {
-    .hero { grid-template-columns: 1fr; gap: 40px; text-align: center; }
+    .hero { grid-template-columns: 1fr; gap: 42px; text-align: center; }
     .hero p.sub { margin-left: auto; margin-right: auto; }
     .hero-actions { justify-content: center; }
     .term-wrap { order: -1; }
-    .phone { transform: none; }
+    .term { max-width: 100%; transform: none; }
+    .bento { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 860px) {
     .nav-links { display: none; }
     .burger { display: block; }
-    .bento { grid-template-columns: repeat(2, 1fr); }
-    .card { grid-column: span 1; }
-    .card.wide { grid-column: span 2; }
   }
-  @media (max-width: 560px) {
+  @media (max-width: 600px) {
     .wrap { padding: 0 16px; }
     .bento { grid-template-columns: 1fr; }
-    .card, .card.wide { grid-column: span 1; }
-    .section-tabs button { padding: 7px 11px; font-size: 12.5px; }
+    .ribbon { margin-top: 34px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -809,7 +748,9 @@
 <body>
 
 <canvas id="space" aria-hidden="true"></canvas>
+<div class="warm-glow" aria-hidden="true"></div>
 <div class="vignette" aria-hidden="true"></div>
+<div id="cursorGlow" aria-hidden="true"></div>
 
 <header class="site">
   <div class="wrap nav">
@@ -824,7 +765,7 @@
         <li><a href="#plugins">Каталог</a></li>
         <li><a href="#themes">Темы</a></li>
         <li><a href="#faq">FAQ</a></li>
-        <li><a href="#install" class="nav-cta">Установить</a></li>
+        <li><a href="#install" class="btn nav-cta">Установить</a></li>
       </ul>
     </nav>
     <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false">
@@ -851,13 +792,11 @@
       <h1>Сделано <span class="grad-text">от Lincoln</span></h1>
       <p class="sub">Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.</p>
       <div class="hero-actions">
-        <a href="#plugins" class="btn btn-primary">Выбрать плагин
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <a href="#install" class="btn btn-ghost">Как установить</a>
-        <a href="https://exteragram.app/" target="_blank" rel="noopener" class="btn btn-download">Скачать ExtraGram
+        <a href="https://exteragram.app/" target="_blank" rel="noopener" class="btn btn-warm float-btn">Скачать ExtraGram
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
+        <a href="#plugins" class="btn float-btn">Выбрать плагин</a>
+        <a href="#install" class="btn float-btn">Как установить</a>
       </div>
     </div>
 
@@ -869,13 +808,20 @@
         </div>
         <div class="term-body">
           <div class="t-line"><span class="t-prompt">$</span> curl -sS https://lincoln-plugin.ru/install</div>
-          <div class="t-line dim"><span class="t-out">→</span> получение пакета: linguaflow-v2.4.1</div>
+          <div class="t-line"><span class="t-out">→</span> получение пакета: lincoln-holl-v2.1</div>
           <div class="t-line ok"><span class="t-out">✓</span> проверка подписи: OK</div>
-          <div class="t-line"><span class="t-prompt">$</span> lincoln install linguaflow</div>
-          <div class="t-line ok"><span class="t-out">✓</span> LinguaFlow установлен</div>
-          <div class="t-line dim bx"><span class="t-out">→</span> готово за 0.8 сек</div>
+          <div class="t-line"><span class="t-prompt">$</span> lincoln install lincoln-holl</div>
+          <div class="t-line ok"><span class="t-out">✓</span> Lincoln Holl установлен</div>
+          <div class="t-line"><span class="t-out">→</span> готово за 0.8 сек</div>
           <div class="t-caret">▌</div>
         </div>
+      </div>
+    </div>
+
+    <div class="ribbon" aria-hidden="true">
+      <div class="ribbon-track">
+        <span>Lincoln Holl <b>·</b> Lincoln Ghost <b>·</b> Lincoln Tools <b>·</b> Voices <b>·</b> NFTs <b>·</b> Stars <b>·</b> Ghost Mode <b>·</b> Online Hide <b>·</b> Own Profile <b>·</b></span>
+        <span>Lincoln Holl <b>·</b> Lincoln Ghost <b>·</b> Lincoln Tools <b>·</b> Voices <b>·</b> NFTs <b>·</b> Stars <b>·</b> Ghost Mode <b>·</b> Online Hide <b>·</b> Own Profile <b>·</b></span>
       </div>
     </div>
   </section>
@@ -889,102 +835,82 @@
         <p>Делает работу комфортной, плавной. И не только...)</p>
       </div>
       <div class="jump-btns">
-        <a href="#pluginGrid" class="btn btn-primary float-btn">Plugin</a>
-        <a href="#themes" class="btn btn-ghost float-btn">Темы/Функции</a>
+        <a href="#pluginGrid" class="btn float-btn">Plugin</a>
+        <a href="#themes" class="btn float-btn">Темы/Функции</a>
       </div>
     </div>
 
     <div class="bento" id="pluginGrid">
-      <article class="card reveal float shimmer" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful">
         <div class="top">
-          <span class="icon" style="background:rgba(60,232,164,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/></svg></span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/></svg></span>
           <span class="tag">Плагин</span>
         </div>
         <h3>Lincoln-Plugin</h3>
-        <p class="desc">NFTSender: локальное изменение баланса звёзд, подмена username на фейковый NFT-ник, визуальная вставка collectible NFT-подарков в чат, анимации и отправка подарков/звёзд с эффектами. Версия 2.0 (актуализирована под SDK 1.4.4.3).</p>
-        <a class="btn btn-primary card-download" href="plugins/Lincoln-Plugin.plugin" download>Скачать плагин</a>
+        <p class="desc">NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник, визуальная вставка collectible NFT-подарков в чат с анимациями. Версия 2.0.</p>
+        <a class="btn card-download" href="plugins/Lincoln-Plugin.plugin" download>Скачать</a>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful">
         <div class="top">
-          <span class="icon" style="background:rgba(43,199,184,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 9h16M4 13h10M4 17h7"/><circle cx="18" cy="16" r="2.6"/><circle cx="18" cy="16" r="1" fill="currentColor"/></svg></span>
-          <span class="tag teal">Редактор</span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 9h16M4 13h10M4 17h7"/><circle cx="18" cy="16" r="2.6"/><circle cx="18" cy="16" r="1" fill="currentColor"/></svg></span>
+          <span class="tag amber">Редактор</span>
         </div>
         <h3>Fake Editor</h3>
-        <p class="desc">Визуальный редактор сообщений: локальные правки, фейки, генератор NFT и многое другое. Очищенная версия, актуализирована под SDK 1.4.4.3. Версия 2.0.</p>
-        <a class="btn btn-primary card-download" href="plugins/Vvisual-Editor.plugin" download>Скачать плагин</a>
+        <p class="desc">Визуальный редактор сообщений: локальные правки, фейки, генератор NFT и многое другое. Очищенная версия 2.0.</p>
+        <a class="btn card-download" href="plugins/Vvisual-Editor.plugin" download>Скачать</a>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful">
         <div class="top">
-          <span class="icon" style="background:rgba(255,206,107,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4.3 12.5c.6.5.9 1.2.9 2V21h6.8v-3.5c0-.8.3-1.5.9-2A7 7 0 0 0 12 3z"/><path d="M10 21v-2h4v2"/></svg></span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4.3 12.5c.6.5.9 1.2.9 2V21h6.8v-3.5c0-.8.3-1.5.9-2A7 7 0 0 0 12 3z"/><path d="M10 21v-2h4v2"/></svg></span>
           <span class="tag amber">Аудио</span>
         </div>
         <h3>Voice Changer RT</h3>
-        <p class="desc">Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых. Очищенная версия, актуализирована под SDK 1.4.4.3. Версия 2.0.</p>
-        <a class="btn btn-primary card-download" href="plugins/Voice-Changer-RT.plugin" download>Скачать плагин</a>
+        <p class="desc">Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых. Версия 2.0.</p>
+        <a class="btn card-download" href="plugins/Voice-Changer-RT.plugin" download>Скачать</a>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful">
         <div class="top">
-          <span class="icon" style="background:rgba(60,232,164,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9L12 3z"/></svg></span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9L12 3z"/></svg></span>
           <span class="tag">Свой</span>
         </div>
         <h3>Lincoln Tools</h3>
-        <p class="desc">Локальная визуальная подмена баланса звёзд и TON в профиле. Ничего не отправляет — только интерфейс. Версия 2.0 (актуализирована под SDK 1.4.4.3).</p>
-        <a class="btn btn-primary card-download" href="plugins/Lincoln-Tools.plugin" download>Скачать плагин</a>
+        <p class="desc">Локальная визуальная подмена баланса звёзд и TON в профиле. Ничего не отправляет — только интерфейс. Версия 2.0.</p>
+        <a class="btn card-download" href="plugins/Lincoln-Tools.plugin" download>Скачать</a>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful">
         <div class="top">
-          <span class="icon" style="background:rgba(43,199,184,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 10.5a6 6 0 1 0-11.6 2 6 6 0 0 0 9.7 2.4M14 12v4M12 13l1.5 2M14 19.5h4M14 21.5h2"/></svg></span>
-          <span class="tag teal">Ghost</span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 10.5a6 6 0 1 0-11.6 2 6 6 0 0 0 9.7 2.4M14 12v4M12 13l1.5 2M14 19.5h4M14 21.5h2"/></svg></span>
+          <span class="tag amber">Ghost</span>
         </div>
         <h3>Lincoln Ghost</h3>
-        <p class="desc">Скрывает статус «в сети», «печатает» и не отправляет «прочитано», даже когда вы открыли чат. Работает на уровне запросов — не зависит от версии. Версия 2.0.</p>
-        <a class="btn btn-primary card-download" href="plugins/Lincoln-Ghost.plugin" download>Скачать плагин</a>
+        <p class="desc">Скрывает «в сети», «печатает» и «прочитано». Работает на уровне запросов — не зависит от версии. Версия 2.0.</p>
+        <a class="btn card-download" href="plugins/Lincoln-Ghost.plugin" download>Скачать</a>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful">
         <div class="top">
-          <span class="icon" style="background:rgba(124,140,255,.15)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5c0 5.2-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z"/><path d="M8.5 9.5 12 13l3.5-3.5"/></svg></span>
-          <span class="tag">Pro</span>
+          <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5c0 5.2-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z"/><path d="M8.5 9.5 12 13l3.5-3.5"/></svg></span>
+          <span class="tag">Warm</span>
         </div>
         <h3>Lincoln Holl</h3>
-        <p class="desc">Всё в одном: телефон, юзернеймы, звёзды, TON, премиум, скрытие «в сети»/«печатает»/«прочитано», своё «был(а)…», мут командой .mut. Версия 2.1.</p>
-        <a class="btn btn-primary card-download" href="plugins/Lincoln-Holl.plugin" download>Скачать плагин</a>
+        <p class="desc">Всё в одном: телефон, юзернеймы, звёзды, TON, премиум, ghost-режим, своё «был(а)…», мут командой .mut. Версия 2.1.</p>
+        <a class="btn card-download" href="plugins/Lincoln-Holl.plugin" download>Скачать</a>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
-        <p class="card-note">В процессе разработки</p>
+      <article class="card reveal" data-pcat="fun">
+        <p class="card-note">Скоро...</p>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
-        <p class="card-note">В процессе разработки</p>
+      <article class="card reveal" data-pcat="fun">
+        <p class="card-note">Скоро...</p>
       </article>
 
-      <article class="card reveal float shimmer" data-pcat="useful">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-pcat="fun">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-pcat="fun">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-pcat="useful">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-pcat="fun">
-        <p class="card-note">В процессе разработки</p>
-      </article>
-
-      <article class="card reveal float shimmer" data-pcat="useful">
-        <p class="card-note">В процессе разработки</p>
+      <article class="card reveal" data-pcat="fun">
+        <p class="card-note">Скоро...</p>
       </article>
     </div>
   </section>
@@ -999,22 +925,10 @@
       </div>
     </div>
     <div class="feats">
-      <div class="feat reveal">
-        <div class="num">01</div>
-        <p>Каждый плагин тестируется в актуальной версии Telegram. Пометка «Проверено» — гарантия, а не маркетинг.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="num">02</div>
-        <p>Никаких архиваторов. Выбираете решение — получаете готовую инструкцию под вашу платформу.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="num">03</div>
-        <p>Мы не публикуем плагины с доступом к лишним данным и предупреждаем о каждом разрешении.</p>
-      </div>
-      <div class="feat reveal">
-        <div class="num">04</div>
-        <p>Авторы отвечают в чате поддержки. Предложения и багрепорты попадают в ближайшие релизы.</p>
-      </div>
+      <div class="feat reveal"><div class="num">01</div><h3>Ручная проверка</h3><p>Каждый плагин тестируется в актуальной версии Telegram. Пометка «Проверено» — гарантия, а не маркетинг.</p></div>
+      <div class="feat reveal"><div class="num">02</div><h3>Установка в один клик</h3><p>Никаких архиваторов. Выбираете решение — получаете готовую инструкцию под вашу платформу.</p></div>
+      <div class="feat reveal"><div class="num">03</div><h3>Безопасность</h3><p>Мы не публикуем плагины с доступом к лишним данным и предупреждаем о каждом разрешении.</p></div>
+      <div class="feat reveal"><div class="num">04</div><h3>Живое сообщество</h3><p>Авторы отвечают в чате поддержки. Предложения попадают в ближайшие релизы.</p></div>
     </div>
   </section>
 
@@ -1024,7 +938,7 @@
       <div>
         <div class="eyebrow">Оформление</div>
         <h2>Темы оформления</h2>
-        <p>Перекрасьте Telegram под себя: от глубокого космоса до мягкого света. Всё совместимо с актуальными версиями.</p>
+        <p>Перекрасьте Telegram под себя: от глубокого космоса до мягкого света.</p>
       </div>
       <div class="section-tabs" role="tablist" aria-label="Типы тем">
         <button role="tab" aria-selected="true" data-ttab="dark" class="active">Черные</button>
@@ -1033,17 +947,22 @@
     </div>
 
     <div class="bento" id="themeGrid">
-      <article class="card reveal float shimmer" data-tcat="dark">
-        <p class="card-note">В процессе разработки</p>
+      <article class="card reveal" data-tcat="dark">
+        <div class="theme-preview" style="background:linear-gradient(135deg,#14100b,#241c12,#3a2c1c)">🌑</div>
+        <h3>Чёрная жемчужина</h3>
+        <p class="desc">Глубокий чёрный с тёплыми бликами. Экономит батарею и бережёт глаза.</p>
       </article>
 
-      <article class="card reveal float shimmer" data-tcat="dark">
-        <p class="card-note">В процессе разработки</p>
+      <article class="card reveal" data-tcat="dark">
+        <div class="theme-preview" style="background:linear-gradient(135deg,#121009,#1e1a10,#332a16)">✨</div>
+        <h3>Уголь и янтарь</h3>
+        <p class="desc">Угольно-чёрный фон с янтарными свечениями. Тепло и глубина.</p>
       </article>
 
-      <article class="card reveal float shimmer" data-tcat="light">
-        <p class="card-note">В процессе разработки</p>
-      </article>
+      <article class="card reveal" data-tcat="light">
+        <div class="theme-preview" style="background:linear-gradient(135deg,#fbf6ec,#f3e5cd,#e8d3ae)">🤍</div>
+        <h3>Тёплый свет</h3>
+        <p class="desc">Светлые панели с персиковыми и кремовыми акцентами. Лёгкость и уют.</p>
       </article>
     </div>
   </section>
@@ -1058,47 +977,10 @@
       </div>
     </div>
     <div class="timeline">
-      <div class="step reveal">
-        <span class="tick">1</span>
-        <b>Выберите плагин или тему</b>
-        <p>Откройте карточку в каталоге и нажмите «Скопировать установку» — код окажется в буфере обмена.</p>
-      </div>
-      <div class="step reveal">
-        <span class="tick">2</span>
-        <b>Откройте Telegram</b>
-        <p>Вставьте код в строку сообщения боту-установщику из инструкции на карточке (указана для каждой платформы).</p>
-      </div>
-      <div class="step reveal">
-        <span class="tick">3</span>
-        <b>Подтвердите установку</b>
-        <p>Telegram покажет запрашиваемые разрешения — проверьте их и подтвердите. Готово, решение уже работает.</p>
-      </div>
-      <div class="step reveal">
-        <span class="tick">4</span>
-        <b>Управляйте в настройках</b>
-        <p>Все установленные плагины и темы появляются в разделе «Плагины» внутри Telegram. Отключение — тоже в один клик.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- CATEGORIES -->
-  <section class="block wrap">
-    <div class="section-head reveal" style="justify-content:center; text-align:center;">
-      <div style="margin:0 auto;">
-        <div class="eyebrow">Разделы</div>
-        <h2>Категории</h2>
-        <p>Подборки обновляются еженедельно.</p>
-      </div>
-    </div>
-    <div class="cats">
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9S14.5 18.4 12 21c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg></span> Перевод</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="4"/><circle cx="9.5" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><circle cx="14.5" cy="12.5" r="1.3" fill="currentColor" stroke="none"/><path d="M12 8V5m-2-1.6h4M8.5 13v2.4m7-2.4v2.4M12 19v2.4"/></svg></span> Автоответы</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5.5c0 4.6-3 7.9-7 9.5-4-1.6-7-4.9-7-9.5V6l7-3z"/><path d="M9.2 12l2 2 3.6-3.8"/></svg></span> Безопасность</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5z"/><path d="M9.5 8.5h5"/></svg></span> Организация</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h10a5 5 0 0 1 4.9 6l-.6 3a2.6 2.6 0 0 1-4.6 1l-1.2-1.7a2 2 0 0 0-3.3 0L11 17a2.6 2.6 0 0 1-4.6-1l-.6-3A5 5 0 0 1 7 7z"/><circle cx="9" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1" fill="currentColor" stroke="none"/></svg></span> Игры</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.8 2-1.8 0-.9-.5-1.4-.5-2.2 0-1 .8-1.7 1.9-1.7H17a4 4 0 0 0 4-4c0-4.6-4-8.3-9-8.3z"/><circle cx="7.5" cy="11.5" r="1" fill="currentColor" stroke="none"/><circle cx="10" cy="7.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg></span> Стиль</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10m5.3 10V4.5M14.6 20v-7m5.4 7V7.5"/></svg></span> Аналитика</a>
-      <a class="cat-chip reveal" href="#plugins"><span class="emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 17.5V5.8l10-2v11.9"/><circle cx="6.8" cy="17.8" r="2.4"/><circle cx="16.8" cy="15.8" r="2.4"/></svg></span> Музыка</a>
+      <div class="step reveal"><span class="tick">1</span><b>Скачайте ExtraGram</b><p>Перейдите на официальный сайт exteragram.app и установите клиент на Android (APK или RuStore).</p></div>
+      <div class="step reveal"><span class="tick">2</span><b>Скачайте плагин</b><p>Нажмите «Скачать» на нужной карточке — файл с расширением .plugin сохранится на устройство.</p></div>
+      <div class="step reveal"><span class="tick">3</span><b>Откройте настройки плагинов</b><p>В ExtraGram: Настройки → Плагины → «+» → выберите скачанный .plugin файл.</p></div>
+      <div class="step reveal"><span class="tick">4</span><b>Включите и настройте</b><p>Перезапустите клиент, включите плагин и настройте под себя. Всё работает — готово!</p></div>
     </div>
   </section>
 
@@ -1114,35 +996,31 @@
     <div class="faq">
       <details class="faq-item reveal">
         <summary>Это официальный каталог Telegram?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="answer">Нет, Lincoln-Plugin — независимый каталог сообщества. Мы не связаны с Telegram Messenger LLP: это наш подбор самых качественных тем и плагинов, которые уже использует большое сообщество.</div>
+        <div class="answer">Нет, Lincoln-Plugin — независимый каталог сообщества. Мы не связаны с Telegram Messenger LLP: это наш подбор качественных плагинов и тем, которые уже использует большое сообщество.</div>
       </details>
       <details class="faq-item reveal">
         <summary>Установка безопасна?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="answer">Мы вручную проверяем каждый плагин: смотрим код, запрашиваемые разрешения и отзывы пользователей. Если находим проблему — решение сразу помечается и убирается из выдачи.</div>
+        <div class="answer">Мы вручную проверяем каждый плагин: смотрим код и запрашиваемые разрешения. Все опубликованные файлы очищены от скрытых сетевых блоков.</div>
       </details>
       <details class="faq-item reveal">
-        <summary>Плагины работают на всех платформах?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="answer">Большинство решений работает на Android, iOS, Windows, macOS и Linux. На карточке каждого плагина указаны поддерживаемые платформы и минимальная версия Telegram.</div>
+        <summary>Почему визуальные эффекты видны только мне?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="answer">Звёзды, телефон, юзернеймы и премиум — это локальная кастомизация интерфейса. На сервере Telegram данные остаются реальными; собеседники в общих чатах видят настоящие.</div>
       </details>
       <details class="faq-item reveal">
         <summary>Можно ли предложить свой плагин?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="answer">Конечно. Напишите нам — после обязательной проверки ваш плагин или тема появится в каталоге с пометкой автора. Лучшие работы попадают в «Популярное».</div>
-      </details>
-      <details class="faq-item reveal">
-        <summary>Темы можно редактировать?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
-        <div class="answer">Да. После установки тема появляется в настройках оформления Telegram, где можно поменять отдельные цвета, фон и размер шрифта под себя.</div>
+        <div class="answer">Конечно. Напишите нам — после обязательной проверки ваш плагин появится в каталоге с пометкой автора.</div>
       </details>
     </div>
   </section>
 
   <!-- CTA -->
   <section class="block wrap" id="cta">
-    <div class="cta-banner reveal shimmer">
+    <div class="cta-banner reveal">
       <h2>Готовы сделать Telegram <span class="grad-text">своим</span>?</h2>
-      <p>Начните с популярных плагинов — это займёт меньше минуты. Всё остальное подстроится под вас.</p>
+      <p>Начните с популярных плагинов — это займёт меньше минуты.</p>
       <div class="hero-actions">
-        <a href="#plugins" class="btn btn-primary">Выбрать плагин</a>
-        <a href="#themes" class="btn btn-ghost">Выбрать тему</a>
+        <a href="#plugins" class="btn btn-warm">Выбрать плагин</a>
+        <a href="#install" class="btn">Как установить</a>
       </div>
     </div>
   </section>
@@ -1160,17 +1038,13 @@
 </footer>
 
 <div id="toast" role="status" aria-live="polite"></div>
-<p class="sr-only" id="liveRegion" aria-live="polite"></p>
+<p class="sr-only" id="liveRegion" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);"></p>
 
 <script>
 (function () {
   "use strict";
 
-  /* ================= Smooth black background: star web =================
-     Pure black canvas. A sparse set of small white dots slowly drifting;
-     dots closer than a threshold are joined by a very faint line, making
-     a quiet "constellation web". Everything is time-based (delta seconds),
-     so motion is smooth and identical on any refresh rate.              */
+  /* ================= Warm star-web background ================= */
   var canvas = document.getElementById("space");
   var ctx = canvas.getContext("2d");
   var W = window.innerWidth, H = window.innerHeight;
@@ -1189,9 +1063,8 @@
 
   function rand(min, max) { return min + Math.random() * (max - min); }
 
-  var COUNT = 70;                 /* sparse, calm */
-  var LINK_DIST = 130;            /* connect dots closer than this (px) */
-  var MIN_SPEED = 2.5, MAX_SPEED = 7.5;
+  var COUNT = 64;
+  var LINK_DIST = 150;
   var nodes = [];
 
   function makeNodes() {
@@ -1199,36 +1072,27 @@
     for (var i = 0; i < COUNT; i++) {
       var vx = rand(-1, 1), vy = rand(-1, 1);
       var len = Math.hypot(vx, vy) || 1;
-      var speed = rand(MIN_SPEED, MAX_SPEED);
+      var speed = rand(2, 6);
       nodes.push({
-        x: rand(0, W),
-        y: rand(0, H),
-        vx: (vx / len) * speed,
-        vy: (vy / len) * speed,
-        r: rand(0.6, 1.8),
+        x: rand(0, W), y: rand(0, H),
+        vx: (vx / len) * speed, vy: (vy / len) * speed,
+        r: rand(0.7, 2),
         twPh: rand(0, Math.PI * 2),
-        twSp: rand(0.4, 1.2)
+        twSp: rand(0.3, 1)
       });
     }
   }
   makeNodes();
   window.addEventListener("resize", makeNodes);
 
-  /* Draw the lines first (they look best under the dots), then dots */
   function drawWeb(t, dt) {
     ctx.clearRect(0, 0, W, H);
-
     for (var i = 0; i < nodes.length; i++) {
       var n = nodes[i];
-      n.x += n.vx * dt;
-      n.y += n.vy * dt;
-
-      /* wrap around edges */
+      n.x += n.vx * dt; n.y += n.vy * dt;
       if (n.x < -20) n.x = W + 20; else if (n.x > W + 20) n.x = -20;
       if (n.y < -20) n.y = H + 20; else if (n.y > H + 20) n.y = -20;
     }
-
-    /* links */
     ctx.lineWidth = 1;
     for (i = 0; i < nodes.length; i++) {
       var a = nodes[i];
@@ -1237,8 +1101,8 @@
         var dx = a.x - b.x, dy = a.y - b.y;
         var d2 = dx * dx + dy * dy;
         if (d2 < LINK_DIST * LINK_DIST) {
-          var alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.16;
-          ctx.strokeStyle = "rgba(220, 235, 255, " + alpha.toFixed(3) + ")";
+          var alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.10;
+          ctx.strokeStyle = "rgba(235, 215, 185, " + alpha.toFixed(3) + ")";
           ctx.beginPath();
           ctx.moveTo(a.x, a.y);
           ctx.lineTo(b.x, b.y);
@@ -1246,12 +1110,10 @@
         }
       }
     }
-
-    /* dots */
     for (i = 0; i < nodes.length; i++) {
       var s = nodes[i];
       var tw = 0.55 + 0.45 * Math.sin(t * s.twSp + s.twPh);
-      ctx.fillStyle = "rgba(228, 238, 250, " + (tw * 0.75).toFixed(3) + ")";
+      ctx.fillStyle = "rgba(240, 226, 205, " + (tw * 0.7).toFixed(3) + ")";
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
       ctx.fill();
@@ -1261,7 +1123,6 @@
   var T0 = performance.now();
   var last = 0;
   var raf = null;
-
   function frame(now) {
     var t = (now - T0) / 1000;
     var dt = Math.min((now - last) / 1000, 0.05);
@@ -1269,20 +1130,61 @@
     drawWeb(t, dt);
     raf = requestAnimationFrame(frame);
   }
-
-  var prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReduced) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     drawWeb(0, 0);
   } else {
     last = performance.now();
     raf = requestAnimationFrame(frame);
   }
 
+  /* ================= Custom cursor warm glow ================= */
+  var cursorGlow = document.getElementById("cursorGlow");
+  var glowX = -200, glowY = -200, gx = -200, gy = -200;
+  var hasMouse = false;
+
+  window.addEventListener("pointermove", function (e) {
+    glowX = e.clientX; glowY = e.clientY;
+    if (!hasMouse) {
+      hasMouse = true;
+      document.body.classList.add("show-cursor");
+      gx = glowX; gy = glowY;
+    }
+  });
+  document.addEventListener("mouseleave", function () {
+    document.body.classList.remove("show-cursor");
+    hasMouse = false;
+  });
+
+  function glowLoop() {
+    gx += (glowX - gx) * 0.08;
+    gy += (glowY - gy) * 0.08;
+    cursorGlow.style.transform = "translate(" + (gx - 210) + "px, " + (gy - 210) + "px)";
+    requestAnimationFrame(glowLoop);
+  }
+  glowLoop();
+
+  /* ================= 3D tilt cards + spotlight ================= */
+  var cards = document.querySelectorAll(".card");
+  cards.forEach(function (card) {
+    card.addEventListener("pointermove", function (e) {
+      var r = card.getBoundingClientRect();
+      var px = (e.clientX - r.left) / r.width;
+      var py = (e.clientY - r.top) / r.height;
+      var rx = (0.5 - py) * 10;
+      var ry = (px - 0.5) * 10;
+      card.style.transform = "perspective(1200px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-4px)";
+      card.style.setProperty("--mx", (px * 100) + "%");
+      card.style.setProperty("--my", (py * 100) + "%");
+    });
+    card.addEventListener("pointerleave", function () {
+      card.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
+    });
+  });
+
   /* ================= Mobile menu ================= */
   var burger = document.getElementById("burger");
   var mobileMenu = document.getElementById("mobileMenu");
   var menuClose = document.getElementById("menuClose");
-
   function setMenu(open) {
     mobileMenu.classList.toggle("open", open);
     mobileMenu.setAttribute("aria-hidden", open ? "false" : "true");
@@ -1295,7 +1197,7 @@
     a.addEventListener("click", function () { setMenu(false); });
   });
 
-  /* ================= Tabs: themes ================= */
+  /* ================= Themes tabs ================= */
   var themeTabs = document.querySelectorAll("[data-ttab]");
   var themeGrid = document.getElementById("themeGrid");
   var liveRegion = document.getElementById("liveRegion");
@@ -1307,14 +1209,10 @@
     themeGrid.querySelectorAll(".card").forEach(function (card) {
       var match = card.getAttribute("data-tcat") === cat;
       card.classList.toggle("hidden", !match);
-      if (match) {
-        card.classList.add("in");
-        visible++;
-      }
+      if (match) { card.classList.add("in"); visible++; }
     });
     liveRegion.textContent = "Показано тем: " + visible;
   }
-
   themeTabs.forEach(function (btn) {
     btn.addEventListener("click", function () {
       themeTabs.forEach(function (b) {
@@ -1326,68 +1224,25 @@
       applyThemeFilter();
     });
   });
-
   applyThemeFilter();
 
-  /* ================= Copy-to-clipboard ================= */
-  var toast = document.getElementById("toast");
-  var toastTimer = null;
-
-  function showToast(msg) {
-    toast.textContent = msg;
-    toast.classList.add("show");
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { toast.classList.remove("show"); }, 2400);
-  }
-
-  function copyText(text) {
-    var fallback = function () {
-      try {
-        var ta = document.createElement("textarea");
-        ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
-        document.body.appendChild(ta);
-        ta.select();
-        var ok = document.execCommand("copy");
-        document.body.removeChild(ta);
-        return Promise.resolve(ok);
-      } catch (e) { return Promise.resolve(false); }
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).then(function () { return true; }, fallback);
-    }
-    return fallback();
-  }
-
-  document.querySelectorAll(".install-btn").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var code = btn.getAttribute("data-code") || "";
-      copyText(code).then(function (ok) {
-        if (ok) {
-          btn.classList.add("copied");
-          var label = btn.textContent;
-          btn.textContent = "Скопировано ✓";
-          setTimeout(function () { btn.classList.remove("copied"); btn.textContent = label; }, 1800);
-          showToast("Код установки скопирован ✓");
-        } else {
-          showToast("Не удалось скопировать: " + code);
-        }
-      });
-    });
-  });
-
-  /* ================= Reveal on scroll ================= */
+  /* ================= Reveal on scroll (stagger) ================= */
   var revealEls = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window) {
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
         if (en.isIntersecting) {
-          en.target.classList.add("in");
+          var delay = 0;
+          var parent = en.target.closest(".bento, .feats, .faq");
+          if (parent) {
+            var idx = Array.prototype.indexOf.call(parent.children, en.target);
+            delay = Math.min(idx * 60, 400);
+          }
+          setTimeout(function () { en.target.classList.add("in"); }, delay);
           io.unobserve(en.target);
         }
       });
-    }, { threshold: 0.1 });
+    }, { threshold: 0.08 });
     revealEls.forEach(function (el) { io.observe(el); });
   } else {
     revealEls.forEach(function (el) { el.classList.add("in"); });
