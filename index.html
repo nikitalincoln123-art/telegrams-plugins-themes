@@ -1054,6 +1054,101 @@
   .news-text p { color: var(--text-dim); font-size: 15px; max-width: 540px; }
   .news-btn { flex: none; position: relative; z-index: 1; }
 
+  /* ---------- Розыгрыши ---------- */
+  .giveaway-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-top: 10px;
+  }
+  .giveaway-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 26px 24px 22px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    background: linear-gradient(180deg, var(--panel-hover), var(--panel));
+    overflow: hidden;
+    transition: border-color 0.35s, box-shadow 0.5s var(--ease), transform 0.4s var(--ease);
+  }
+  .giveaway-card:hover {
+    border-color: rgba(255, 245, 230, 0.2);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+    transform: translateY(-3px);
+  }
+  .giveaway-card .g-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(237, 201, 160, 0.16), rgba(237, 201, 160, 0.05));
+    border: 1px solid rgba(237, 201, 160, 0.18);
+    display: grid;
+    place-items: center;
+    font-size: 26px;
+  }
+  .giveaway-card h3 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--creme); }
+  .giveaway-card .g-desc { color: var(--text-dim); font-size: 14px; line-height: 1.55; }
+  .g-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: auto;
+    padding-top: 6px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .g-timer b { color: var(--creme); font-weight: 700; }
+  .g-count b { color: var(--creme); font-weight: 700; }
+  .g-join { margin-top: 4px; text-align: center; }
+  .g-status {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  .g-status.active { background: rgba(79, 174, 106, 0.12); color: #5ec27b; border: 1px solid rgba(79, 174, 106, 0.3); }
+  .g-status.soon { background: rgba(237, 201, 160, 0.12); color: var(--creme); border: 1px solid rgba(237, 201, 160, 0.3); }
+  .g-status.done { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border: 1px solid var(--border); }
+
+  .giveaway-rules {
+    margin-top: 26px;
+    padding: 28px 30px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, var(--panel-hover), var(--panel));
+  }
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 18px;
+  }
+  .rule { display: flex; gap: 13px; color: var(--text-dim); font-size: 14px; line-height: 1.55; }
+  .rule b {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, #f8f2e6, #e3cba8);
+    color: #0b0a08;
+    font-size: 13px;
+  }
+  .rule p { margin: 0; }
+
+  @media (max-width: 860px) {
+    .giveaway-rules { padding: 22px 20px; }
+  }
+
   /* ---------- О проекте ---------- */
   .about {
     display: grid;
@@ -1372,6 +1467,7 @@
       <ul class="nav-links">
         <li><a href="#plugins">Каталог</a></li>
         <li><a href="#themes">Темы</a></li>
+        <li><a href="#giveaways">Розыгрыши</a></li>
         <li><a href="#faq">FAQ</a></li>
         <li><a href="#install" class="btn nav-cta">Установить</a></li>
       </ul>
@@ -1396,6 +1492,7 @@
   </button>
   <a href="#plugins">Каталог плагинов</a>
   <a href="#themes">Темы</a>
+  <a href="#giveaways">Розыгрыши</a>
   <a href="#faq">FAQ</a>
   <a href="#install">Установить</a>
 </div>
@@ -1744,6 +1841,67 @@
         <h3>Тёплый свет</h3>
         <p class="desc">Светлые панели с персиковыми и кремовыми акцентами. Лёгкость и уют.</p>
       </article>
+    </div>
+  </section>
+
+  <!-- GIVEAWAYS -->
+  <section class="block wrap" id="giveaways">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow">Призы для сообщества</div>
+        <h2>Розыгрыши</h2>
+        <p>Периодически разыгрываем подарки среди подписчиков: Telegram Premium, звёзды, платные функции и не только.</p>
+      </div>
+      <a href="https://t.me/LincolnWasted" target="_blank" rel="noopener" class="btn float-btn">Канал с розыгрышами</a>
+    </div>
+
+    <div class="giveaway-grid">
+
+      <article class="giveaway-card reveal" data-end="2026-11-20T21:00:00+03:00" data-status="active">
+        <div class="g-status active">Активен</div>
+        <span class="g-icon">🎁</span>
+        <h3>Telegram Premium × 3 месяца</h3>
+        <p class="g-desc">Три победителя получат подписку Telegram Premium. Условия: подписка на канал, репост анонса, реакция на пост.</p>
+        <div class="g-meta">
+          <span class="g-timer" data-timer>Осталось: <b>—</b></span>
+          <span class="g-count">Участвуют: <b id="g-count-1">—</b></span>
+        </div>
+        <a href="https://t.me/LincolnWasted" target="_blank" rel="noopener" class="btn btn-warm g-join">Участвовать</a>
+      </article>
+
+      <article class="giveaway-card reveal" data-end="2026-11-30T21:00:00+03:00" data-status="soon">
+        <div class="g-status soon">Скоро</div>
+        <span class="g-icon">⭐</span>
+        <h3>Звёзды Telegram × 500</h3>
+        <p class="g-desc">Разыграем 500 звёзд одному победителю. Старт — сразу после завершения текущего розыгрыша, следите за каналом.</p>
+        <div class="g-meta">
+          <span class="g-timer" data-timer>Старт: <b>—</b></span>
+          <span class="g-count">Приз: <b>500 ⭐</b></span>
+        </div>
+        <a href="https://t.me/LincolnWasted" target="_blank" rel="noopener" class="btn g-join">Следить</a>
+      </article>
+
+      <article class="giveaway-card reveal" data-end="2026-11-01T21:00:00+03:00" data-status="done">
+        <div class="g-status done">Завершён</div>
+        <span class="g-icon">🏆</span>
+        <h3>VIP-статус в канале × 5</h3>
+        <p class="g-desc">Победители объявлены в канале. Спасибо всем за участие — следующий розыгрыш уже скоро!</p>
+        <div class="g-meta">
+          <span class="g-timer">Завершён 01.11</span>
+          <span class="g-count">Итоги в канале</span>
+        </div>
+        <a href="https://t.me/LincolnWasted" target="_blank" rel="noopener" class="btn g-join">Смотреть итоги</a>
+      </article>
+
+    </div>
+
+    <div class="giveaway-rules reveal">
+      <div class="eyebrow" style="margin-bottom:10px;">Как проходит розыгрыш</div>
+      <div class="rules-grid">
+        <div class="rule"><b>1</b><p>Подпишитесь на канал и выполните условия поста (репост, реакция, комментарий).</p></div>
+        <div class="rule"><b>2</b><p>Дождитесь завершения — победителей определяет встроенный розыгрыш Telegram.</p></div>
+        <div class="rule"><b>3</b><p>Итоги публикуются в канале, призы высылаются ботом или вручную.</p></div>
+      </div>
     </div>
   </section>
 
@@ -2627,6 +2785,52 @@
     // Любая ошибка не должна прятать контент — показываем всё
     document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
   }
+
+  /* ================= Розыгрыши: таймеры ================= */
+  function plural(n, one, few, many) {
+    n = Math.abs(n) % 100;
+    var n1 = n % 10;
+    if (n > 10 && n < 20) return many;
+    if (n1 > 1 && n1 < 5) return few;
+    if (n1 === 1) return one;
+    return many;
+  }
+  function fmt(ms, prefix) {
+    if (ms <= 0) return prefix + "завершён";
+    var s = Math.floor(ms / 1000);
+    var d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60);
+    var parts = [];
+    if (d > 0) parts.push(d + " " + plural(d, "день", "дня", "дней"));
+    if (h > 0) parts.push(h + " ч");
+    if (m > 0) parts.push(m + " мин");
+    if (parts.length === 0) parts.push("меньше минуты");
+    return prefix + parts.join(" ");
+  }
+  function tickGiveaway() {
+    var now = Date.now();
+    document.querySelectorAll(".giveaway-card[data-end]").forEach(function (card) {
+      var timerEl = card.querySelector("[data-timer]");
+      if (!timerEl) return;
+      var end = new Date(card.getAttribute("data-end")).getTime();
+      if (isNaN(end)) return;
+      var status = card.getAttribute("data-status");
+      var left = end - now;
+      if (status === "active") {
+        if (left <= 0) {
+          card.setAttribute("data-status", "done");
+          var st = card.querySelector(".g-status");
+          if (st) { st.className = "g-status done"; st.textContent = "Завершён"; }
+          var join = card.querySelector(".g-join");
+          if (join) { join.textContent = "Смотреть итоги"; }
+        }
+        timerEl.innerHTML = "Осталось: <b>" + fmt(left, "") + "</b>";
+      } else if (status === "soon") {
+        timerEl.innerHTML = "Старт: <b>" + fmt(left, "") + "</b>";
+      }
+    });
+  }
+  tickGiveaway();
+  setInterval(tickGiveaway, 30000);
 })();
 </script>
 </body>
