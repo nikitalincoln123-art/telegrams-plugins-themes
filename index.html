@@ -532,6 +532,12 @@
     letter-spacing: 0.01em;
     text-align: center;
   }
+  .card .card-download {
+    align-self: flex-start;
+    padding: 10px 18px;
+    font-size: 14px;
+    border-radius: var(--radius-sm);
+  }
   .card .meta {
     display: flex;
     align-items: center;
@@ -890,7 +896,13 @@
 
     <div class="bento" id="pluginGrid">
       <article class="card reveal float shimmer" data-pcat="useful">
-        <p class="card-note">В процессе разработки</p>
+        <div class="top">
+          <span class="icon" style="background:rgba(60,232,164,.13)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/></svg></span>
+          <span class="tag">Плагин</span>
+        </div>
+        <h3>Lincoln-Plugin</h3>
+        <p class="desc">NFTSender: локальное изменение баланса звёзд, подмена username на фейковый NFT-ник, визуальная вставка collectible NFT-подарков в чат, анимации и отправка подарков/звёзд с эффектами. Версия 1.5.</p>
+        <a class="btn btn-primary card-download" href="plugins/Lincoln-Plugin.plugin" download>Скачать плагин</a>
       </article>
 
       <article class="card reveal float shimmer" data-pcat="useful">
