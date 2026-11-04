@@ -908,6 +908,46 @@
     transition: opacity 0.35s var(--ease), visibility 0.35s;
   }
   .modal-overlay.open { opacity: 1; visibility: visible; }
+  .modal-overlay.show { opacity: 1; visibility: visible; }
+  .modal-overlay.show .modal { transform: none; }
+  .ga-modal { max-width: 480px; text-align: center; }
+  .ga-modal-icon {
+    width: 74px;
+    height: 74px;
+    margin: 0 auto 16px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(135deg, rgba(237, 201, 160, 0.2), rgba(237, 201, 160, 0.06));
+    border: 1px solid rgba(237, 201, 160, 0.22);
+    box-shadow: 0 0 30px rgba(224, 177, 120, 0.15);
+  }
+  .ga-modal-icon svg { width: 52px; height: 52px; display: block; }
+  .ga-modal h3 { font-size: 22px; font-weight: 800; color: var(--creme); margin-bottom: 8px; letter-spacing: -0.02em; }
+  .ga-modal .m-desc { color: var(--text-dim); font-size: 14px; line-height: 1.55; margin-bottom: 18px; }
+  .ga-modal-rules {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    text-align: left;
+    padding: 18px 20px;
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    background: rgba(255, 250, 240, 0.03);
+    margin-bottom: 14px;
+  }
+  .ga-modal-rules .rule { font-size: 13.5px; }
+  .ga-modal-note {
+    margin-bottom: 20px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(237, 201, 160, 0.25);
+    background: rgba(237, 201, 160, 0.08);
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  .ga-modal .modal-actions { justify-content: center; }
   .modal {
     width: 100%;
     max-width: 560px;
@@ -2149,7 +2189,7 @@
           <span class="g-count">Участвуют: <b id="gCount">0</b></span>
         </div>
         <div class="g-join-row">
-          <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener" class="btn btn-warm g-join" id="gJoinBtn">Участвовать</a>
+          <button type="button" class="btn btn-warm g-join" id="gJoinBtn">Участвовать</button>
           <span class="g-side-count" id="gSideCount" aria-hidden="true">
             <span class="g-side-num" id="gSideNum">0</span> участников
           </span>
@@ -2358,6 +2398,40 @@
     <div class="modal-actions">
       <a class="btn btn-warm" href="#" id="mDownload" download>Скачать плагин</a>
       <button class="m-copy" id="mCopy">Копировать ссылку</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модальное окно правил розыгрыша -->
+<div class="modal-overlay" id="giveawayModal" aria-hidden="true">
+  <div class="modal ga-modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="gaModalClose" aria-label="Закрыть">✕</button>
+    <span class="ga-modal-icon" aria-hidden="true">
+      <svg viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="40" r="18" fill="#e9c88f"/>
+        <circle cx="14" cy="18" r="10" fill="#e9c88f"/>
+        <circle cx="50" cy="18" r="10" fill="#e9c88f"/>
+        <circle cx="14" cy="14" r="4.2" fill="#f3e0b8"/>
+        <circle cx="50" cy="14" r="4.2" fill="#f3e0b8"/>
+        <circle cx="26" cy="38" r="1.8" fill="#2a1e10"/>
+        <circle cx="38" cy="38" r="1.8" fill="#2a1e10"/>
+        <path d="M27 44.5c3 2.2 7 2.2 10 0" stroke="#2a1e10" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="32" cy="48.5" rx="5" ry="3.4" fill="#2a1e10"/>
+        <path d="M29 51.5 27 58l5 1.5 5-1.5-2-6.5z" fill="#2a1e10"/>
+      </svg>
+    </span>
+    <div class="m-eyebrow" data-i18n="ga_modal_eyebrow">Условия участия</div>
+    <h3 id="gaModalTitle">10 мишек Telegram</h3>
+    <p class="m-desc" data-i18n="ga_modal_sub">Все 10 подарков будут отданы 10-ти рандомным людям после выполнения условий.</p>
+    <div class="ga-modal-rules">
+      <div class="rule"><b>1</b><p data-i18n="ga_rule1">Подписаться на Telegram канал и поставить реакцию на последний пост.</p></div>
+      <div class="rule"><b>2</b><p data-i18n="ga_rule2">По табличке «В процессе» на самом сайте начать писать мне в лс.</p></div>
+      <div class="rule"><b>3</b><p data-i18n="ga_rule3">По итогу розыгрыша все первые 10 человек получат свои подарки.</p></div>
+    </div>
+    <div class="ga-modal-note" data-i18n="ga_modal_note">Принять участие можно заранее, но при этом придется следить за активностью и началом раздачи подарков.</div>
+    <div class="modal-actions">
+      <a class="btn btn-warm" href="https://t.me/AdapterLincoln" target="_blank" rel="noopener" id="gaModalJoin" data-i18n="ga_join">Принять участие</a>
+      <button class="m-copy" id="gaModalCancel" data-i18n="ga_cancel">Отмена</button>
     </div>
   </div>
 </div>
@@ -3121,6 +3195,12 @@
       themes_dark: "Черные", themes_light: "Светлые",
       ga_eyebrow: "Призы для сообщества", ga_title: "Розыгрыши", ga_sub: "Периодически разыгрываем подарки среди подписчиков: мишки Telegram, Premium, звёзды и не только.",
       ga_channel: "Канал с розыгрышами",
+      ga_modal_eyebrow: "Условия участия", ga_modal_sub: "Все 10 подарков будут отданы 10-ти рандомным людям после выполнения условий.",
+      ga_rule1: "Подписаться на Telegram канал и поставить реакцию на последний пост.",
+      ga_rule2: "По табличке «В процессе» на самом сайте начать писать мне в лс.",
+      ga_rule3: "По итогу розыгрыша все первые 10 человек получат свои подарки.",
+      ga_modal_note: "Принять участие можно заранее, но при этом придется следить за активностью и началом раздачи подарков.",
+      ga_join: "Принять участие", ga_cancel: "Отмена",
       ch_eyebrow: "Канал", ch_title: "Lincoln · Логово", ch_sub: "Новости, анонсы розыгрышей и полезные материалы — подписывайтесь, чтобы ничего не пропустить.",
       ch_join: "Подписаться", ch_join_btn: "Подписаться", ch_more: "Больше постов:",
       inst_eyebrow: "Начало работы", inst_title: "Как установить", inst_sub: "Простые шаги для любой платформы — от десктопа до телефона.",
@@ -3159,6 +3239,12 @@
       themes_dark: "Dark", themes_light: "Light",
       ga_eyebrow: "Community prizes", ga_title: "Giveaways", ga_sub: "We regularly give away prizes among subscribers: Telegram bears, Premium, stars and more.",
       ga_channel: "Giveaway channel",
+      ga_modal_eyebrow: "Terms of participation", ga_modal_sub: "All 10 gifts will be given to 10 random people after fulfilling the conditions.",
+      ga_rule1: "Subscribe to the Telegram channel and react to the latest post.",
+      ga_rule2: "See the «In progress» badge on the site and start writing to me in DM.",
+      ga_rule3: "When the giveaway ends, the first 10 people will receive their gifts.",
+      ga_modal_note: "You can join in advance, but you will need to watch for activity and the start of the gift distribution.",
+      ga_join: "Join now", ga_cancel: "Cancel",
       ch_eyebrow: "Channel", ch_title: "Lincoln · Lair", ch_sub: "News, giveaway announcements and useful stuff — subscribe so you don't miss anything.",
       ch_join: "Subscribe", ch_join_btn: "Subscribe", ch_more: "More posts:",
       inst_eyebrow: "Getting started", inst_title: "How to install", inst_sub: "Simple steps for any platform — from desktop to phone.",
@@ -3274,6 +3360,10 @@
     var sideEl = document.getElementById("gSideCount");
     var sideNum = document.getElementById("gSideNum");
     var joinBtn = document.getElementById("gJoinBtn");
+    var gaModal = document.getElementById("giveawayModal");
+    var gaClose = document.getElementById("gaModalClose");
+    var gaCancel = document.getElementById("gaModalCancel");
+    var gaJoin = document.getElementById("gaModalJoin");
     var joined = getGiveawayJoined();
     var base = Math.max(getGiveawayBase(), joined ? 1 : 0);
     var n = base + (joined ? 1 : 0);
@@ -3285,9 +3375,20 @@
     if (joined && sideEl) {
       sideEl.classList.add("show");
     }
-    if (joinBtn) {
-      joinBtn.addEventListener("click", function () {
-        if (getGiveawayJoined()) return;
+    function openGaModal() {
+      if (!gaModal) return;
+      gaModal.setAttribute("aria-hidden", "false");
+      gaModal.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
+    function closeGaModal() {
+      if (!gaModal) return;
+      gaModal.setAttribute("aria-hidden", "true");
+      gaModal.classList.remove("show");
+      document.body.style.overflow = "";
+    }
+    function confirmJoin() {
+      if (!getGiveawayJoined()) {
         setGiveawayJoined();
         joined = true;
         setGiveawayBase(n);
@@ -3299,8 +3400,26 @@
           if (meta) meta.classList.add("pulse");
           setTimeout(function () { if (meta) meta.classList.remove("pulse"); }, 800);
         }
+      }
+      closeGaModal();
+    }
+    if (joinBtn) {
+      joinBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        openGaModal();
       });
     }
+    if (gaClose) gaClose.addEventListener("click", closeGaModal);
+    if (gaCancel) gaCancel.addEventListener("click", closeGaModal);
+    if (gaJoin) gaJoin.addEventListener("click", confirmJoin);
+    if (gaModal) {
+      gaModal.addEventListener("click", function (e) {
+        if (e.target === gaModal) closeGaModal();
+      });
+    }
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeGaModal();
+    });
   })();
 
   /* ================= Шторка секций при скролле ================= */
