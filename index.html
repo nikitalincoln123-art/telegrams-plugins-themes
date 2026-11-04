@@ -755,8 +755,10 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* ---------- Reveal: раскрытие (шторка) ---------- */
-  .reveal {
+  /* ---------- Reveal: раскрытие (шторка) — только при работающем JS ---------- */
+  /* По умолчанию контент ВИДЕН (безопасно). Класс .js на <html> включает
+     анимацию; если JS упал — страница остаётся полностью доступной. */
+  .js .reveal {
     opacity: 0;
     transform: translateY(40px);
     transition:
@@ -765,14 +767,13 @@
       clip-path 0.9s var(--ease);
     clip-path: inset(0% 0% 100% 0%);
   }
-  .reveal.in {
+  .js .reveal.in {
     opacity: 1;
     transform: none;
     clip-path: inset(0% 0% 0% 0%);
   }
 
-  /* Карточки внутри контейнера раскрываются по отдельности */
-  .reveal.in { will-change: transform, clip-path; }
+  .js .card { will-change: transform, clip-path; }
 
   /* ---------- Дополнительный фон: дрейфующие сферы ---------- */
   .orb {
@@ -1142,6 +1143,15 @@
 (function () {
   "use strict";
 
+  /* Включаем анимации только после того, как JS точно работает.
+     Аварийный таймер: если reveal-механизм не сработал, показываем всё. */
+  document.documentElement.classList.add("js");
+  setTimeout(function () {
+    document.querySelectorAll(".reveal").forEach(function (el) {
+      el.classList.add("in");
+    });
+  }, 1500);
+
   /* ================= Warm star-web background ================= */
   var canvas = document.getElementById("space");
   var ctx = canvas.getContext("2d");
@@ -1338,25 +1348,30 @@
   orbParallax();
 
   /* ================= Reveal on scroll: раскрытие-шторка ================= */
-  var revealEls = document.querySelectorAll(".reveal");
-  if ("IntersectionObserver" in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (en) {
-        if (en.isIntersecting) {
-          var delay = 0;
-          var parent = en.target.closest(".bento, .feats, .faq");
-          if (parent) {
-            var idx = Array.prototype.indexOf.call(parent.children, en.target);
-            delay = Math.min(idx * 70, 420);
+  try {
+    var revealEls = document.querySelectorAll(".reveal");
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) {
+          if (en.isIntersecting) {
+            var delay = 0;
+            var parent = en.target.closest(".bento, .feats, .faq");
+            if (parent) {
+              var idx = Array.prototype.indexOf.call(parent.children, en.target);
+              delay = Math.min(idx * 70, 420);
+            }
+            setTimeout(function () { en.target.classList.add("in"); }, delay);
+            io.unobserve(en.target);
           }
-          setTimeout(function () { en.target.classList.add("in"); }, delay);
-          io.unobserve(en.target);
-        }
-      });
-    }, { threshold: 0.12 });
-    revealEls.forEach(function (el) { io.observe(el); });
-  } else {
-    revealEls.forEach(function (el) { el.classList.add("in"); });
+        });
+      }, { threshold: 0.12 });
+      revealEls.forEach(function (el) { io.observe(el); });
+    } else {
+      revealEls.forEach(function (el) { el.classList.add("in"); });
+    }
+  } catch (e) {
+    // Любая ошибка не должна прятать контент — показываем всё
+    document.querySelectorAll(".reveal").forEach(function (el) { el.classList.add("in"); });
   }
 })();
 </script>
