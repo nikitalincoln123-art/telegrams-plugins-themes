@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>404 — Lincoln-Plugin</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#070604">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23ffffff'/%3E%3Cstop offset='1' stop-color='%23e3cba8'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='%230b0a08'/%3E%3Ccircle cx='32' cy='32' r='15' fill='none' stroke='url(%23g)' stroke-width='4.5'/%3E%3Ccircle cx='32' cy='32' r='6.5' fill='%23f7f1e7'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #070604;
+    --panel: rgba(255, 250, 240, 0.035);
+    --border: rgba(255, 245, 230, 0.10);
+    --text: #f5efe4;
+    --text-dim: #b3a897;
+    --creme: #f8f2e6;
+    --peach: #edc9a0;
+    --radius: 20px;
+    --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    overflow: hidden;
+    position: relative;
+  }
+  .glow {
+    position: fixed;
+    top: -30%;
+    right: -15%;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(224, 177, 120, 0.14), transparent 70%);
+    pointer-events: none;
+    animation: drift 16s ease-in-out infinite alternate;
+  }
+  .glow-2 {
+    position: fixed;
+    bottom: -25%;
+    left: -15%;
+    width: 420px;
+    height: 420px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(237, 201, 160, 0.10), transparent 70%);
+    pointer-events: none;
+    animation: drift 20s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(50px, 30px) scale(1.15); }
+  }
+  .card {
+    position: relative;
+    z-index: 1;
+    max-width: 460px;
+    padding: 48px 40px;
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    background: linear-gradient(180deg, rgba(255, 250, 240, 0.05), rgba(255, 250, 240, 0.02));
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.6);
+  }
+  .code {
+    font-size: 96px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--creme), var(--peach));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 26px;
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 15px;
+  }
+  .logo svg { width: 30px; height: 30px; }
+  .logo em { color: var(--peach); font-style: normal; font-weight: 400; }
+  h1 { font-size: 22px; font-weight: 800; color: var(--creme); margin-bottom: 12px; }
+  p { color: var(--text-dim); font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+  .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    background: rgba(255, 250, 240, 0.04);
+    color: var(--creme);
+    transition: all 0.3s var(--ease);
+  }
+  .btn:hover { border-color: rgba(237, 201, 160, 0.4); transform: translateY(-2px); }
+  .btn-warm {
+    background: linear-gradient(135deg, #f8f2e6, #e3cba8);
+    color: #0b0a08;
+    border: none;
+  }
+  .btn-warm:hover { box-shadow: 0 10px 30px rgba(224, 177, 120, 0.25); }
+  @media (max-width: 480px) {
+    .card { padding: 36px 24px; }
+    .code { font-size: 76px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .glow, .glow-2 { animation: none; }
+  }
+</style>
+</head>
+<body>
+  <div class="glow" aria-hidden="true"></div>
+  <div class="glow-2" aria-hidden="true"></div>
+
+  <div class="card">
+    <a class="logo" href="./">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5c5.2 0 9.5 4.3 9.5 9.5s-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z" stroke="currentColor" stroke-width="1.8"/><path d="M12 6.5A5.5 5.5 0 0 1 17.5 12 5.5 5.5 0 0 1 12 17.5 5.5 5.5 0 0 1 6.5 12 5.5 5.5 0 0 1 12 6.5z" fill="currentColor"/></svg>
+      Lincoln<em>-Plugin</em>
+    </a>
+    <div class="code">404</div>
+    <h1>Страница не найдена</h1>
+    <p>Такой страницы нет или она была перемещена. Но плагины и темы никуда не делись — возвращайтесь в каталог.</p>
+    <div class="btn-row">
+      <a href="./" class="btn btn-warm">На главную</a>
+      <a href="./#plugins" class="btn">Каталог плагинов</a>
+    </div>
+  </div>
+</body>
+</html>
