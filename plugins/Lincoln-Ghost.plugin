@@ -2,32 +2,45 @@ __id__ = "lincoln_ghost"
 __name__ = "Lincoln Ghost"
 __description__ = "Скрывает статус «в сети» для собеседников и не отправляет отметку «прочитано», даже когда вы заходите в чат. Всё работает локально, на сервер ничего не отправляется."
 __author__ = "Lincoln"
-__version__ = "1.0"
+__version__ = "1.1"
 __icon__ = "msg_invisible"
 __min_version__ = "11.9.0"
 
-from base_plugin import BasePlugin, MethodReplacement
+from base_plugin import BasePlugin, MethodHook, MethodReplacement, HookResult
 from ui.settings import Header, Switch, Divider, Text
 
-from org.telegram.messenger import AccountInstance, ConnectionsManager, MessagesController
+from hook_utils import find_class
+from org.telegram.messenger import UserConfig
 
 
-class BlockReadReceipts(MethodReplacement):
-    """Перехватывает методы отметки «прочитано» и не даёт им выполниться."""
+class HideRead(MethodHook):
+    """Блокирует отметку «прочитано»: прерываем вызов в before."""
 
     def __init__(self, plugin):
         super().__init__()
         self.plugin = plugin
 
-    def replace_hooked_method(self, param):
-        # чтобы не ломать чужую логику, проверяем настройку внутри хука
+    def before_hooked_method(self, param):
         if self.plugin.get_setting("no_read", True):
-            return None
-        return param.getDefaultReturnValue()
+            # Не даём оригинальному методу выполниться
+            param.setResult(None)
 
 
-class FakeOffline(MethodReplacement):
-    """Заставляет клиент выглядеть «не в сети» для собеседников."""
+class DisableOnline(MethodHook):
+    """Не даёт клиенту перевести статус в «в сети»."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        if self.plugin.get_setting("ghost_online", True):
+            # Например updateOnlineStatus(true) / setAppPaused(false) — не выполняем
+            param.setResult(None)
+
+
+class ForceOfflineStatus(MethodReplacement):
+    """Замена статуса на False, если метод возвращает boolean."""
 
     def __init__(self, plugin):
         super().__init__()
@@ -35,70 +48,63 @@ class FakeOffline(MethodReplacement):
 
     def replace_hooked_method(self, param):
         if not self.plugin.get_setting("ghost_online", True):
-            return param.getDefaultReturnValue()
-        # для boolean-методов возвращаем False (не в сети)
-        try:
-            rt = param.getReturnType()
-            rtn = str(rt.getName() if rt is not None else "")
-            if "boolean" in rtn:
-                return False
-        except Exception:
-            pass
-        return None
+            return param.getResult()
+        return False
 
 
 class LincolnGhostPlugin(BasePlugin):
 
-    def _hook_methods_by_name(self, cls, names, hook):
-        """Хукает все методы класса, чьё имя входит в список паттернов."""
-        hooked = []
-        try:
-            for method in cls.getDeclaredMethods():
-                name = str(method.getName())
-                if not any(name == n or name.startswith(n) or n in name for n in names):
-                    continue
-                try:
-                    method.setAccessible(True)
-                    self.hook_method(method, hook)
-                    hooked.append("%s.%s" % (cls.getSimpleName(), name))
-                except Exception:
-                    continue
-        except Exception:
-            pass
-        return hooked
-
     def on_plugin_load(self):
         self.add_hook("TL_updateNewMessage")
-        self._read_hooks = []
-        self._online_hooks = []
+        self._refs = []
 
-        try:
-            self._read_hooks += self._hook_methods_by_name(
-                MessagesController,
-                ("markDialogAsRead", "markMessageAsRead", "markMessageContentAsRead",
-                 "markMessagesAsRead", "markFragmentsAsRead"),
-                BlockReadReceipts(self),
-            )
-        except Exception:
-            pass
+        # 1) Убираем «прочитано»
+        mc = find_class("org.telegram.messenger.MessagesController")
+        if mc is not None:
+            for name in ("markDialogAsRead", "markMessageAsRead", "markMessageContentAsRead"):
+                try:
+                    for m in mc.getDeclaredMethods():
+                        if m.getName() == name:
+                            m.setAccessible(True)
+                            r = self.hook_method(m, HideRead(self), priority=100)
+                            if r:
+                                self._refs.append(r)
+                except Exception:
+                    pass
 
-        try:
-            self._online_hooks += self._hook_methods_by_name(
-                AccountInstance,
-                ("isOnline", "isHiddenOnline", "updateOnlineStatus"),
-                FakeOffline(self),
-            )
-        except Exception:
-            pass
+        # 2) Скрываем «в сети»
+        cm = find_class("org.telegram.tgnet.ConnectionsManager")
+        if cm is not None:
+            for name in ("updateOnlineStatus",):
+                try:
+                    for m in cm.getDeclaredMethods():
+                        if m.getName() == name:
+                            m.setAccessible(True)
+                            r = self.hook_method(m, DisableOnline(self), priority=100)
+                            if r:
+                                self._refs.append(r)
+                except Exception:
+                    pass
+            # делаем так, чтобы isOnline возвращал False
+            for name in ("isOnline",):
+                try:
+                    for m in cm.getDeclaredMethods():
+                        if m.getName() == name and m.getParameterTypes().length == 0:
+                            m.setAccessible(True)
+                            r = self.hook_method(m, ForceOfflineStatus(self), priority=100)
+                            if r:
+                                self._refs.append(r)
+                except Exception:
+                    pass
 
+        # 3) Не отслеживаем last seen / status при отправке (доп. защита)
         try:
-            # «разбуживание» связи на переднем плане делает нас «в сети» —
-            # блокируем его, чтобы не отправлять статус онлайн
-            self._online_hooks += self._hook_methods_by_name(
-                ConnectionsManager,
-                ("setAppPaused",),
-                FakeOffline(self),
-            )
+            uc = find_class("org.telegram.messenger.UserConfig")
+            if uc is not None:
+                for m in uc.getDeclaredMethods():
+                    if m.getName() in ("getLastSeen", "saveConfig"):
+                        m.setAccessible(True)
+                # Не хардкодим, достаточно 1 и 2
         except Exception:
             pass
 
@@ -122,8 +128,7 @@ class LincolnGhostPlugin(BasePlugin):
             Divider(),
             Text(
                 text="Примечание",
-                subtext="Если после установки не сработало — перезапустите клиент. Найдено хуков: чтение %d, онлайн %d."
-                       % (len(self._read_hooks), len(self._online_hooks)),
+                subtext="Перезапустите клиент после установки. Найдено хуков: %d." % len(self._refs),
                 icon="msg_info",
             ),
         ]

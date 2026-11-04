@@ -2,21 +2,18 @@ __id__ = "lincoln_tools"
 __name__ = "Lincoln Tools"
 __description__ = "Локальная визуальная подмена баланса звёзд и TON в профиле. Работает только в интерфейсе, ничего не отправляет и не изменяет на сервере."
 __author__ = "Lincoln"
-__version__ = "1.0"
+__version__ = "1.1"
 __icon__ = "msg_star"
 __min_version__ = "11.9.0"
 
 from decimal import Decimal, getcontext
 
 from base_plugin import BasePlugin, MethodReplacement
-from ui.settings import Header, Switch, Input, Text, Divider
+from ui.settings import Header, Switch, Input, Divider, Text
 
-from org.telegram.tgnet.tl import TL_stars
-from org.telegram.ui.Stars import StarsController
+from hook_utils import find_class
 
 getcontext().prec = 12
-
-STARS_AMOUNT_CLASS_IS_ABSTRACT = hasattr(TL_stars.StarsAmount, "ofStars")
 
 
 class ReplaceBalance(MethodReplacement):
@@ -29,54 +26,69 @@ class ReplaceBalance(MethodReplacement):
     def replace_hooked_method(self, param):
         try:
             is_ton = bool(getattr(param.thisObject, "ton", False))
-            value = Decimal(self.plugin.fr_stars if not is_ton else self.plugin.fr_ton)
+            value = Decimal(str(self.plugin._stars if not is_ton else self.plugin._ton))
+            stars = find_class("org.telegram.tgnet.tl.TL_stars$StarsAmount")
+            ton_amount = find_class("org.telegram.tgnet.tl.TL_stars$TL_starsTonAmount")
             if is_ton:
-                amount = TL_stars.TL_starsTonAmount()
+                if ton_amount is None:
+                    return param.getResult()
+                amount = ton_amount()
                 amount.amount = int(value * Decimal("1000000000"))
                 return amount
+            if stars is None:
+                return param.getResult()
+            # Безопасно создаём объект нужного типа через KnownClasses,
+            # используя заводской метод ofStars если доступен
+            try:
+                amount = stars.ofStars(int(value))
+            except Exception:
+                amount = stars(int(value))
             frac = value - int(value)
             nanos = int((frac * Decimal("1000000000")).to_integral_value())
-            if STARS_AMOUNT_CLASS_IS_ABSTRACT:
-                amount = TL_stars.StarsAmount.ofStars(int(value))
-            else:
-                amount = TL_stars.StarsAmount(int(value))
-            amount.nanos = nanos
+            try:
+                amount.nanos = nanos
+            except Exception:
+                pass
             return amount
         except Exception:
-            return param.getDefaultReturnValue()
+            return param.getResult()
 
 
 class LincolnToolsPlugin(BasePlugin):
 
     def on_plugin_load(self):
         self.add_hook("TL_updateNewMessage")
-        self.fr_stars = Decimal(self.get_setting("stars", "9999"))
-        self.fr_ton = Decimal(self.get_setting("ton", "1.5"))
+        self._stars = self.get_setting("stars", "9999")
+        self._ton = self.get_setting("ton", "1.5")
+        self._hook_ref = None
+
+        controller = find_class("org.telegram.ui.Stars.StarsController")
+        if controller is None:
+            return
         try:
-            stars_controller = StarsController.class_
-            for method in stars_controller.getDeclaredMethods():
+            for method in controller.getDeclaredMethods():
                 if method.getName() == "getBalance" and method.getParameterTypes().length == 0:
                     method.setAccessible(True)
-                    self.hook_method(method, ReplaceBalance(self))
+                    self._hook_ref = self.hook_method(method, ReplaceBalance(self), priority=100)
                     break
         except Exception:
             pass
 
+    def on_amount_change(self, value):
+        try:
+            self._stars = str(value).strip() or "0"
+            self.set_setting("stars", self._stars)
+        except Exception:
+            pass
+
+    def on_ton_change(self, value):
+        try:
+            self._ton = str(value).strip() or "0"
+            self.set_setting("ton", self._ton)
+        except Exception:
+            pass
+
     def create_settings(self):
-        def on_stars_change(value):
-            try:
-                self.fr_stars = Decimal(str(value).strip() or "0")
-                self.set_setting("stars", str(self.fr_stars))
-            except Exception:
-                pass
-
-        def on_ton_change(value):
-            try:
-                self.fr_ton = Decimal(str(value).strip() or "0")
-                self.set_setting("ton", str(self.fr_ton))
-            except Exception:
-                pass
-
         return [
             Header(text="Lincoln Tools"),
             Switch(
@@ -94,7 +106,7 @@ class LincolnToolsPlugin(BasePlugin):
                 default="9999",
                 subtext="Целое число, видимое в профиле",
                 icon="msg_star",
-                on_change=on_stars_change,
+                on_change=self.on_amount_change,
             ),
             Divider(),
             Header(text="Баланс TON"),
@@ -104,7 +116,7 @@ class LincolnToolsPlugin(BasePlugin):
                 default="1.5",
                 subtext="Дробное число с точкой",
                 icon="msg_toncoin",
-                on_change=on_ton_change,
+                on_change=self.on_ton_change,
             ),
             Divider(),
             Text(
