@@ -2,9 +2,10 @@ __id__ = "lincoln_pro"
 __name__ = "Lincoln Pro"
 __description__ = "Локальная визуальная кастомизация профиля: телефон, несколько юзернеймов, NFT-подарки, звёзды, премиум, скрытие «в сети», своё «был(а) недавно», фон профиля, уровень, мут по команде .mut и визуальные подарки. Всё меняется только в интерфейсе, на сервер ничего не отправляется."
 __author__ = "Lincoln"
-__version__ = "1.0"
+__version__ = "2.0"
 __icon__ = "msg_star"
-__min_version__ = "11.9.0"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
 
 from decimal import Decimal, getcontext
 from datetime import datetime
@@ -86,26 +87,6 @@ class ReplaceStarsBalance(MethodReplacement):
         return param.getResult()
 
 
-class HideRead(MethodHook):
-    def __init__(self, plugin):
-        super().__init__()
-        self.plugin = plugin
-
-    def before_hooked_method(self, param):
-        if self.plugin.get_setting("no_read", True):
-            param.setResult(None)
-
-
-class HideOnline(MethodHook):
-    def __init__(self, plugin):
-        super().__init__()
-        self.plugin = plugin
-
-    def before_hooked_method(self, param):
-        if self.plugin.get_setting("ghost_online", True):
-            param.setResult(None)
-
-
 class FakeLastSeen(MethodReplacement):
     """Подменяет строку «был(а) недавно/в сети» в профиле на свой текст."""
 
@@ -129,6 +110,11 @@ class LincolnProPlugin(BasePlugin):
         self._hook_read = 0
         self._hook_online = 0
         self._hook_user = 0
+
+        # Подключаем перехват сетевых запросов для ghost-режима
+        for req in ("TL_account_updateStatus", "TL_messages_setTyping",
+                    "TL_messages_readHistory", "TL_messages_readMessageContents"):
+            self.add_hook(req)
 
         # 1) Подмена своего профиля (телефон / username / premium)
         uc = find_class("org.telegram.messenger.UserConfig")
@@ -157,35 +143,10 @@ class LincolnProPlugin(BasePlugin):
             except Exception:
                 pass
 
-        # 3) Скрытие «в сети» + «прочитано»
-        mc = find_class("org.telegram.messenger.MessagesController")
-        if mc is not None:
-            for name in ("markDialogAsRead", "markMessageAsRead"):
-                try:
-                    for m in mc.getDeclaredMethods():
-                        if m.getName() == name:
-                            m.setAccessible(True)
-                            r = self.hook_method(m, HideRead(self), priority=100)
-                            if r:
-                                self._refs.append(r)
-                                self._hook_read += 1
-                except Exception:
-                    pass
-        cm = find_class("org.telegram.tgnet.ConnectionsManager")
-        if cm is not None:
-            for name in ("updateOnlineStatus",):
-                try:
-                    for m in cm.getDeclaredMethods():
-                        if m.getName() == name:
-                            m.setAccessible(True)
-                            r = self.hook_method(m, HideOnline(self), priority=100)
-                            if r:
-                                self._refs.append(r)
-                                self._hook_online += 1
-                except Exception:
-                    pass
+        # 4) Скрытие «в сети» и «прочитано» — через перехват запросов (pre_request_hook)
+        #    (работает на уровне протокола, не зависит от имён Java-методов)
 
-        # 4) Последний визит (замена строки в профиле)
+        # 5) Последний визит (замена строки в профиле)
         for cls_name in ("org.telegram.messenger.LocaleController",
                          "org.telegram.messenger.UserConfig"):
             cls = find_class(cls_name)
@@ -200,6 +161,23 @@ class LincolnProPlugin(BasePlugin):
                             self._refs.append(r)
             except Exception:
                 pass
+
+    # ------------------------------------------------- ghost-режим (запросы)
+
+    def pre_request_hook(self, request_name: str, account: int, request: Any) -> HookResult:
+        if request_name == "TL_account_updateStatus" and self.get_setting("ghost_online", True):
+            try:
+                request.offline = True
+            except Exception:
+                pass
+            return HookResult(strategy=HookStrategy.MODIFY, request=request)
+        if request_name in ("TL_messages_setTyping", "TL_messages_setEncryptedTyping") \
+                and self.get_setting("dont_send_typing", True):
+            return HookResult(strategy=HookStrategy.CANCEL)
+        if request_name in ("TL_messages_readHistory", "TL_messages_readMessageContents",
+                            "TL_messages_readEncryptedHistory") and self.get_setting("no_read", True):
+            return HookResult(strategy=HookStrategy.CANCEL)
+        return HookResult()
 
     # ------------------------------------------------------- .mut команда
 
@@ -282,6 +260,7 @@ class LincolnProPlugin(BasePlugin):
             Header(text="Статус"),
             Switch(key="fake_premium", text="Премиум (значок)", default=True),
             Switch(key="ghost_online", text="Скрыть «в сети»", default=True),
+            Switch(key="dont_send_typing", text="Скрыть «печатает…»", default=True),
             Switch(key="no_read", text="Не отправлять «прочитано»", default=True),
             Switch(key="fake_lastseen", text="Своё «был(а)…»", default=True),
             Input(key="lastseen_text", text="Текст «был(а)…»", default="был(а) только что"),
@@ -292,12 +271,11 @@ class LincolnProPlugin(BasePlugin):
             Divider(),
             Header(text="Мут и подарки"),
             Text(text=".mut 30", subtext="Скрыть сообщения собеседника на 30 минут", icon="msg_mute"),
-            Text(text="Подарки / NFT / фон / уровень", subtext="Эти визуальные эффекты добавляются отдельными блоками клиента; в данной версии доступны звёзды, статус и мут.", icon="msg_info"),
+            Text(text="Подарки / NFT / фон / уровень", subtext="Эти визуальные эффекты добавляются отдельными блоками клиента; в данной версии доступны звёзды, статус, ghost и мут.", icon="msg_info"),
             Divider(),
             Text(
-                text="Найдено хуков",
-                subtext="user %d, read %d, online %d. Перезапустите клиент после установки." %
-                        (self._hook_user, self._hook_read, self._hook_online),
+                text="Статус хуков",
+                subtext="User %d · ghost-режим работает на уровне запросов (не зависит от версии). Перезапустите клиент после установки." % self._hook_user,
                 icon="msg_info",
             ),
         ]
