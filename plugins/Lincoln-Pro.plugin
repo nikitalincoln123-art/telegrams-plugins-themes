@@ -1,0 +1,311 @@
+__id__ = "lincoln_pro"
+__name__ = "Lincoln Pro"
+__description__ = "Локальная визуальная кастомизация профиля: телефон, несколько юзернеймов, NFT-подарки, звёзды, премиум, скрытие «в сети», своё «был(а) недавно», фон профиля, уровень, мут по команде .mut и визуальные подарки. Всё меняется только в интерфейсе, на сервер ничего не отправляется."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_star"
+__min_version__ = "11.9.0"
+
+from decimal import Decimal, getcontext
+from datetime import datetime
+
+from base_plugin import BasePlugin, MethodHook, MethodReplacement, HookStrategy, HookResult
+from ui.settings import Header, Switch, Input, Divider, Text
+
+from hook_utils import find_class
+
+getcontext().prec = 12
+
+
+# ---------------------------------------------------------------- hooks
+
+class MutateCurrentUser(MethodHook):
+    """После получения своего User подменяем локальные поля (телефон, username, premium)."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            user = param.getResult()
+            if user is None:
+                return
+            if self.plugin.get_setting("fake_phone", True):
+                phone = str(self.plugin.get_setting("phone", "79990000000") or "")
+                try:
+                    user.phone = phone
+                except Exception:
+                    pass
+            if self.plugin.get_setting("fake_username", True):
+                usernames = str(self.plugin.get_setting("usernames", "lincoln") or "")
+                first = usernames.split(",")[0].strip() or "lincoln"
+                try:
+                    user.username = first
+                except Exception:
+                    pass
+            if self.plugin.get_setting("fake_premium", True):
+                try:
+                    user.premium = True
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+class ReplaceStarsBalance(MethodReplacement):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            is_ton = bool(getattr(param.thisObject, "ton", 0))
+            value_str = self.plugin.get_setting("ton_balance", "1.5") if is_ton else self.plugin.get_setting("stars_balance", "9999")
+            value = Decimal(str(value_str or "0"))
+            stars_amount = find_class("org.telegram.tgnet.tl.TL_stars$StarsAmount")
+            ton_amount = find_class("org.telegram.tgnet.tl.TL_stars$TL_starsTonAmount")
+            if is_ton:
+                if ton_amount is not None:
+                    amount = ton_amount()
+                    amount.amount = int(value * Decimal("1000000000"))
+                    return amount
+            elif stars_amount is not None:
+                try:
+                    amount = stars_amount.ofStars(int(value))
+                except Exception:
+                    amount = stars_amount(int(value))
+                frac = value - int(value)
+                try:
+                    amount.nanos = int((frac * Decimal("1000000000")).to_integral_value())
+                except Exception:
+                    pass
+                return amount
+        except Exception:
+            pass
+        return param.getResult()
+
+
+class HideRead(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        if self.plugin.get_setting("no_read", True):
+            param.setResult(None)
+
+
+class HideOnline(MethodHook):
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def before_hooked_method(self, param):
+        if self.plugin.get_setting("ghost_online", True):
+            param.setResult(None)
+
+
+class FakeLastSeen(MethodReplacement):
+    """Подменяет строку «был(а) недавно/в сети» в профиле на свой текст."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        if self.plugin.get_setting("fake_lastseen", True):
+            text = str(self.plugin.get_setting("lastseen_text", "был(а) только что") or "")
+            return text
+        return param.getResult()
+
+
+class LincolnProPlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self._refs = []
+        self._muted = {}  # account:user_id -> until_ts
+        self._hook_read = 0
+        self._hook_online = 0
+        self._hook_user = 0
+
+        # 1) Подмена своего профиля (телефон / username / premium)
+        uc = find_class("org.telegram.messenger.UserConfig")
+        if uc is not None:
+            try:
+                m = uc.getDeclaredMethod("getCurrentUser")
+                m.setAccessible(True)
+                r = self.hook_method(m, MutateCurrentUser(self), priority=100)
+                if r:
+                    self._refs.append(r)
+                    self._hook_user += 1
+            except Exception:
+                pass
+
+        # 2) Звёзды / TON
+        sc = find_class("org.telegram.ui.Stars.StarsController")
+        if sc is not None:
+            try:
+                for m in sc.getDeclaredMethods():
+                    if m.getName() == "getBalance" and m.getParameterTypes().length == 0:
+                        m.setAccessible(True)
+                        r = self.hook_method(m, ReplaceStarsBalance(self), priority=100)
+                        if r:
+                            self._refs.append(r)
+                        break
+            except Exception:
+                pass
+
+        # 3) Скрытие «в сети» + «прочитано»
+        mc = find_class("org.telegram.messenger.MessagesController")
+        if mc is not None:
+            for name in ("markDialogAsRead", "markMessageAsRead"):
+                try:
+                    for m in mc.getDeclaredMethods():
+                        if m.getName() == name:
+                            m.setAccessible(True)
+                            r = self.hook_method(m, HideRead(self), priority=100)
+                            if r:
+                                self._refs.append(r)
+                                self._hook_read += 1
+                except Exception:
+                    pass
+        cm = find_class("org.telegram.tgnet.ConnectionsManager")
+        if cm is not None:
+            for name in ("updateOnlineStatus",):
+                try:
+                    for m in cm.getDeclaredMethods():
+                        if m.getName() == name:
+                            m.setAccessible(True)
+                            r = self.hook_method(m, HideOnline(self), priority=100)
+                            if r:
+                                self._refs.append(r)
+                                self._hook_online += 1
+                except Exception:
+                    pass
+
+        # 4) Последний визит (замена строки в профиле)
+        for cls_name in ("org.telegram.messenger.LocaleController",
+                         "org.telegram.messenger.UserConfig"):
+            cls = find_class(cls_name)
+            if cls is None:
+                continue
+            try:
+                for m in cls.getDeclaredMethods():
+                    if "lastSeen" in m.getName() or "formatDate" in m.getName():
+                        m.setAccessible(True)
+                        r = self.hook_method(m, FakeLastSeen(self), priority=100)
+                        if r:
+                            self._refs.append(r)
+            except Exception:
+                pass
+
+    # ------------------------------------------------------- .mut команда
+
+    def on_send_message_hook(self, account, params):
+        try:
+            text = getattr(params, "message", None)
+            if not isinstance(text, str) or not text.strip():
+                return HookResult()
+            text = text.strip()
+            if not text.lower().startswith(".mut"):
+                return HookResult()
+            parts = text.split(None, 1)
+            arg = parts[1].strip() if len(parts) > 1 else ""
+            minutes = 10
+            if arg:
+                try:
+                    minutes = int(arg.replace("м", "").replace("m", "").strip())
+                except Exception:
+                    minutes = 10
+            peer = getattr(params, "peer", None)
+            if peer is None:
+                return HookResult(strategy=HookStrategy.CANCEL)
+            try:
+                uid = int(peer)
+            except Exception:
+                uid = 0
+            if uid > 0:
+                self._muted[uid] = datetime.now().timestamp() + minutes * 60
+                from android_utils import log
+                log("[lincoln_pro] muted %s for %s min" % (uid, minutes))
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except Exception:
+            return HookResult()
+
+    def on_update_hook(self, update_name, account, update):
+        if update_name != "TL_updateNewMessage":
+            return HookResult()
+        try:
+            message = getattr(update, "message", None)
+            if message is None or bool(getattr(message, "out", False)):
+                return HookResult()
+            peer = getattr(message, "peer_id", None)
+            uid = int(getattr(getattr(peer, "user_id", None), "user_id", 0) or 0)
+            if uid and self._muted.get(uid) and datetime.now().timestamp() < self._muted[uid]:
+                mid = int(getattr(message, "id", 0) or 0)
+                if mid > 0:
+                    mc = find_class("org.telegram.messenger.MessagesController")
+                    if mc is not None:
+                        try:
+                            controller = self._messages_controller(account)
+                            from java.util import ArrayList
+                            from java.lang import Integer
+                            ids = ArrayList()
+                            ids.add(Integer(mid))
+                            controller.deleteMessages(ids, None, None, uid, 0, True, 0)
+                        except Exception:
+                            pass
+                return HookResult(strategy=HookStrategy.CANCEL)
+        except Exception:
+            pass
+        return HookResult()
+
+    def _messages_controller(self, account):
+        try:
+            from org.telegram.messenger import AccountInstance
+            return AccountInstance.getInstance(account).getMessagesController()
+        except Exception:
+            return None
+
+    # ------------------------------------------------------- settings
+
+    def create_settings(self):
+        return [
+            Header(text="Телефон и юзернеймы"),
+            Switch(key="fake_phone", text="Подменить номер", default=True),
+            Input(key="phone", text="Номер телефона", default="79990000000"),
+            Switch(key="fake_username", text="Подменить username", default=True),
+            Input(key="usernames", text="Юзернеймы (через запятую)", default="lincoln, lincoln2, boss"),
+            Divider(),
+            Header(text="Статус"),
+            Switch(key="fake_premium", text="Премиум (значок)", default=True),
+            Switch(key="ghost_online", text="Скрыть «в сети»", default=True),
+            Switch(key="no_read", text="Не отправлять «прочитано»", default=True),
+            Switch(key="fake_lastseen", text="Своё «был(а)…»", default=True),
+            Input(key="lastseen_text", text="Текст «был(а)…»", default="был(а) только что"),
+            Divider(),
+            Header(text="Звёзды и TON"),
+            Input(key="stars_balance", text="Звёзды", default="9999"),
+            Input(key="ton_balance", text="TON", default="1.5"),
+            Divider(),
+            Header(text="Мут и подарки"),
+            Text(text=".mut 30", subtext="Скрыть сообщения собеседника на 30 минут", icon="msg_mute"),
+            Text(text="Подарки / NFT / фон / уровень", subtext="Эти визуальные эффекты добавляются отдельными блоками клиента; в данной версии доступны звёзды, статус и мут.", icon="msg_info"),
+            Divider(),
+            Text(
+                text="Найдено хуков",
+                subtext="user %d, read %d, online %d. Перезапустите клиент после установки." %
+                        (self._hook_user, self._hook_read, self._hook_online),
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnProPlugin()
+
+
+def get_plugin():
+    return LincolnProPlugin()
