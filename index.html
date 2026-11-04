@@ -490,6 +490,8 @@
   /* ---------- Terminal ---------- */
   .term-wrap { position: relative; display: flex; justify-content: center; }
 
+  .term-stack { display: flex; flex-direction: column; gap: 22px; width: 100%; max-width: 460px; }
+
   .term {
     width: 100%;
     max-width: 460px;
@@ -522,7 +524,9 @@
   .term-head .dot-g { background: #6fcf97; opacity: 0.8; }
   .term-head .term-title { margin-left: 8px; font-size: 11.5px; color: var(--text-faint); letter-spacing: 0.02em; }
 
-  .term-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; }
+  .term-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; position: relative; min-height: 180px; }
+  .term-dark .term-body { min-height: 170px; }
+  .term-dark .t-caret { position: absolute; bottom: 14px; left: 18px; }
   .t-line { display: flex; gap: 10px; color: var(--text-dim); white-space: nowrap; }
   .t-prompt { color: var(--peach); font-weight: 700; }
   .t-out { color: var(--text-faint); }
@@ -947,7 +951,101 @@
     margin-bottom: -6px;
   }
 
-  /* ---------- Timeline (instruction) ---------- */
+  /* ---------- Баннер новинок ---------- */
+  .news-banner {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    flex-wrap: wrap;
+    padding: 34px 36px;
+    border: 1px solid var(--border);
+    border-radius: 26px;
+    background: linear-gradient(135deg, var(--panel-hover), var(--panel));
+    overflow: hidden;
+  }
+  .news-glow {
+    position: absolute;
+    top: -60%;
+    right: -10%;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(224, 177, 120, 0.18), transparent 70%);
+    pointer-events: none;
+    animation: orbDrift1 14s ease-in-out infinite alternate;
+  }
+  .news-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #f8f2e6, #e3cba8);
+    color: #0b0a08;
+    display: grid;
+    place-items: center;
+    flex: none;
+    box-shadow: 0 0 34px rgba(224, 177, 120, 0.3);
+  }
+  .news-text { flex: 1; min-width: 220px; position: relative; z-index: 1; }
+  .news-text h2 { font-size: 24px; letter-spacing: -0.02em; font-weight: 800; margin-bottom: 8px; color: var(--creme); }
+  .news-text p { color: var(--text-dim); font-size: 15px; max-width: 540px; }
+  .news-btn { flex: none; position: relative; z-index: 1; }
+
+  /* ---------- О проекте ---------- */
+  .about {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 30px;
+    align-items: center;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px;
+    border: 1px solid var(--border-soft);
+    border-radius: 26px;
+    background: var(--panel);
+  }
+  .about-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f8f2e6, #e3cba8);
+    display: grid;
+    place-items: center;
+    font-size: 46px;
+    font-weight: 800;
+    color: #0b0a08;
+    box-shadow: 0 0 40px rgba(224, 177, 120, 0.25);
+    animation: prePulse 4s ease-in-out infinite;
+  }
+  .about h3 { font-size: 22px; margin-bottom: 8px; color: var(--creme); }
+  .about p { color: var(--text-dim); font-size: 15px; line-height: 1.65; margin-bottom: 16px; }
+  .about-links { display: flex; gap: 10px; flex-wrap: wrap; }
+  .about-links a {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13.5px;
+    font-weight: 600;
+    transition: all 0.3s var(--ease);
+  }
+  .about-links a:hover { color: var(--creme); border-color: rgba(237, 201, 160, 0.4); transform: translateY(-2px); }
+
+  @media (max-width: 640px) {
+    .about { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+    .news-banner { flex-direction: column; text-align: center; }
+  }
+
+  /* ---------- Терм 2: тёмная версия ---------- */
+  .term-dark-wrap { display: grid; place-items: center; }
+  .term-dark {
+    width: 100%;
+    max-width: 420px;
+  }
   .timeline { position: relative; max-width: 660px; margin: 0 auto; }
   .timeline::before {
     content: "";
@@ -1251,19 +1349,36 @@
     </div>
 
     <div class="term-wrap" aria-hidden="true">
-      <div class="term">
-        <div class="term-head">
-          <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
-          <span class="term-title">lincoln-plugin — install</span>
+      <div class="term-stack">
+        <div class="term">
+          <div class="term-head">
+            <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+            <span class="term-title">lincoln-plugin — install</span>
+          </div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span> curl -sS https://lincoln-plugin.ru/install</div>
+            <div class="t-line"><span class="t-out">→</span> получение пакета: lincoln-holl-v2.1</div>
+            <div class="t-line ok"><span class="t-out">✓</span> проверка подписи: OK</div>
+            <div class="t-line"><span class="t-prompt">$</span> lincoln install lincoln-holl</div>
+            <div class="t-line ok"><span class="t-out">✓</span> Lincoln Holl установлен</div>
+            <div class="t-line"><span class="t-out">→</span> готово за 0.8 сек</div>
+            <div class="t-caret">▌</div>
+          </div>
         </div>
-        <div class="term-body">
-          <div class="t-line"><span class="t-prompt">$</span> curl -sS https://lincoln-plugin.ru/install</div>
-          <div class="t-line"><span class="t-out">→</span> получение пакета: lincoln-holl-v2.1</div>
-          <div class="t-line ok"><span class="t-out">✓</span> проверка подписи: OK</div>
-          <div class="t-line"><span class="t-prompt">$</span> lincoln install lincoln-holl</div>
-          <div class="t-line ok"><span class="t-out">✓</span> Lincoln Holl установлен</div>
-          <div class="t-line"><span class="t-out">→</span> готово за 0.8 сек</div>
-          <div class="t-caret">▌</div>
+        <div class="term term-dark">
+          <div class="term-head">
+            <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
+            <span class="term-title">lincoln — ghost status</span>
+          </div>
+          <div class="term-body">
+            <div class="t-line"><span class="t-prompt">$</span> lincoln ghost --on</div>
+            <div class="t-line ok"><span class="t-out">✓</span> скрыть «в сети»: включено</div>
+            <div class="t-line ok"><span class="t-out">✓</span> скрыть «печатает»: включено</div>
+            <div class="t-line ok"><span class="t-out">✓</span> скрыть «прочитано»: включено</div>
+            <div class="t-line"><span class="t-prompt">$</span> lincoln status</div>
+            <div class="t-line"><span class="t-out">→</span> вы невидимы. 0.0s latency</div>
+            <div class="t-caret">▌</div>
+          </div>
         </div>
       </div>
     </div>
@@ -1318,6 +1433,7 @@
         <p class="desc">NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник, визуальная вставка collectible NFT-подарков в чат с анимациями. Версия 2.0.</p>
         <div class="card-actions">
           <a class="btn card-download" href="plugins/Lincoln-Plugin.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-copy>Копировать</button>
           <button class="btn btn-info" data-detail>Подробнее</button>
         </div>
       </article>
@@ -1333,6 +1449,7 @@
         <p class="desc">Визуальный редактор сообщений: локальные правки, фейки, генератор NFT и многое другое. Очищенная версия 2.0.</p>
         <div class="card-actions">
           <a class="btn card-download" href="plugins/Vvisual-Editor.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-copy>Копировать</button>
           <button class="btn btn-info" data-detail>Подробнее</button>
         </div>
       </article>
@@ -1348,6 +1465,7 @@
         <p class="desc">Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых. Версия 2.0.</p>
         <div class="card-actions">
           <a class="btn card-download" href="plugins/Voice-Changer-RT.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-copy>Копировать</button>
           <button class="btn btn-info" data-detail>Подробнее</button>
         </div>
       </article>
@@ -1363,6 +1481,7 @@
         <p class="desc">Локальная визуальная подмена баланса звёзд и TON в профиле. Ничего не отправляет — только интерфейс. Версия 2.0.</p>
         <div class="card-actions">
           <a class="btn card-download" href="plugins/Lincoln-Tools.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-copy>Копировать</button>
           <button class="btn btn-info" data-detail>Подробнее</button>
         </div>
       </article>
@@ -1378,6 +1497,7 @@
         <p class="desc">Скрывает «в сети», «печатает» и «прочитано». Работает на уровне запросов — не зависит от версии. Версия 2.0.</p>
         <div class="card-actions">
           <a class="btn card-download" href="plugins/Lincoln-Ghost.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-copy>Копировать</button>
           <button class="btn btn-info" data-detail>Подробнее</button>
         </div>
       </article>
@@ -1393,6 +1513,7 @@
         <p class="desc">Всё в одном: телефон, юзернеймы, звёзды, TON, премиум, ghost-режим, своё «был(а)…», мут командой .mut. Версия 2.1.</p>
         <div class="card-actions">
           <a class="btn card-download" href="plugins/Lincoln-Holl.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-copy>Копировать</button>
           <button class="btn btn-info" data-detail>Подробнее</button>
         </div>
       </article>
@@ -1411,6 +1532,22 @@
           data-changelog="" data-long="Новый плагин появится в ближайших обновлениях.">
         <p class="card-note">Скоро...</p>
       </article>
+    </div>
+  </section>
+
+  <!-- НОВИНКИ / БАННЕР -->
+  <section class="block wrap" id="news">
+    <div class="news-banner reveal">
+      <div class="news-glow" aria-hidden="true"></div>
+      <div class="news-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" width="26" height="26"><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5c0 5.2-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z"/><path d="M8.5 9.5 12 13l3.5-3.5"/></svg>
+      </div>
+      <div class="news-text">
+        <div class="eyebrow">Свежий релиз · <span id="lastRelease">2026-11-04</span></div>
+        <h2>Lincoln Holl 2.1 — теперь с ghost-режимом</h2>
+        <p>Скрытие «в сети», «печатает» и «прочитано» на уровне запросов. Обновите плагин — новые функции уже ждут.</p>
+      </div>
+      <a href="plugins/Lincoln-Holl.plugin" download class="btn btn-warm news-btn">Скачать</a>
     </div>
   </section>
 
@@ -1512,6 +1649,28 @@
     </div>
   </section>
 
+  <!-- О ПРОЕКТЕ -->
+  <section class="block wrap" id="about">
+    <div class="section-head reveal" style="justify-content:center; text-align:center;">
+      <div style="margin:0 auto;">
+        <div class="eyebrow">О проекте</div>
+        <h2>Сделано от Lincoln</h2>
+      </div>
+    </div>
+    <div class="about reveal">
+      <div class="about-avatar" aria-hidden="true">L</div>
+      <div>
+        <h3>Lincoln-Plugin — каталог плагинов для exteraGram</h3>
+        <p>Привет! Я Lincoln. Собираю и делаю плагины для exteraGram: локальная кастомизация профиля, ghost-режим, визуальные фейки и инструменты для комфорта. Всё, что здесь есть, проверено вручную и очищено от скрытых сетевых блоков.</p>
+        <div class="about-links">
+          <a href="https://t.me/lincoln" target="_blank" rel="noopener">Telegram</a>
+          <a href="https://github.com/nikitalincoln123-art" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://exteragram.app/" target="_blank" rel="noopener">exteraGram</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- CTA -->
   <section class="block wrap" id="cta">
     <div class="cta-banner reveal">
@@ -1527,7 +1686,7 @@
 
 <footer class="site">
   <div class="wrap foot">
-    <span>© 2026 Lincoln-Plugin · Сделано для сообщества Telegram</span>
+    <span>© 2026 Lincoln-Plugin · Сделано для сообщества Telegram · <span id="visitCount">0</span> визитов</span>
     <div class="links">
       <a href="#faq">FAQ</a>
       <a href="#install">Помощь</a>
@@ -2110,6 +2269,132 @@
     if (href && href !== "#") copyText(location.origin + location.pathname + href.replace(/^\//, ""), copyBtn);
     else copyBtn.classList.add("copied");
   });
+
+  /* ================= Копирование ссылок на карточках (тост) ================= */
+  var toastEl = document.getElementById("toast");
+  var toastTimer = null;
+  function showToast(msg) {
+    if (!toastEl) return;
+    toastEl.textContent = msg;
+    toastEl.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest("[data-copy]") : null;
+    if (!btn) return;
+    var card = btn.closest(".card");
+    if (!card) return;
+    var hrefEl = card.querySelector("a[download]");
+    if (!hrefEl) return;
+    var url = location.origin + location.pathname + hrefEl.getAttribute("href").replace(/^\.\//, "");
+    var ok = false;
+    function done(success) {
+      if (success) {
+        var old = btn.textContent;
+        btn.textContent = "Скопировано ✓";
+        showToast("Ссылка скопирована");
+        setTimeout(function () { btn.textContent = old; }, 1600);
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { done(true); }, function () { done(fallbackCopy(url)); });
+    } else {
+      done(fallbackCopy(url));
+    }
+  });
+
+  /* ================= Динамический заголовок вкладки ================= */
+  var defaultTitle = document.title;
+  var titleSections = [
+    { sel: "#plugins", text: "Каталог плагинов" },
+    { sel: "#themes", text: "Темы оформления" },
+    { sel: "#install", text: "Как установить" },
+    { sel: "#faq", text: "FAQ" }
+  ];
+  function updateTitle() {
+    for (var i = 0; i < titleSections.length; i++) {
+      var el = document.querySelector(titleSections[i].sel);
+      if (el) {
+        var r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.5 && r.bottom > 0) {
+          document.title = titleSections[i].text + " · Lincoln-Plugin";
+          return;
+        }
+      }
+    }
+    document.title = defaultTitle;
+  }
+  window.addEventListener("scroll", function () {
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(updateTitle);
+    } else updateTitle();
+  }, { passive: true });
+
+  /* ================= Автодата релизов ================= */
+  var today = new Date();
+  var todayStr = today.getFullYear() + "-" + String(today.getMonth() + 1).padStart(2, "0") + "-" + String(today.getDate()).padStart(2, "0");
+  document.querySelectorAll(".card[data-date='auto']").forEach(function (c) {
+    c.setAttribute("data-date", todayStr);
+  });
+  var releaseDateEl = document.getElementById("lastRelease");
+  if (releaseDateEl) releaseDateEl.textContent = todayStr;
+
+  /* ================= Живой набор текста во 2-м терме ================= */
+  var darkTerm = document.querySelector(".term-dark .term-body");
+  if (darkTerm && window.matchMedia("(pointer: fine)").matches) {
+    var termLines = Array.prototype.slice.call(darkTerm.querySelectorAll(".t-line"));
+    var termCaret = darkTerm.querySelector(".t-caret");
+    var termIdx = 0;
+    termLines.forEach(function (l) {
+      l.style.visibility = "hidden";
+      l.style.position = "absolute";
+      l.style.left = "18px";
+      l.style.width = "calc(100% - 36px)";
+      l.style.top = (18 + termIdx * 24) + "px";
+      termIdx++;
+    });
+    var termStep = 0;
+    var termExpected = termLines.length;
+    function termTick() {
+      if (termStep >= termExpected) {
+        if (termCaret) termCaret.style.visibility = "visible";
+        return;
+      }
+      termLines[termStep].style.visibility = "visible";
+      termStep++;
+      setTimeout(termTick, 380);
+    }
+    var termStarted = false;
+    function maybeStartTerm() {
+      if (termStarted) return;
+      var r = darkTerm.getBoundingClientRect();
+      if (r.top < window.innerHeight * 0.9 && r.bottom > 0) {
+        termStarted = true;
+        setTimeout(termTick, 300);
+      }
+    }
+    window.addEventListener("scroll", maybeStartTerm, { passive: true });
+    maybeStartTerm();
+    setTimeout(function () {
+      if (!termStarted) {
+        termLines.forEach(function (l) { l.style.visibility = "visible"; });
+        if (termCaret) termCaret.style.visibility = "visible";
+      }
+    }, 4000);
+  }
+
+  /* ================= Счётчик посещений ================= */
+  try {
+    var visits = parseInt(localStorage.getItem("lincoln-visits") || "0", 10);
+    if (!sessionStorage.getItem("lincoln-session")) {
+      visits += 1;
+      localStorage.setItem("lincoln-visits", String(visits));
+      sessionStorage.setItem("lincoln-session", "1");
+    }
+    var visitEl = document.getElementById("visitCount");
+    if (visitEl) visitEl.textContent = visits;
+  } catch (e) {}
 
   /* ================= Шторка секций при скролле ================= */
   try {
