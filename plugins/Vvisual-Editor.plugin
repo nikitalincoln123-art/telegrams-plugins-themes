@@ -39,7 +39,9 @@ __id__ = "Vvisual-editor"
 __name__ = "Fake Editor By @xufev"
 __description__ = "Визуальный редактор сообщений, локальные правки, фейки, генератор NFT и многое другое"
 __author__ = "@xufev"
-__version__ = "1.0"
+__version__ = "2.0"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
 
 class MsgFlags:
     OUT = 2

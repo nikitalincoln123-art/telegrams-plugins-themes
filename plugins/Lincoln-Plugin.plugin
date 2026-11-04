@@ -2,9 +2,10 @@ __id__ = 'fullnftprofile'
 __name__ = 'Lincoln-Plugin'
 __description__ = 'Локальное изменение баланса звёзд в профиле, подмена username в профиле на фейковый NFT-ник с красивой карточкой, визуальная вставка collectible NFT-подарков в чат: выбор направления, каталог подарков, вставка по ссылке и корректное отображение передачи, красивая анимация и отправка подарков/звёзд с эффектами.'
 __author__ = 'NFTProfileFull'
-__version__ = '1.5'
+__version__ = '2.0'
 __icon__ = 'msg_gift'
-__min_version__ = '11.9.0'
+__app_version__ = '>=12.5.1'
+__sdk_version__ = '>=1.4.4.3'
 
 import json
 import math

@@ -23,10 +23,9 @@ __id__ = "voice_changer_rt"
 __name__ = "Voice Changer RT"
 __description__ = "Real-time voice changing for calls, video chats, round videos and voice messages."
 __author__ = "@mraniv & @anivplugins"
-__version__ = "1.0.0"
-__icon__ = "ToxicDuck/34"
+__version__ = "2.0.0"
 __app_version__ = ">=12.5.1"
-__sdk_version__ = ">=1.4.0"
+__sdk_version__ = ">=1.4.4.3"
 
 TAG = "[VoiceRT]"
 ABI_VERSION = 3
