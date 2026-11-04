@@ -22,6 +22,49 @@
     --peach: #edc9a0;
     --gold: #e0b178;
     --warm: #fff8ec;
+    --btn-bg: #0b0a08;
+    --btn-bg-hover: #14110c;
+    --btn-text: var(--creme);
+    --btn-border: var(--border);
+    --btn-inset: rgba(255, 255, 255, 0.05);
+    --btn-inset-hover: rgba(255, 255, 255, 0.08);
+    --term-bg1: #0e0c08;
+    --term-bg2: #070604;
+    --head-bg: rgba(7, 6, 4, 0.6);
+    --menu-bg: rgba(7, 6, 4, 0.96);
+    --toast-border: rgba(237, 201, 160, 0.4);
+  }
+
+  /* Светлая тема: тёплый белый фон, тёмный текст, светлые кнопки */
+  [data-theme="light"] {
+    --bg: #f6f1e7;
+    --bg-soft: #efe8da;
+    --panel: rgba(50, 40, 25, 0.05);
+    --panel-hover: rgba(50, 40, 25, 0.08);
+    --panel-solid: #ffffff;
+    --border: rgba(60, 45, 25, 0.14);
+    --border-soft: rgba(60, 45, 25, 0.09);
+    --text: #2b2419;
+    --text-dim: #6d5f4b;
+    --text-faint: #9a8b74;
+    --creme: #2b2419;
+    --peach: #b5774a;
+    --gold: #9a6b2e;
+    --warm: #fff8ec;
+    --btn-bg: #11100d;
+    --btn-bg-hover: #221e17;
+    --btn-text: #f8f2e6;
+    --btn-border: rgba(40, 30, 15, 0.2);
+    --btn-inset: rgba(255, 255, 255, 0.08);
+    --btn-inset-hover: rgba(255, 255, 255, 0.1);
+    --term-bg1: #ffffff;
+    --term-bg2: #f3ecdf;
+    --head-bg: rgba(246, 241, 231, 0.72);
+    --menu-bg: rgba(246, 241, 231, 0.97);
+    --toast-border: rgba(154, 107, 46, 0.45);
+  }
+
+  :root {
     --radius: 20px;
     --radius-sm: 12px;
     --font: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -108,7 +151,7 @@
     z-index: 50;
     backdrop-filter: blur(18px);
     -webkit-backdrop-filter: blur(18px);
-    background: rgba(7, 6, 4, 0.6);
+    background: var(--head-bg);
     border-bottom: 1px solid var(--border-soft);
   }
 
@@ -178,18 +221,18 @@
     text-decoration: none;
     cursor: pointer;
     border: 1px solid var(--border);
-    background: #0b0a08;
-    color: var(--creme);
+    background: var(--btn-bg);
+    color: var(--btn-text);
     font-family: var(--font);
     transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, background 0.3s;
-    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 var(--btn-inset);
     white-space: nowrap;
   }
   .btn:hover {
     transform: translateY(-2px);
     border-color: rgba(245, 239, 228, 0.3);
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    background: #14110c;
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--btn-inset-hover);
+    background: var(--btn-bg-hover);
   }
   .btn svg { flex: none; }
 
@@ -216,6 +259,15 @@
   border: none;
   box-shadow: 0 12px 40px rgba(224, 177, 120, 0.38);
 }
+[data-theme="light"] .btn-warm {
+  background: linear-gradient(135deg, #b5774a, #9a6b2e);
+  color: #fdf9f0;
+  box-shadow: 0 6px 24px rgba(154, 107, 46, 0.3);
+}
+[data-theme="light"] .btn-warm:hover {
+  background: linear-gradient(135deg, #c08452, #a87733);
+  color: #fff;
+}
 
   .nav-cta { padding: 10px 20px; font-size: 14px; }
 
@@ -230,12 +282,34 @@
   }
   .burger svg { width: 20px; height: 20px; display: block; }
 
+  .theme-toggle {
+    display: none;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px;
+    color: var(--text);
+    cursor: pointer;
+    margin-left: 10px;
+    transition: color 0.3s, border-color 0.3s, transform 0.3s var(--ease);
+    line-height: 0;
+  }
+  .theme-toggle:hover { color: var(--peach); border-color: rgba(255, 245, 230, 0.25); transform: rotate(15deg); }
+  .theme-toggle svg { width: 18px; height: 18px; display: block; }
+  .theme-toggle .icon-sun { display: none; }
+  [data-theme="light"] .theme-toggle .icon-sun { display: block; }
+  [data-theme="light"] .theme-toggle .icon-moon { display: none; }
+
+  @media (min-width: 861px) {
+    .theme-toggle { display: inline-flex; }
+  }
+
   .mobile-menu {
     display: none;
     position: fixed;
     inset: 0;
     z-index: 60;
-    background: rgba(7, 6, 4, 0.96);
+    background: var(--menu-bg);
     backdrop-filter: blur(22px);
     -webkit-backdrop-filter: blur(22px);
     flex-direction: column;
@@ -366,7 +440,7 @@
     max-width: 460px;
     border-radius: 18px;
     border: 1px solid rgba(255, 245, 230, 0.10);
-    background: linear-gradient(180deg, #0e0c08, #070604 70%);
+    background: linear-gradient(180deg, var(--term-bg1), var(--term-bg2) 70%);
     box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 80px rgba(224, 177, 120, 0.06);
     overflow: hidden;
     font-family: var(--mono);
@@ -400,6 +474,12 @@
   .t-line.ok { color: #d8e8c8; }
   .t-caret { color: var(--peach); animation: caretBlink 1.1s steps(1) infinite; font-size: 14px; }
   @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+  /* Искры */
+  @keyframes sparkFly {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--dx, 0px)), calc(-50% + var(--dy, 0px))) scale(0.2); }
+  }
 
   /* ---------- Sections ---------- */
   section.block { padding: 76px 0; }
@@ -592,8 +672,8 @@
     transition: all 0.3s var(--ease);
   }
   .section-tabs button.active {
-    background: #0b0a08;
-    color: var(--creme);
+    background: var(--btn-bg);
+    color: var(--btn-text);
     box-shadow: inset 0 0 0 1px var(--border), 0 4px 16px rgba(0, 0, 0, 0.5);
   }
 
@@ -741,7 +821,7 @@
     left: 50%;
     transform: translateX(-50%) translateY(90px);
     background: var(--panel-solid);
-    border: 1px solid rgba(237, 201, 160, 0.4);
+    border: 1px solid var(--toast-border);
     color: var(--peach);
     padding: 12px 24px;
     border-radius: 999px;
@@ -869,6 +949,10 @@
     </nav>
     <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="theme-toggle" id="themeToggle" aria-label="Переключить тему сайта">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.7"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m9.9 9.9 1.4 1.4m0-12.7-1.4 1.4M7 17l-1.4 1.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
     </button>
   </div>
 </header>
@@ -1152,6 +1236,84 @@
     });
   }, 1500);
 
+  /* ================= Тема: ночь / день ================= */
+  var themeToggle = document.getElementById("themeToggle");
+  function applyTheme(theme) {
+    var root = document.documentElement;
+    if (theme === "light") root.setAttribute("data-theme", "light");
+    else root.removeAttribute("data-theme");
+    try { localStorage.setItem("lincoln-theme", theme); } catch (e) {}
+  }
+  var savedTheme = "dark";
+  try { savedTheme = localStorage.getItem("lincoln-theme") || "dark"; } catch (e) {}
+  applyTheme(savedTheme);
+  if (themeToggle) {
+    themeToggle.addEventListener("click", function () {
+      var cur = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+      applyTheme(cur === "light" ? "dark" : "light");
+      clickSound();
+    });
+  }
+
+  /* ================= Звук клика (Web Audio, без файлов) ================= */
+  var AudioCtx = window.AudioContext || window.webkitAudioContext;
+  var audioCtx = null;
+  function clickSound() {
+    try {
+      if (!AudioCtx) return;
+      if (!audioCtx) audioCtx = new AudioCtx();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      var t = audioCtx.currentTime;
+      var osc = audioCtx.createOscillator();
+      var gain = audioCtx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(660, t);
+      osc.frequency.exponentialRampToValueAtTime(990, t + 0.08);
+      gain.gain.setValueAtTime(0.05, t);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(t);
+      osc.stop(t + 0.13);
+    } catch (e) {}
+  }
+  document.addEventListener("pointerdown", function (e) {
+    var el = e.target && e.target.closest ? e.target.closest("a, button") : null;
+    if (el) clickSound();
+  });
+
+  /* ================= Частицы-искры при наведении ================= */
+  document.addEventListener("pointermove", function (e) {
+    var tgt = e.target && e.target.closest ? e.target.closest(".card") : null;
+    if (!tgt || tgt._sparkLast && (performance.now() - tgt._sparkLast < 120)) return;
+    if (tgt) tgt._sparkLast = performance.now();
+    sparkAt(e.clientX, e.clientY, 3);
+  });
+  var sparkLayer = document.createElement("div");
+  sparkLayer.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:200;overflow:hidden;";
+  document.body.appendChild(sparkLayer);
+  function sparkAt(x, y, n) {
+    try {
+      for (var i = 0; i < n; i++) {
+        var s = document.createElement("span");
+        var size = Math.random() * 5 + 2;
+        var dx = (Math.random() - 0.5) * 60;
+        var dy = (Math.random() - 0.5) * 60;
+        var hue = Math.random() > 0.5 ? "237,201,160" : "224,177,120";
+        s.style.cssText =
+          "position:absolute;left:" + x + "px;top:" + y + "px;width:" + size + "px;height:" + size + "px;" +
+          "border-radius:50%;pointer-events:none;background:rgba(" + hue + ",0.9);box-shadow:0 0 8px rgba(" + hue + ",0.8);" +
+          "transform:translate(-50%,-50%);animation:sparkFly .65s ease-out forwards;";
+        s.style.setProperty("--dx", dx + "px");
+        s.style.setProperty("--dy", dy + "px");
+        sparkLayer.appendChild(s);
+        (function (el) {
+          setTimeout(function () { el.remove(); }, 700);
+        })(s);
+      }
+    } catch (e) {}
+  }
+
   /* ================= Warm star-web background ================= */
   var canvas = document.getElementById("space");
   var ctx = canvas.getContext("2d");
@@ -1335,6 +1497,22 @@
     });
   });
   applyThemeFilter();
+
+  /* ================= Hero 3D parallax ================= */
+  var hero = document.querySelector(".hero");
+  var heroText = document.querySelector(".hero > div:first-child");
+  var heroTerm = document.querySelector(".term-wrap");
+  if (hero && heroTerm && window.matchMedia("(pointer: fine)").matches) {
+    var heroMoved = false;
+    document.addEventListener("pointermove", function (e) {
+      if (!heroMoved && (e.clientY < hero.getBoundingClientRect().top + 200 || e.clientY > hero.getBoundingClientRect().bottom - 200)) return;
+      heroMoved = true;
+      var cx = e.clientX / window.innerWidth - 0.5;
+      var cy = e.clientY / window.innerHeight - 0.5;
+      if (heroText) heroText.style.transform = "translate3d(" + (cx * -14) + "px, " + (cy * -10) + "px, 0)";
+      if (heroTerm) heroTerm.style.transform = "translate3d(" + (cx * 20) + "px, " + (cy * 14) + "px, 0)";
+    });
+  }
 
   /* ================= Parallax orbs on scroll ================= */
   var orbs = document.querySelectorAll(".orb");
