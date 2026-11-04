@@ -693,6 +693,195 @@
     margin-top: 4px;
   }
 
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .card-actions .btn { padding: 9px 16px; font-size: 13px; border-radius: 999px; }
+  .btn-info { background: transparent; color: var(--text-dim); }
+  .btn-info:hover { color: var(--creme); border-color: rgba(255, 245, 230, 0.3); background: var(--panel-hover); }
+
+  /* ---------- Панель каталога ---------- */
+  .catalog-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin: 0 0 26px;
+    padding: 14px 18px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius);
+    background: var(--panel);
+    backdrop-filter: blur(8px);
+  }
+  .counter {
+    font-size: 30px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--peach);
+    font-family: var(--mono);
+    line-height: 1;
+  }
+  .counter-label {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-left: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+  .catalog-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--btn-bg);
+    color: var(--text-faint);
+    transition: border-color 0.3s;
+  }
+  .search-box:focus-within { border-color: rgba(237, 201, 160, 0.5); }
+  .search-box input {
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    width: 180px;
+  }
+  .search-box input::placeholder { color: var(--text-faint); }
+  .sort-select {
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--btn-bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 13.5px;
+    cursor: pointer;
+    outline: none;
+  }
+  .sort-select:hover { border-color: rgba(237, 201, 160, 0.5); }
+
+  /* ---------- Модальное окно ---------- */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 800;
+    background: rgba(0, 0, 0, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.35s var(--ease), visibility 0.35s;
+  }
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+  .modal {
+    width: 100%;
+    max-width: 560px;
+    max-height: 82vh;
+    overflow-y: auto;
+    background: var(--panel-solid);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    position: relative;
+    transform: translateY(24px) scale(0.96);
+    transition: transform 0.4s var(--ease);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7);
+  }
+  .modal-overlay.open .modal { transform: none; }
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 18px;
+    line-height: 1;
+    transition: all 0.3s;
+  }
+  .modal-close:hover { color: var(--creme); border-color: rgba(255, 245, 230, 0.3); transform: rotate(90deg); }
+  .modal .m-eyebrow {
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+  .modal h3 { font-size: 26px; margin-bottom: 8px; color: var(--creme); }
+  .modal .m-desc { color: var(--text-dim); font-size: 15px; line-height: 1.65; margin-bottom: 20px; }
+  .modal .m-meta {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+    padding: 14px 16px;
+    border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+  }
+  .modal .m-meta span { font-size: 13px; color: var(--text-dim); }
+  .modal .m-meta b { color: var(--creme); font-weight: 600; }
+  .modal h4 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 10px;
+  }
+  .modal .m-changelog {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 26px;
+  }
+  .modal .m-changelog li {
+    padding: 9px 12px;
+    border-left: 2px solid var(--gold);
+    background: var(--panel);
+    border-radius: 0 10px 10px 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: var(--text-dim);
+    font-family: var(--mono);
+  }
+  .modal .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .modal .m-copy {
+    background: transparent;
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    padding: 11px 18px;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.3s;
+  }
+  .modal .m-copy:hover { color: var(--creme); border-color: rgba(237, 201, 160, 0.45); }
+  .modal .m-copy.copied {
+    color: #4fae6a;
+    border-color: rgba(79, 174, 106, 0.5);
+    background: rgba(79, 174, 106, 0.08);
+  }
+
   .hidden { display: none !important; }
 
   /* ---------- Why ---------- */
@@ -1101,76 +1290,125 @@
       </div>
     </div>
 
+    <!-- Панель управления каталогом -->
+    <div class="catalog-bar reveal">
+      <span class="counter" id="pluginCount" data-target="6">0</span><span class="counter-label">плагинов</span>
+      <div class="catalog-controls">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <input type="text" id="catalogSearch" placeholder="Поиск по каталогу..." aria-label="Поиск по каталогу">
+        </div>
+        <select id="catalogSort" class="sort-select" aria-label="Сортировка">
+          <option value="default">По умолчанию</option>
+          <option value="name">По алфавиту</option>
+          <option value="date">Сначала новые</option>
+        </select>
+      </div>
+    </div>
+
     <div class="bento" id="pluginGrid">
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful" data-name="Lincoln-Plugin" data-version="2.0" data-date="2026-11-04"
+          data-changelog="v2.0 — актуализация под SDK 1.4.4.3, удалён бэкдор"
+          data-long="NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник с красивой карточкой, визуальная вставка collectible NFT-подарков в чат, анимации отправки подарков и звёзд. Полностью локально, на сервер ничего не отправляется.">
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/></svg></span>
           <span class="tag">Плагин</span>
         </div>
         <h3>Lincoln-Plugin</h3>
         <p class="desc">NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник, визуальная вставка collectible NFT-подарков в чат с анимациями. Версия 2.0.</p>
-        <a class="btn card-download" href="plugins/Lincoln-Plugin.plugin" download>Скачать</a>
+        <div class="card-actions">
+          <a class="btn card-download" href="plugins/Lincoln-Plugin.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-detail>Подробнее</button>
+        </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful" data-name="Fake Editor" data-version="2.0" data-date="2026-11-03"
+          data-changelog="v2.0 — актуализация под SDK 1.4.4.3, очищен от бэкдора"
+          data-long="Визуальный редактор сообщений: локальные правки текста, фейковые сообщения, генератор NFT-аватарок и многое другое. Все эффекты применяются только в вашем клиенте.">
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M4 9h16M4 13h10M4 17h7"/><circle cx="18" cy="16" r="2.6"/><circle cx="18" cy="16" r="1" fill="currentColor"/></svg></span>
           <span class="tag amber">Редактор</span>
         </div>
         <h3>Fake Editor</h3>
         <p class="desc">Визуальный редактор сообщений: локальные правки, фейки, генератор NFT и многое другое. Очищенная версия 2.0.</p>
-        <a class="btn card-download" href="plugins/Vvisual-Editor.plugin" download>Скачать</a>
+        <div class="card-actions">
+          <a class="btn card-download" href="plugins/Vvisual-Editor.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-detail>Подробнее</button>
+        </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful" data-name="Voice Changer RT" data-version="2.0.0" data-date="2026-11-03"
+          data-changelog="v2.0.0 — sdk 1.4.4.3, обновлены метаданные"
+          data-long="Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых сообщений. Включает нативный аудио-движок, вшитый в плагин.">
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4.3 12.5c.6.5.9 1.2.9 2V21h6.8v-3.5c0-.8.3-1.5.9-2A7 7 0 0 0 12 3z"/><path d="M10 21v-2h4v2"/></svg></span>
           <span class="tag amber">Аудио</span>
         </div>
         <h3>Voice Changer RT</h3>
         <p class="desc">Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых. Версия 2.0.</p>
-        <a class="btn card-download" href="plugins/Voice-Changer-RT.plugin" download>Скачать</a>
+        <div class="card-actions">
+          <a class="btn card-download" href="plugins/Voice-Changer-RT.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-detail>Подробнее</button>
+        </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful" data-name="Lincoln Tools" data-version="2.0" data-date="2026-11-04"
+          data-changelog="v2.0 — SDK 1.4.4.3, совместимость с 12.5.1+"
+          data-long="Локальная визуальная подмена баланса звёзд и TON в профиле. Полностью локально: ничего не отправляется и не изменяется на сервере.">
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9L12 3z"/></svg></span>
           <span class="tag">Свой</span>
         </div>
         <h3>Lincoln Tools</h3>
         <p class="desc">Локальная визуальная подмена баланса звёзд и TON в профиле. Ничего не отправляет — только интерфейс. Версия 2.0.</p>
-        <a class="btn card-download" href="plugins/Lincoln-Tools.plugin" download>Скачать</a>
+        <div class="card-actions">
+          <a class="btn card-download" href="plugins/Lincoln-Tools.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-detail>Подробнее</button>
+        </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful" data-name="Lincoln Ghost" data-version="2.0" data-date="2026-11-04"
+          data-changelog="v2.0 — ghost-режим переведён на перехват запросов"
+          data-long="Скрывает статус «в сети», «печатает» и «прочитано». Работает на уровне сетевых запросов (TL_account_updateStatus, TL_messages_readHistory), поэтому не зависит от версии клиента.">
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 10.5a6 6 0 1 0-11.6 2 6 6 0 0 0 9.7 2.4M14 12v4M12 13l1.5 2M14 19.5h4M14 21.5h2"/></svg></span>
           <span class="tag amber">Ghost</span>
         </div>
         <h3>Lincoln Ghost</h3>
         <p class="desc">Скрывает «в сети», «печатает» и «прочитано». Работает на уровне запросов — не зависит от версии. Версия 2.0.</p>
-        <a class="btn card-download" href="plugins/Lincoln-Ghost.plugin" download>Скачать</a>
+        <div class="card-actions">
+          <a class="btn card-download" href="plugins/Lincoln-Ghost.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-detail>Подробнее</button>
+        </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful">
+      <article class="card reveal" data-pcat="useful" data-name="Lincoln Holl" data-version="2.1" data-date="2026-11-04"
+          data-changelog="v2.1 — переименован из Lincoln Pro, добавлен перехват запросов"
+          data-long="Всё в одном: телефон, несколько юзернеймов, звёзды, TON, премиум, скрытие «в сети»/«печатает»/«прочитано», своё «был(а)…», мут командой .mut, визуальные подарки. Локальная кастомизация профиля.">
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5c0 5.2-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z"/><path d="M8.5 9.5 12 13l3.5-3.5"/></svg></span>
           <span class="tag">Warm</span>
         </div>
         <h3>Lincoln Holl</h3>
         <p class="desc">Всё в одном: телефон, юзернеймы, звёзды, TON, премиум, ghost-режим, своё «был(а)…», мут командой .mut. Версия 2.1.</p>
-        <a class="btn card-download" href="plugins/Lincoln-Holl.plugin" download>Скачать</a>
+        <div class="card-actions">
+          <a class="btn card-download" href="plugins/Lincoln-Holl.plugin" download>Скачать</a>
+          <button class="btn btn-info" data-detail>Подробнее</button>
+        </div>
       </article>
 
-      <article class="card reveal" data-pcat="fun">
+      <article class="card reveal" data-pcat="fun" data-name="Скоро" data-version="—" data-date="2026-01-01"
+          data-changelog="" data-long="Новый плагин появится в ближайших обновлениях.">
         <p class="card-note">Скоро...</p>
       </article>
 
-      <article class="card reveal" data-pcat="fun">
+      <article class="card reveal" data-pcat="fun" data-name="Скоро" data-version="—" data-date="2026-01-01"
+          data-changelog="" data-long="Новый плагин появится в ближайших обновлениях.">
         <p class="card-note">Скоро...</p>
       </article>
 
-      <article class="card reveal" data-pcat="fun">
+      <article class="card reveal" data-pcat="fun" data-name="Скоро" data-version="—" data-date="2026-01-01"
+          data-changelog="" data-long="Новый плагин появится в ближайших обновлениях.">
         <p class="card-note">Скоро...</p>
       </article>
     </div>
@@ -1300,6 +1538,26 @@
 
 <div id="toast" role="status" aria-live="polite"></div>
 <p class="sr-only" id="liveRegion" aria-live="polite" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);"></p>
+
+<!-- Модальное окно деталей плагина -->
+<div class="modal-overlay" id="pluginModal" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true">
+    <button class="modal-close" id="modalClose" aria-label="Закрыть">✕</button>
+    <div class="m-eyebrow" id="mCategory">Плагин</div>
+    <h3 id="mTitle">Название</h3>
+    <p class="m-desc" id="mDesc">Описание</p>
+    <div class="m-meta">
+      <span>Версия: <b id="mVersion">—</b></span>
+      <span>Обновлён: <b id="mDate">—</b></span>
+    </div>
+    <h4>Что нового</h4>
+    <ul class="m-changelog" id="mChangelog"></ul>
+    <div class="modal-actions">
+      <a class="btn btn-warm" href="#" id="mDownload" download>Скачать плагин</a>
+      <button class="m-copy" id="mCopy">Копировать ссылку</button>
+    </div>
+  </div>
+</div>
 
 <script>
 (function () {
@@ -1692,6 +1950,166 @@
   }
   window.addEventListener("scroll", orbParallax, { passive: true });
   orbParallax();
+
+  /* ================= Каталог: счётчики, поиск, сортировка, модалка ================= */
+  var grid = document.getElementById("pluginGrid");
+  var searchInput = document.getElementById("catalogSearch");
+  var sortSelect = document.getElementById("catalogSort");
+  var countEl = document.getElementById("pluginCount");
+  var realCards = grid ? [].filter.call(grid.querySelectorAll(".card"), function (c) {
+    return c.querySelector("h3");
+  }) : [];
+
+  /* Анимированный счётчик */
+  function animateCounter(el, target) {
+    if (!el) return;
+    var start = 0, dur = 900, t0 = null;
+    function step(ts) {
+      if (!t0) t0 = ts;
+      var p = Math.min((ts - t0) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(start + (target - start) * eased);
+      if (p < 1) requestAnimationFrame(step);
+      else el.textContent = target;
+    }
+    requestAnimationFrame(step);
+  }
+  var counterDone = false;
+  function maybeCount() {
+    if (counterDone || !countEl) return;
+    var r = countEl.getBoundingClientRect();
+    if (r.top < window.innerHeight - 40) {
+      counterDone = true;
+      animateCounter(countEl, realCards.length);
+    }
+  }
+  window.addEventListener("scroll", maybeCount, { passive: true });
+  maybeCount();
+
+  /* Применение фильтра + сортировки */
+  function applyCatalog() {
+    var q = (searchInput && searchInput.value || "").trim().toLowerCase();
+    var sort = sortSelect ? sortSelect.value : "default";
+    var visible = 0;
+    var cards = [].slice.call(grid.querySelectorAll(".card"));
+    cards.forEach(function (c) {
+      var name = (c.getAttribute("data-name") || "").toLowerCase();
+      var long = (c.getAttribute("data-long") || "").toLowerCase();
+      var match = !q || name.indexOf(q) !== -1 || long.indexOf(q) !== -1;
+      c.classList.toggle("hidden", !match);
+      if (match) visible++;
+    });
+    if (countEl) countEl.textContent = visible;
+    if (sort !== "default") {
+      var order = [].slice.call(grid.querySelectorAll(".card")).filter(function (c) { return !c.classList.contains("hidden"); });
+      order.sort(function (a, b) {
+        if (sort === "name") {
+          return (a.getAttribute("data-name") || "").localeCompare(b.getAttribute("data-name") || "", "ru");
+        }
+        return (b.getAttribute("data-date") || "").localeCompare(a.getAttribute("data-date") || "");
+      });
+      order.forEach(function (c) { grid.appendChild(c); });
+    }
+  }
+  if (searchInput) searchInput.addEventListener("input", applyCatalog);
+  if (sortSelect) sortSelect.addEventListener("change", applyCatalog);
+
+  /* Модальное окно */
+  var modal = document.getElementById("pluginModal");
+  var modalClose = document.getElementById("modalClose");
+  function openModal(card) {
+    if (!modal) return;
+    var name = card.getAttribute("data-name") || "";
+    var ver = card.getAttribute("data-version") || "—";
+    var date = card.getAttribute("data-date") || "—";
+    var long = card.getAttribute("data-long") || "";
+    var changelog = card.getAttribute("data-changelog") || "";
+    var tag = card.querySelector(".tag");
+    var href = card.querySelector("a[download]");
+
+    document.getElementById("mTitle").textContent = name;
+    document.getElementById("mDesc").textContent = long;
+    document.getElementById("mVersion").textContent = ver;
+    document.getElementById("mDate").textContent = date;
+    document.getElementById("mCategory").textContent = tag ? tag.textContent : "Плагин";
+    var ul = document.getElementById("mChangelog");
+    ul.innerHTML = "";
+    changelog.split(";").forEach(function (item) {
+      var v = item.trim();
+      if (!v) return;
+      var li = document.createElement("li");
+      li.textContent = v;
+      ul.appendChild(li);
+    });
+    if (!changelog) {
+      var li = document.createElement("li");
+      li.textContent = "Первоначальный релиз";
+      ul.appendChild(li);
+    }
+    var dl = document.getElementById("mDownload");
+    if (href) { dl.href = href.getAttribute("href"); dl.style.display = ""; }
+    else dl.style.display = "none";
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+  }
+  function closeModal() {
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  grid.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-detail]");
+    if (btn) {
+      var card = btn.closest(".card");
+      if (card) openModal(card);
+      return;
+    }
+  });
+  if (modalClose) modalClose.addEventListener("click", closeModal);
+  if (modal) modal.addEventListener("click", function (e) {
+    if (e.target === modal) closeModal();
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") closeModal();
+  });
+
+  /* Копирование ссылки */
+  function copyText(text, btn) {
+    var done = function (ok) {
+      if (!ok) return;
+      if (btn) {
+        btn.classList.add("copied");
+        var old = btn.textContent;
+        btn.textContent = "Скопировано ✓";
+        window.setTimeout(function () { btn.classList.remove("copied"); btn.textContent = old; }, 1600);
+      }
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(text)); });
+    } else {
+      done(fallbackCopy(text));
+    }
+  }
+  function fallbackCopy(text) {
+    try {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      var ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+  var copyBtn = document.getElementById("mCopy");
+  if (copyBtn) copyBtn.addEventListener("click", function () {
+    var href = document.getElementById("mDownload").getAttribute("href");
+    if (href && href !== "#") copyText(location.origin + location.pathname + href.replace(/^\//, ""), copyBtn);
+    else copyBtn.classList.add("copied");
+  });
 
   /* ================= Шторка секций при скролле ================= */
   try {
