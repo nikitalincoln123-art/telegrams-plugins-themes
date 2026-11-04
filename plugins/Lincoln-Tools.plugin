@@ -67,11 +67,9 @@ class LincolnToolsPlugin(BasePlugin):
         if controller is None:
             return
         try:
-            for method in controller.getDeclaredMethods():
-                if method.getName() == "getBalance" and method.getParameterTypes().length == 0:
-                    method.setAccessible(True)
-                    self._hook_ref = self.hook_method(method, ReplaceBalance(self), priority=100)
-                    break
+            refs = self.hook_all_methods(controller, "getBalance", ReplaceBalance(self), priority=100)
+            if refs:
+                self._hook_ref = refs[0]
         except Exception:
             pass
 
