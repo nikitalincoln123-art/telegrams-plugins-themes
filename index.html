@@ -124,6 +124,63 @@
     pointer-events: none;
   }
 
+  /* ---------- 3D floating word "Lincoln" ---------- */
+  .float3d {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    perspective: 900px;
+  }
+  .float3d-word {
+    position: absolute;
+    left: 50%;
+    top: 46%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    gap: 0.01em;
+    font-size: clamp(96px, 16vw, 260px);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    transform-style: preserve-3d;
+    animation: float3dYaw 26s ease-in-out infinite alternate;
+    user-select: none;
+  }
+  .float3d.has-mouse {
+    will-change: transform;
+  }
+  .float3d-char {
+    display: inline-block;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--i, 0) * 26px));
+    color: transparent;
+    background: linear-gradient(180deg, rgba(237, 201, 160, 0.10), rgba(224, 177, 120, 0.02));
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: 0 0 60px rgba(224, 177, 120, 0.18);
+    animation: float3dBob 7s ease-in-out infinite;
+    animation-delay: calc(var(--i, 0) * -0.35s);
+  }
+  @keyframes float3dYaw {
+    from { transform: translate(-50%, -50%) rotateY(-18deg) rotateX(6deg) translateY(-10px); }
+    to { transform: translate(-50%, -50%) rotateY(18deg) rotateX(-6deg) translateY(10px); }
+  }
+  @keyframes float3dBob {
+    0%, 100% { transform: translateZ(calc(var(--i, 0) * 26px)) translateY(0); }
+    50% { transform: translateZ(calc(var(--i, 0) * 26px)) translateY(-14px); }
+  }
+  .float3d.has-mouse .float3d-word {
+    transition: transform 0.4s var(--ease);
+  }
+  @media (pointer: coarse), (hover: none) {
+    .float3d { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .float3d { display: none; }
+  }
+
   .warm-glow {
     position: fixed;
     inset: 0;
@@ -1903,6 +1960,11 @@
 <body>
 
 <canvas id="space" aria-hidden="true"></canvas>
+<div class="float3d" id="float3d" aria-hidden="true">
+  <div class="float3d-word" data-depth="1.0">
+    <span class="float3d-char" style="--i:0">L</span><span class="float3d-char" style="--i:1">i</span><span class="float3d-char" style="--i:2">n</span><span class="float3d-char" style="--i:3">c</span><span class="float3d-char" style="--i:4">o</span><span class="float3d-char" style="--i:5">l</span><span class="float3d-char" style="--i:6">n</span>
+  </div>
+</div>
 <div id="preloader" aria-hidden="true">
   <div class="pre-logo">
     <svg viewBox="0 0 24 24" fill="none"><path d="M12 2.5c5.2 0 9.5 4.3 9.5 9.5s-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z" stroke="currentColor" stroke-width="1.8"/><path d="M12 6.5A5.5 5.5 0 0 1 17.5 12 5.5 5.5 0 0 1 12 17.5 5.5 5.5 0 0 1 6.5 12 5.5 5.5 0 0 1 12 6.5z" fill="currentColor"/></svg>
@@ -3061,6 +3123,25 @@
   }
   window.addEventListener("scroll", orbParallax, { passive: true });
   orbParallax();
+
+  /* ================= 3D floating word parallax (mouse) ================= */
+  var float3d = document.getElementById("float3d");
+  if (float3d && window.matchMedia("(pointer: fine)").matches) {
+    float3d.classList.add("has-mouse");
+    var fwTargetX = 0, fwTargetY = 0, fwX = 0, fwY = 0;
+    window.addEventListener("pointermove", function (e) {
+      var cx = e.clientX / window.innerWidth - 0.5;
+      var cy = e.clientY / window.innerHeight - 0.5;
+      fwTargetX = cx * 12;
+      fwTargetY = cy * 8;
+    });
+    (function floatTick() {
+      fwX += (fwTargetX - fwX) * 0.04;
+      fwY += (fwTargetY - fwY) * 0.04;
+      float3d.style.transform = "translate3d(" + fwX + "px, " + fwY + "px, 0) rotateY(" + (-fwX * 0.15) + "deg)";
+      requestAnimationFrame(floatTick);
+    })();
+  }
 
   /* ================= Каталог: счётчики, поиск, сортировка, модалка ================= */
   var grid = document.getElementById("pluginGrid");
