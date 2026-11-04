@@ -1107,8 +1107,33 @@
     font-size: 13px;
   }
   .g-timer b { color: var(--creme); font-weight: 700; }
-  .g-count b { color: var(--creme); font-weight: 700; }
-  .g-join { margin-top: 4px; text-align: center; }
+  .g-count b { color: var(--creme); font-weight: 700; transition: color 0.3s; }
+  .g-join-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .g-join { flex: 1; text-align: center; }
+  .g-side-count {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(237, 201, 160, 0.35);
+    background: rgba(237, 201, 160, 0.1);
+    color: var(--creme);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translateX(6px);
+    transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
+  }
+  .g-side-count.show { display: inline-flex; opacity: 1; transform: none; }
+  .g-side-num { font-weight: 800; color: var(--creme); }
+  .g-count.pulse b { color: #5ec27b; }
   .g-status {
     position: absolute;
     top: 16px;
@@ -1120,7 +1145,7 @@
     padding: 4px 10px;
     border-radius: 999px;
   }
-  .g-status.active { background: rgba(79, 174, 106, 0.12); color: #5ec27b; border: 1px solid rgba(79, 174, 106, 0.3); }
+  .g-status.active { background: rgba(237, 201, 160, 0.12); color: var(--creme); border: 1px solid rgba(237, 201, 160, 0.3); }
   .g-status.soon { background: rgba(237, 201, 160, 0.12); color: var(--creme); border: 1px solid rgba(237, 201, 160, 0.3); }
   .g-status.done { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border: 1px solid var(--border); }
 
@@ -1892,8 +1917,8 @@
 
     <div class="giveaway-grid">
 
-      <article class="giveaway-card reveal">
-        <div class="g-status active">Активен</div>
+      <article class="giveaway-card reveal" data-giveaway="bears-10">
+        <div class="g-status active">В процессе</div>
         <span class="g-icon">
           <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
             <circle cx="32" cy="40" r="18" fill="#e9c88f"/>
@@ -1912,9 +1937,14 @@
         <p class="g-desc">Все 10 подарков будут отданы 10-ти рандомным людям после выполнения условий</p>
         <div class="g-meta">
           <span class="g-timer">Осталось: 0 дней 0 часов 0 минут</span>
-          <span class="g-count">Участвуют: 0</span>
+          <span class="g-count">Участвуют: <b id="gCount">0</b></span>
         </div>
-        <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener" class="btn btn-warm g-join">Участвовать</a>
+        <div class="g-join-row">
+          <a href="https://t.me/AdapterLincoln" target="_blank" rel="noopener" class="btn btn-warm g-join" id="gJoinBtn">Участвовать</a>
+          <span class="g-side-count" id="gSideCount" aria-hidden="true">
+            <span class="g-side-num" id="gSideNum">0</span> участников
+          </span>
+        </div>
       </article>
 
     </div>
@@ -2763,6 +2793,57 @@
     if (dl) markInstalled(dl.getAttribute("href"));
   });
   applyHistory();
+
+  /* ================= Розыгрыш: счётчик участников ================= */
+  function getGiveawayBase() {
+    try { return parseInt(localStorage.getItem("lincoln-giveaway-base") || "0", 10) || 0; }
+    catch (e) { return 0; }
+  }
+  function setGiveawayBase(v) {
+    try { localStorage.setItem("lincoln-giveaway-base", String(v)); } catch (e) {}
+  }
+  function getGiveawayJoined() {
+    try { return localStorage.getItem("lincoln-giveaway-joined") === "1"; }
+    catch (e) { return false; }
+  }
+  function setGiveawayJoined() {
+    try { localStorage.setItem("lincoln-giveaway-joined", "1"); } catch (e) {}
+  }
+  (function initGiveaway() {
+    var card = document.querySelector(".giveaway-card[data-giveaway]");
+    if (!card) return;
+    var countEl = document.getElementById("gCount");
+    var sideEl = document.getElementById("gSideCount");
+    var sideNum = document.getElementById("gSideNum");
+    var joinBtn = document.getElementById("gJoinBtn");
+    var joined = getGiveawayJoined();
+    var base = Math.max(getGiveawayBase(), joined ? 1 : 0);
+    var n = base + (joined ? 1 : 0);
+    function render() {
+      if (countEl) countEl.textContent = n;
+      if (sideNum) sideNum.textContent = n;
+    }
+    render();
+    if (joined && sideEl) {
+      sideEl.classList.add("show");
+    }
+    if (joinBtn) {
+      joinBtn.addEventListener("click", function () {
+        if (getGiveawayJoined()) return;
+        setGiveawayJoined();
+        joined = true;
+        setGiveawayBase(n);
+        n = base + 1;
+        render();
+        if (sideEl) sideEl.classList.add("show");
+        if (countEl) {
+          var meta = countEl.closest(".g-count");
+          if (meta) meta.classList.add("pulse");
+          setTimeout(function () { if (meta) meta.classList.remove("pulse"); }, 800);
+        }
+      });
+    }
+  })();
 
   /* ================= Шторка секций при скролле ================= */
   try {
