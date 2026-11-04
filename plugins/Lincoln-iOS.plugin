@@ -13,8 +13,8 @@ from typing import Any, List
 from datetime import datetime
 
 from base_plugin import BasePlugin, MethodHook, HookResult, HookStrategy
-from ui.settings import Header, Switch, Input, Divider, Text, Button
-from android_utils import log, run_on_ui_thread
+from ui.settings import Header, Switch, Input, Divider, Text
+from android_utils import log
 from hook_utils import find_class
 
 getcontext().prec = 12
@@ -506,7 +506,7 @@ class LincolnIOSPlugin(BasePlugin):
             Header(text="NFT-плашка (визуально)"),
             Switch(key="fake_nft_badge", text="Показывать NFT-плашку в профиле", default=False),
             Input(key="nft_text", text="Текст плашки", default="NFT Collectible"),
-            Button(
+            Text(
                 text="Предпросмотр",
                 subtext="Что показывает плашка",
                 on_click=self.on_nft_row_click,

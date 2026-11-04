@@ -11,7 +11,7 @@ __category__ = ["tools"]
 from typing import Any, List, Set
 
 from base_plugin import BasePlugin
-from ui.settings import Header, Switch, Divider, Button, Text
+from ui.settings import Header, Switch, Divider, Text
 from ui.alert import AlertDialogBuilder
 from ui.bulletin import BulletinHelper
 from android_utils import log, run_on_ui_thread
@@ -187,7 +187,7 @@ class LincolnCleanerPlugin(BasePlugin):
     def create_settings(self) -> List[Any]:
         return [
             Header(text="Lincoln Cleaner"),
-            Button(
+            Text(
                 text="Запустить очистку",
                 subtext="Удаляет диалоги по правилам ниже",
                 on_click=self._on_clean_click,

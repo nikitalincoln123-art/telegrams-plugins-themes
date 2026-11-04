@@ -11,7 +11,7 @@ __category__ = ["tools"]
 from typing import Any, List
 
 from base_plugin import BasePlugin
-from ui.settings import Header, Button, Divider, Text
+from ui.settings import Header, Divider, Text
 from android_utils import run_on_ui_thread, log
 
 from client_utils import get_last_fragment, get_user_config
@@ -106,7 +106,7 @@ class LincolnStatsPlugin(BasePlugin):
     def create_settings(self) -> List[Any]:
         return [
             Header(text="Lincoln Stats"),
-            Button(
+            Text(
                 text="Показать статистику",
                 subtext="ID, возраст аккаунта, локаль, сервер",
                 on_click=self._show_stats,
