@@ -1,0 +1,3023 @@
+import os
+import time
+import random
+import traceback
+import weakref
+from decimal import Decimal
+from functools import wraps
+
+from java import dynamic_proxy, jfloat, jint, jlong
+from java.io import ByteArrayOutputStream, File
+from java.lang import Runnable, Class as JavaClass
+from java.util import ArrayList
+from android.graphics import Bitmap, BitmapFactory, Color, Typeface
+from android.graphics.drawable import GradientDrawable, RippleDrawable
+from android.content.res import ColorStateList
+from android.media import MediaMetadataRetriever
+from android.text import SpannableString, SpannableStringBuilder, Spanned, InputType
+from android.view import Gravity, KeyEvent, View, ViewGroup, MotionEvent
+from android.os import Bundle
+from android.widget import FrameLayout, LinearLayout, TextView, ImageView, ScrollView, HorizontalScrollView, EditText, Toast, CheckBox
+
+from org.telegram.messenger import (
+    AndroidUtilities, ApplicationLoader, MessageObject, MessagesController,
+    MessagesStorage, SharedConfig, UserConfig
+)
+from org.telegram.tgnet import SerializedData, TLRPC, ConnectionsManager
+from org.telegram.ui import ChatActivity, DialogsActivity, PhotoAlbumPickerActivity
+from org.telegram.ui.ActionBar import BottomSheet, Theme, AlertDialog
+from org.telegram.ui.Components import AnimatedEmojiSpan, EmojiView, LayoutHelper
+
+from android_utils import OnClickListener, log as logcat, run_on_ui_thread
+from base_plugin import BasePlugin, MenuItemData, MenuItemType, MethodHook, HookResult, HookStrategy
+from client_utils import get_last_fragment, get_user_config, _generate_photo_sizes, _prepare_document, _add_video_attributes
+from hook_utils import find_class, get_private_field
+from ui.alert import AlertDialogBuilder
+from ui.bulletin import BulletinHelper
+
+__id__ = "Vvisual-editor"
+__name__ = "Fake Editor By @xufev"
+__description__ = "Визуальный редактор сообщений, локальные правки, фейки, генератор NFT и многое другое"
+__author__ = "@xufev"
+__version__ = "1.0"
+
+class MsgFlags:
+    OUT = 2
+    REPLY = 8
+    REPLY_MARKUP = 64
+    ENTITIES = 128
+    FROM_ID = 256
+    MEDIA = 512
+    VIEWS = 1024
+    VIA_BOT_ID = 2048
+    POST_AUTHOR = 65536
+    HAS_REACTIONS = 1048576
+
+class J:
+    _c = {}
+    def __getattr__(self, n):
+        if n not in self._c: self._c[n] = find_class(n.replace('_', '.'))
+        return self._c[n]
+j = J()
+
+def safe(f):
+    @wraps(f)
+    def w(*a, **kw):
+        try: return f(*a, **kw)
+        except Exception as e: logcat(f"Error in {f.__name__}: {e}\n{traceback.format_exc()}")
+    return w
+
+def on_ui(f):
+    @wraps(f)
+    def w(*a, **kw): run_on_ui_thread(lambda: f(*a, **kw))
+    return w
+
+def to_s32(n): return (n & 0xFFFFFFFF) - (0x100000000 if n > 0x7FFFFFFF else 0)
+def dp(value): return AndroidUtilities.dp(value)
+def _ji(color_val):
+    c = int(color_val) & 0xFFFFFFFF
+    return c - 0x100000000 if c >= 0x80000000 else c
+
+def blend_colors(c1, c2, ratio):
+    a1, r1, g1, b1 = (c1 >> 24) & 0xFF, (c1 >> 16) & 0xFF, (c1 >> 8) & 0xFF, c1 & 0xFF
+    a2, r2, g2, b2 = (c2 >> 24) & 0xFF, (c2 >> 16) & 0xFF, (c2 >> 8) & 0xFF, c2 & 0xFF
+    a = int(a1 + (a2 - a1) * ratio) & 0xFF
+    r = int(r1 + (r2 - r1) * ratio) & 0xFF
+    g = int(g1 + (g2 - g1) * ratio) & 0xFF
+    b = int(b1 + (b2 - b1) * ratio) & 0xFF
+    return (a << 24) | (r << 16) | (g << 8) | b
+
+def get_val(obj, name, default=None):
+    if obj is None: return default
+    try: return getattr(obj, name)
+    except: pass
+    try:
+        f = obj.getClass().getField(name)
+        f.setAccessible(True)
+        return f.get(obj)
+    except: pass
+    try:
+        f = obj.getClass().getDeclaredField(name)
+        f.setAccessible(True)
+        return f.get(obj)
+    except: pass
+    return default
+
+def _set_field(obj, field_name, value):
+    if obj is None: return False
+    try:
+        setattr(obj, field_name, value)
+        return True
+    except: pass
+    try:
+        f = obj.getClass().getField(field_name)
+        f.setAccessible(True)
+        t_name = f.getType().getName()
+        if t_name == "int": f.setInt(obj, int(value))
+        elif t_name == "long": f.setLong(obj, int(value))
+        elif t_name == "boolean": f.setBoolean(obj, bool(value))
+        else: f.set(obj, value)
+        return True
+    except: pass
+    try:
+        f = obj.getClass().getDeclaredField(field_name)
+        f.setAccessible(True)
+        t_name = f.getType().getName()
+        if t_name == "int": f.setInt(obj, int(value))
+        elif t_name == "long": f.setLong(obj, int(value))
+        elif t_name == "boolean": f.setBoolean(obj, bool(value))
+        else: f.set(obj, value)
+        return True
+    except: return False
+
+class ProxyF:
+    @staticmethod
+    def create(path, **methods):
+        base = dynamic_proxy(j.__getattr__(path.replace('.', '_')))
+        class Proxy(base):
+            def __init__(self): super().__init__(); self._m = methods
+            def __getattribute__(self, name):
+                try:
+                    m = object.__getattribute__(self, '_m')
+                    if name in m: return lambda *a, **kw: m[name](self, *a, **kw)
+                except: pass
+                return super().__getattribute__(name)
+        return Proxy()
+
+def get_icon_id(*names):
+    ctx = ApplicationLoader.applicationContext
+    for n in names:
+        res = ctx.getResources().getIdentifier(n, "drawable", ctx.getPackageName())
+        if res: return res
+    return 0
+
+def clone_message_owner(owner):
+    try:
+        data = SerializedData(owner.getObjectSize())
+        owner.serializeToStream(data)
+        stream = SerializedData(data.toByteArray())
+        magic = stream.readInt32(True)
+        return TLRPC.Message.TLdeserialize(stream, magic, True)
+    except Exception as e:
+        m = TLRPC.TL_message()
+        m.id = owner.id
+        m.from_id = owner.from_id
+        m.peer_id = owner.peer_id
+        m.date = owner.date
+        m.message = owner.message
+        m.media = owner.media
+        m.flags = owner.flags
+        m.out = owner.out
+        m.reply_to = owner.reply_to
+        m.entities = owner.entities
+        m.via_bot_id = getattr(owner, 'via_bot_id', 0)
+        m.post_author = getattr(owner, 'post_author', "")
+        m.views = getattr(owner, 'views', 0)
+        return m
+
+def apply_reactions_to_mo(mo, reactions_data):
+    if not reactions_data:
+        mo.flags &= ~MsgFlags.HAS_REACTIONS; mo.reactions = None; return
+    mo.flags |= MsgFlags.HAS_REACTIONS
+    tl_reactions = TLRPC.TL_messageReactions()
+    tl_reactions.flags = 3
+    tl_reactions.results = ArrayList()
+    tl_reactions.recent_reactions = ArrayList()
+    mc = MessagesController.getInstance(UserConfig.selectedAccount)
+    for i, r_data in enumerate(reactions_data):
+        emo = r_data['emoticon']
+        users = r_data.get('users',[])
+        count = r_data.get('display_count', len(users))
+        if count == 0 and len(users) == 0: continue
+        if emo.startswith("⭐PAID"):
+            reaction = TLRPC.TL_reactionPaid()
+        elif emo.isdigit():
+            reaction = TLRPC.TL_reactionCustomEmoji()
+            try: reaction.document_id = jlong(int(emo))
+            except: reaction.document_id = int(emo)
+        else:
+            reaction = TLRPC.TL_reactionEmoji()
+            reaction.emoticon = emo
+        rc = TLRPC.TL_reactionCount()
+        rc.reaction = reaction
+        rc.count = count
+        tl_reactions.results.add(rc)
+        for uid in users[:3]:
+            uid_long = jlong(uid)
+            real_user = mc.getUser(uid_long)
+            if not real_user:
+                stub_user = TLRPC.TL_user()
+                stub_user.id = uid
+                stub_user.first_name = f"id{uid}"
+                mc.putUser(stub_user, False)
+                try: mc.loadUser(uid_long, 0, True)
+                except: pass
+            peer_react = TLRPC.TL_messagePeerReaction()
+            peer_react.flags = 1
+            peer_react.peer_id = TLRPC.TL_peerUser()
+            peer_react.peer_id.user_id = uid
+            peer_react.reaction = reaction
+            tl_reactions.recent_reactions.add(peer_react)
+    mo.reactions = tl_reactions
+
+def _create_emoji_view(ctx, emo_str):
+    if emo_str.startswith("⭐PAID") or emo_str == "⭐":
+        tv = TextView(ctx)
+        tv.setText("⭐")
+        tv.setTextSize(1, 16.0)
+        tv.setGravity(Gravity.CENTER)
+        return tv
+    if emo_str.isdigit():
+        try:
+            TextViewEmojis = find_class("org.telegram.ui.Components.AnimatedEmojiSpan$TextViewEmojis")
+            if TextViewEmojis:
+                tv = TextViewEmojis(ctx)
+                tv.setTextSize(1, 16.0)
+                tv.setGravity(Gravity.CENTER)
+                ssb = SpannableStringBuilder(" ")
+                span = AnimatedEmojiSpan(jlong(int(emo_str)), tv.getPaint().getFontMetricsInt())
+                ssb.setSpan(span, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                tv.setText(ssb)
+                return tv
+        except Exception as e: pass
+        try:
+            biv = find_class("org.telegram.ui.Components.BackupImageView")(ctx)
+            AnimatedEmojiDrawable = find_class("org.telegram.ui.Components.AnimatedEmojiDrawable")
+            doc = AnimatedEmojiDrawable.findDocument(UserConfig.selectedAccount, jlong(int(emo_str)))
+            if doc:
+                ImageLocation = find_class("org.telegram.messenger.ImageLocation")
+                biv.setImage(ImageLocation.getForDocument(doc), "50_50", None, None, doc)
+                return biv
+        except Exception as e: pass
+        try:
+            AnimatedEmojiDrawable = find_class("org.telegram.ui.Components.AnimatedEmojiDrawable")
+            drawable = AnimatedEmojiDrawable.make(UserConfig.selectedAccount, 0, jlong(int(emo_str)))
+            iv = ImageView(ctx)
+            iv.setImageDrawable(drawable)
+            try: drawable.addView(iv)
+            except: pass
+            return iv
+        except Exception as e: pass
+        tv = TextView(ctx)
+        tv.setText("?")
+        tv.setTextSize(1, 16.0)
+        tv.setGravity(Gravity.CENTER)
+        return tv
+    else:
+        tv = TextView(ctx)
+        tv.setText(emo_str)
+        tv.setTextSize(1, 16.0)
+        tv.setGravity(Gravity.CENTER)
+        return tv
+
+def get_media_info_and_thumb(path, is_video):
+    w, h, duration, thumb_bytes = 0, 0, 0, None
+    try:
+        bitmap = None
+        if is_video:
+            mmr = MediaMetadataRetriever(); mmr.setDataSource(path)
+            w = int(mmr.extractMetadata(18) or 0); h = int(mmr.extractMetadata(19) or 0)
+            dur_ms = int(mmr.extractMetadata(9) or 0); duration = int(dur_ms / 1000)
+            rotation = int(mmr.extractMetadata(24) or 0)
+            if rotation in[90, 270]: w, h = h, w
+            if dur_ms > 0: bitmap = mmr.getFrameAtTime(jlong(random.randint(0, dur_ms) * 1000), 2)
+            if not bitmap: bitmap = mmr.getFrameAtTime()
+            mmr.release()
+        else:
+            opts = BitmapFactory.Options(); opts.inJustDecodeBounds = True
+            BitmapFactory.decodeFile(path, opts); w, h = opts.outWidth, opts.outHeight
+            opts.inJustDecodeBounds = False; opts.inSampleSize = 4; bitmap = BitmapFactory.decodeFile(path, opts)
+        if bitmap:
+            aspect = float(w) / float(h) if h > 0 else 1.0
+            thumb_w = 90 if w < h else int(90 * aspect); thumb_h = int(90 / aspect) if w < h else 90
+            scaled = Bitmap.createScaledBitmap(bitmap, thumb_w, thumb_h, True)
+            stream = ByteArrayOutputStream(); scaled.compress(Bitmap.CompressFormat.JPEG, 55, stream)
+            thumb_bytes = stream.toByteArray()
+            if scaled != bitmap: scaled.recycle()
+            bitmap.recycle(); stream.close()
+    except: pass
+    return w or 800, h or 800, duration, thumb_bytes
+
+class GiftType:
+    PREMIUM, STARS, PAYMENT = "premium", "stars", "payment"
+
+class GiftConfig:
+    PREMIUM_PRICES_USD = {1: 4.99, 3: 14.99, 6: 28.99, 12: 59.99}
+    STAR_PRICE_USD = 0.0162
+
+class PutUserHook(MethodHook):
+    def __init__(self, p): self.p = weakref.ref(p)
+    @safe
+    def before_hooked_method(self, param):
+        if not (p := self.p()) or not param.args or not (user := param.args[0]): return
+        uid = getattr(user, 'id', None)
+        if uid and uid in p.faked_users:
+            flags = p.faked_users[uid]
+            user.verified = flags.get('verified', user.verified)
+            user.premium = flags.get('premium', user.premium)
+            user.scam = flags.get('scam', False)
+            user.fake = flags.get('fake', False)
+            if flags.get('emoji_status_id'):
+                try:
+                    es = TLRPC.TL_emojiStatus()
+                    es.document_id = jlong(int(flags['emoji_status_id']))
+                    user.emoji_status = es
+                except: pass
+
+class AdminRankHook(MethodHook):
+    def __init__(self, p): self.p = weakref.ref(p)
+    @safe
+    def after_hooked_method(self, param):
+        p = self.p()
+        if not p or not param.args: return
+        uid = param.args[0]
+        if uid in p.faked_users:
+            rank = p.faked_users[uid].get('admin_title')
+            if rank:
+                param.setResult(rank)
+
+class LocalRenderHook(MethodHook):
+    def __init__(self, p): self.p = weakref.ref(p)
+    @safe
+    def before_hooked_method(self, param):
+        if not (p := self.p()) or not param.args or not (m := param.args[0]): return
+        if not (c := p.localChanges.get(m.getId())): return
+        is_service = isinstance(m.messageOwner, TLRPC.TL_messageService)
+        ents = c.get('entities') or ArrayList()
+        m.messageOwner.entities = ents
+        if ents.size() > 0: m.messageOwner.flags |= MsgFlags.ENTITIES
+        else: m.messageOwner.flags &= ~MsgFlags.ENTITIES
+        if is_service:
+            m.messageText = j.android_text_SpannableStringBuilder(c.get('text', ""))
+        else:
+            m.messageOwner.message = c.get('text', "")
+        if (f_id := c.get('from_id')):
+            m.messageOwner.from_id = f_id
+            m.messageOwner.flags |= MsgFlags.FROM_ID
+
+        sender_flags = c.get('sender_flags', {})
+        if sender_flags:
+            acc = UserConfig.selectedAccount
+            mc = MessagesController.getInstance(acc)
+            from_id = c.get('from_id')
+            if from_id:
+                uid = getattr(from_id, 'user_id', None)
+                if uid:
+                    user = mc.getUser(jlong(uid))
+                    if user:
+                        user.verified = sender_flags.get('verified', user.verified)
+                        user.premium = sender_flags.get('premium', user.premium)
+                        user.scam = sender_flags.get('scam', False)
+                        user.fake = sender_flags.get('fake', False)
+                        if sender_flags.get('emoji_status_id'):
+                            try:
+                                es = TLRPC.TL_emojiStatus()
+                                es.document_id = jlong(int(sender_flags['emoji_status_id']))
+                                user.emoji_status = es
+                            except: pass
+                        mc.putUser(user, False)
+
+                admin_title = sender_flags.get('admin_title')
+                if admin_title:
+                    _set_field(m.messageOwner, 'post_author', admin_title)
+                    m.messageOwner.flags |= MsgFlags.POST_AUTHOR
+                else:
+                    _set_field(m.messageOwner, 'post_author', "")
+                    m.messageOwner.flags &= ~MsgFlags.POST_AUTHOR
+
+            admin_title = sender_flags.get('admin_title')
+            if admin_title:
+                _set_field(m.messageOwner, 'post_author', admin_title)
+                m.messageOwner.flags |= MsgFlags.POST_AUTHOR
+            else:
+                _set_field(m.messageOwner, 'post_author', "")
+                m.messageOwner.flags &= ~MsgFlags.POST_AUTHOR
+
+        m.messageOwner.out = c.get('out', False)
+        if m.messageOwner.out: m.messageOwner.flags |= MsgFlags.OUT
+        else: m.messageOwner.flags &= ~MsgFlags.OUT
+
+        via_bot = c.get('via_bot_name', '')
+        if via_bot:
+            try:
+                m.messageOwner.flags |= MsgFlags.VIA_BOT_ID
+                m.messageOwner.via_bot_id = int(c.get('via_bot_id', 123456))
+            except: pass
+
+        if (media := c.get('media')):
+            m.messageOwner.media = media
+            m.messageOwner.flags |= MsgFlags.MEDIA
+            m.type = c.get('msg_type', 0)
+            if (path := c.get('attach_path')): m.messageOwner.attachPath = path
+            m.setType(); m.generateThumbs(False); m.createMediaThumbs(); m.checkMediaExistance()
+        else:
+            m.messageOwner.media = TLRPC.TL_messageMediaEmpty()
+            if not is_service: m.type = 0
+            m.messageOwner.flags &= ~MsgFlags.MEDIA
+            m.messageOwner.attachPath = ""
+            m.setType()
+
+        custom_reply = c.get('custom_reply')
+        clear_reply = c.get('clear_reply')
+        if custom_reply:
+            rep_tl = TLRPC.TL_message(); rep_tl.message = custom_reply.get('text', ''); rep_tl.id = 8888888; rep_tl.date = int(time.time())
+            rep_peer = TLRPC.TL_peerUser(); rep_peer.user_id = 8888888; rep_tl.from_id = rep_peer
+            fake_user = TLRPC.TL_user(); fake_user.id = 8888888; fake_user.first_name = custom_reply.get('name', 'Имя')
+            MessagesController.getInstance(UserConfig.selectedAccount).putUser(fake_user, False)
+            m.messageOwner.flags |= MsgFlags.REPLY
+            header = TLRPC.TL_messageReplyHeader(); header.reply_to_msg_id = rep_tl.id; m.messageOwner.reply_to = header
+            m.replyMessageObject = MessageObject(UserConfig.selectedAccount, rep_tl, False, False)
+        elif clear_reply:
+            m.messageOwner.flags &= ~MsgFlags.REPLY; m.messageOwner.reply_to = None; m.replyMessageObject = None
+
+        if c.get('date'): m.messageOwner.date = c['date']
+        if c.get('views'): m.messageOwner.views = c['views']; m.messageOwner.flags |= MsgFlags.VIEWS
+
+        apply_reactions_to_mo(m.messageOwner, c.get('reactions',[]))
+        if not is_service: m.applyNewText(m.messageOwner.message)
+        m.resetLayout(); m.forceUpdate = True
+
+
+class FakeEditor(BasePlugin):
+    def __init__(self):  
+        super().__init__()
+        self.localChanges = {}
+        self.faked_users = {}
+        self.current_ps = None
+        self.editingId = None
+        self.editingItem = None
+        self.current_sheet = None
+        self.frag = None
+        self.peer = None
+        self._originOut = False
+        self._edit_watcher = None
+        self._gw_state = {'qty': '50', 'val': '12', 'hours': '24', 'txt': '', 'is_stars': False}
+        self._temp_giveaway_channels =[]
+
+    def on_plugin_load(self):
+        self.add_menu_item(MenuItemData(MenuItemType.MESSAGE_CONTEXT_MENU, "Редактор", self.open_editor_sheet, "msg_edit"))
+        self.add_menu_item(MenuItemData(MenuItemType.CHAT_ACTION_MENU, "Создать фейк", self.open_creator_sheet, "msg_edit"))
+        try:
+            chat_cell_cls = JavaClass.forName("org.telegram.ui.Cells.ChatMessageCell")
+            self.hook_all_methods(chat_cell_cls, "setMessageContent", LocalRenderHook(self))
+        except Exception as e:
+            logcat(f"Failed to hook ChatMessageCell: {e}")
+        try:
+            mc_cls = JavaClass.forName("org.telegram.messenger.MessagesController")
+            self.hook_all_methods(mc_cls, "putUser", PutUserHook(self))
+        except Exception as e:
+            logcat(f"Failed to hook MessagesController: {e}")
+        try:
+            ca_cls = JavaClass.forName("org.telegram.ui.ChatActivity")
+            self.hook_all_methods(ca_cls, "getAdminRank", AdminRankHook(self))
+        except Exception as e:
+            logcat(f"Failed to hook ChatActivity: {e}")
+        logcat(f"[{__name__}] Loaded successfully.")
+
+    @on_ui
+    def refresh_ui(self):
+        if isinstance(f := get_last_fragment(), ChatActivity):
+            if (lv := f.getChatListView()):
+                for i in range(lv.getChildCount()):
+                    if (v := lv.getChildAt(i)): v.invalidate()
+                if (ad := lv.getAdapter()): ad.notifyDataSetChanged()
+
+    def _get_ripple_drawable(self, bg_color, corner_radius_dp=0, stroke_color=None, stroke_width_dp=1):
+        is_dark = Theme.isCurrentThemeDark()
+        ripple_color = _ji(0x1AFFFFFF if is_dark else 0x1A000000)
+        bg = GradientDrawable()
+        bg.setColor(_ji(bg_color))
+        if corner_radius_dp > 0:
+            bg.setCornerRadius(float(dp(corner_radius_dp)))
+        if stroke_color is not None:
+            bg.setStroke(dp(stroke_width_dp), _ji(stroke_color))
+        return RippleDrawable(ColorStateList.valueOf(ripple_color), bg, None)
+
+    def _add_press_anim(self, view):
+        class PressAnim(dynamic_proxy(View.OnTouchListener)):
+            def onTouch(self, v, event):
+                action = event.getAction()
+                if action == MotionEvent.ACTION_DOWN:
+                    v.animate().scaleX(0.96).scaleY(0.96).setDuration(100).start()
+                elif action in[MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL]:
+                    v.animate().scaleX(1.0).scaleY(1.0).setDuration(100).start()
+                return False
+        view.setOnTouchListener(PressAnim())
+
+    def _create_dialog_input(self, ctx, hint, default_text="", input_type=1):
+        try: primary_text = Theme.getColor(Theme.key_dialogTextBlack)
+        except: primary_text = 0xFFFFFFFF
+        try: hint_text = Theme.getColor(Theme.key_dialogTextHint)
+        except: hint_text = 0xFF9CA3AF
+        try: card_bg = Theme.getColor(Theme.key_windowBackgroundWhite)
+        except: card_bg = 0xFF233041
+        try: divider_color = Theme.getColor(Theme.key_divider)
+        except: divider_color = 0x1AFFFFFF if Theme.isCurrentThemeDark() else 0x1A000000
+        et = EditText(ctx)
+        et.setHint(hint)
+        et.setText(str(default_text))
+        et.setInputType(input_type)
+        et.setTextColor(_ji(primary_text))
+        et.setHintTextColor(_ji(hint_text))
+        bg = GradientDrawable()
+        bg.setColor(_ji(card_bg))
+        bg.setCornerRadius(float(dp(6)))
+        bg.setStroke(dp(1), _ji(divider_color))
+        et.setBackground(bg)
+        et.setPadding(dp(12), dp(12), dp(12), dp(12))
+        return et
+
+    @staticmethod
+    def _build_msg_obj(base_obj, ps):
+        mo = clone_message_owner(base_obj.messageOwner)
+        mo.out = ps.get('out', False)
+        if mo.out: mo.flags |= MsgFlags.OUT
+        else: mo.flags &= ~MsgFlags.OUT
+        if ps.get('date'): mo.date = ps['date']
+        if ps.get('views'): mo.views = ps['views']; mo.flags |= MsgFlags.VIEWS
+        if ps.get('from_id'):
+            mo.from_id = ps['from_id']; mo.flags |= MsgFlags.FROM_ID
+
+        sender_flags = ps.get('sender_flags', {})
+        if sender_flags and ps.get('from_id'):
+            uid = getattr(ps['from_id'], 'user_id', None)
+            if uid:
+                mc = MessagesController.getInstance(UserConfig.selectedAccount)
+                user = mc.getUser(jlong(uid))
+                if user:
+                    user.verified = sender_flags.get('verified', user.verified)
+                    user.premium = sender_flags.get('premium', user.premium)
+                    user.scam = sender_flags.get('scam', False)
+                    user.fake = sender_flags.get('fake', False)
+                    if sender_flags.get('emoji_status_id'):
+                        try:
+                            es = TLRPC.TL_emojiStatus()
+                            es.document_id = jlong(int(sender_flags['emoji_status_id']))
+                            user.emoji_status = es
+                        except: pass
+                    mc.putUser(user, False)
+
+            admin_title = sender_flags.get('admin_title')
+            if admin_title:
+                _set_field(mo, 'post_author', admin_title)
+                mo.flags |= MsgFlags.POST_AUTHOR
+            else:
+                _set_field(mo, 'post_author', "")
+                mo.flags &= ~MsgFlags.POST_AUTHOR
+
+        via_bot_name = ps.get('via_bot_name', '')
+        if via_bot_name:
+            try:
+                mo.flags |= MsgFlags.VIA_BOT_ID
+                mo.via_bot_id = int(ps.get('via_bot_id', 123456))
+                via_user = TLRPC.TL_user()
+                via_user.id = int(ps.get('via_bot_id', 123456))
+                via_user.username = via_bot_name.lstrip('@')
+                via_user.first_name = via_bot_name.lstrip('@')
+                via_user.bot = True
+                MessagesController.getInstance(UserConfig.selectedAccount).putUser(via_user, False)
+            except: pass
+        else:
+            mo.flags &= ~MsgFlags.VIA_BOT_ID
+
+        obj = MessageObject(UserConfig.selectedAccount, mo, True, True)
+        custom_reply = ps.get('custom_reply')
+        clear_reply = ps.get('clear_reply')
+        if custom_reply:
+            rep_tl = TLRPC.TL_message(); rep_tl.message = custom_reply['text']; rep_tl.id = 8888888; rep_tl.date = int(time.time())
+            p_rep = TLRPC.TL_peerUser(); p_rep.user_id = int(8888888); rep_tl.from_id = p_rep
+            fu = TLRPC.TL_user(); fu.id = int(8888888); fu.first_name = custom_reply['name']
+            MessagesController.getInstance(UserConfig.selectedAccount).putUser(fu, False)
+            mo.flags |= MsgFlags.REPLY
+            hdr = TLRPC.TL_messageReplyHeader(); hdr.reply_to_msg_id = rep_tl.id; mo.reply_to = hdr
+            obj.replyMessageObject = MessageObject(UserConfig.selectedAccount, rep_tl, False, False)
+        elif not clear_reply and base_obj.replyMessageObject:
+            obj.replyMessageObject = base_obj.replyMessageObject
+            mo.flags |= MsgFlags.REPLY
+            if not mo.reply_to:
+                hdr = TLRPC.TL_messageReplyHeader(); hdr.reply_to_msg_id = base_obj.replyMessageObject.getId(); mo.reply_to = hdr
+        else:
+            mo.flags &= ~MsgFlags.REPLY; mo.reply_to = None; obj.replyMessageObject = None
+
+        display_text = ps.get('text', "")
+        if not ps.get('reactions') and not ps.get('media'): display_text += "\n\n\u200b"
+        mo.message = display_text
+        ents = ps.get('entities') or ArrayList(); mo.entities = ents
+        if ents.size() > 0: mo.flags |= MsgFlags.ENTITIES
+        else: mo.flags &= ~MsgFlags.ENTITIES
+        if ps.get('media'):
+            mo.media = ps['media']; mo.flags |= MsgFlags.MEDIA
+            if ps.get('attach_path'): mo.attachPath = ps['attach_path']
+        else:
+            mo.media = TLRPC.TL_messageMediaEmpty(); mo.flags &= ~MsgFlags.MEDIA; mo.attachPath = ""
+        apply_reactions_to_mo(mo, ps.get('reactions',[]))
+        if ps.get('msg_type') is not None: obj.type = ps['msg_type']
+        obj.resetLayout(); obj.generateThumbs(False); obj.createMediaThumbs()
+        return obj
+
+    @on_ui
+    @safe
+    def open_editor_sheet(self, ctx_data):
+        origin = ctx_data.get("message")
+        self.frag = get_last_fragment()
+        if not origin or not self.frag: return
+        self.peer = self.frag.getDialogId()
+        self._show_sheet(origin)
+
+    @on_ui
+    @safe
+    def open_creator_sheet(self, ctx_data):
+        self.frag = get_last_fragment()
+        if not self.frag: return
+        self.peer = self.frag.getDialogId()
+        self._show_sheet(None)
+
+    # ========================================================================
+    # Основное окно (интерфейс)
+    # ========================================================================
+    def _show_sheet(self, origin):
+        activity = self.frag.getParentActivity()
+        if not activity: return
+
+        acc = UserConfig.selectedAccount
+        is_creation_mode = origin is None
+
+        if is_creation_mode:
+            self.editingId = None
+            self._originOut = False
+
+            dummy_msg = TLRPC.TL_message()
+            dummy_msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            dummy_msg.dialog_id = self.peer
+            dummy_msg.date = int(time.time())
+            dummy_msg.message = ""
+            dummy_msg.flags = MsgFlags.FROM_ID
+            dummy_msg.out = False
+            dummy_msg.peer_id = self._make_peer()
+            dummy_msg.from_id = self._make_peer()
+
+            origin_to_use = MessageObject(acc, dummy_msg, False, True)
+
+            self.current_ps = {
+                'text': "",
+                'entities': ArrayList(),
+                'media': None,
+                'msg_type': 0,
+                'from_id': dummy_msg.from_id,
+                'out': False,
+                '_sender_changed': True,
+                'attach_path': None,
+                'custom_reply': None,
+                'clear_reply': False,
+                'reactions': [],
+                'date': dummy_msg.date,
+                'views': 0,
+                'sender_flags': {},
+                'via_bot_name': '',
+                'via_bot_id': 0,
+            }
+        else:
+            origin_to_use = origin
+            self.editingId = origin.getId()
+            self._originOut = origin.isOutOwner()
+
+            prev = self.localChanges.get(self.editingId)
+            if prev:
+                self.current_ps = prev.copy()
+            else:
+                mo = origin.messageOwner
+                has_media = mo.media is not None and not isinstance(mo.media, TLRPC.TL_messageMediaEmpty)
+                init_media = mo.media if has_media else None
+                init_type = origin.type if has_media else 0
+                init_text = str(origin.messageText).replace('\u200b', '').strip() if origin.messageText else ""
+                init_path = getattr(mo, 'attachPath', None)
+                if not init_path:
+                    try: init_path = getattr(origin, 'attachPath', None)
+                    except: pass
+                my_id = UserConfig.getInstance(acc).getClientUserId()
+                if origin.isOutOwner():
+                    my_peer = TLRPC.TL_peerUser()
+                    my_peer.user_id = int(my_id)
+                    init_from_id = my_peer
+                else:
+                    init_from_id = mo.from_id
+
+                existing_reactions = []
+                if mo.reactions and mo.reactions.results:
+                    mc = MessagesController.getInstance(acc)
+                    real_users_by_emo = {}
+                    if mo.reactions.recent_reactions:
+                        for rr_idx in range(mo.reactions.recent_reactions.size()):
+                            pr = mo.reactions.recent_reactions.get(rr_idx)
+                            if not pr or not pr.reaction or not pr.peer_id: continue
+                            if isinstance(pr.reaction, TLRPC.TL_reactionEmoji):
+                                emo_key = pr.reaction.emoticon
+                            elif isinstance(pr.reaction, TLRPC.TL_reactionPaid):
+                                emo_key = "⭐PAID"
+                            else:
+                                emo_key = str(pr.reaction.document_id)
+                            uid = getattr(pr.peer_id, 'user_id', None)
+                            if uid:
+                                real_users_by_emo.setdefault(emo_key, []).append(int(uid))
+                                real_user = mc.getUser(jlong(uid))
+                                if not real_user:
+                                    try: mc.loadUser(jlong(uid), 0, True)
+                                    except: pass
+                    for rc_idx in range(mo.reactions.results.size()):
+                        rc = mo.reactions.results.get(rc_idx)
+                        if isinstance(rc.reaction, TLRPC.TL_reactionEmoji):
+                            emo = rc.reaction.emoticon
+                        elif isinstance(rc.reaction, TLRPC.TL_reactionPaid):
+                            emo = "⭐PAID"
+                        else:
+                            emo = str(rc.reaction.document_id)
+                        real_uids = real_users_by_emo.get(emo, [])[:3]
+                        existing_reactions.append({'emoticon': emo, 'users': real_uids, 'display_count': rc.count})
+
+                self.current_ps = {
+                    'text': init_text,
+                    'entities': mo.entities or ArrayList(),
+                    'media': init_media,
+                    'msg_type': init_type,
+                    'from_id': init_from_id,
+                    'out': False,
+                    '_sender_changed': True,
+                    'attach_path': init_path,
+                    'custom_reply': None,
+                    'clear_reply': False,
+                    'reactions': existing_reactions,
+                    'date': mo.date,
+                    'views': getattr(mo, 'views', 0),
+                    'sender_flags': {},
+                    'via_bot_name': '',
+                    'via_bot_id': 0,
+                }
+
+        self.editingItem = self._build_msg_obj(origin_to_use, self.current_ps)
+
+        is_dark = Theme.isCurrentThemeDark()
+        try: bg_color = Theme.getColor(Theme.key_dialogBackground)
+        except: bg_color = 0xFF1F2937
+        try: primary_text = Theme.getColor(Theme.key_dialogTextBlack)
+        except: primary_text = 0xFFFFFFFF
+        try: secondary_text = Theme.getColor(Theme.key_dialogTextGray3)
+        except: secondary_text = 0xFF9CA3AF
+        try: card_bg = Theme.getColor(Theme.key_windowBackgroundWhite)
+        except: card_bg = 0xFF233041
+        try: icon_color = Theme.getColor(Theme.key_windowBackgroundWhiteBlueIcon)
+        except: icon_color = 0xFF3B82F6
+        try: divider_color = Theme.getColor(Theme.key_divider)
+        except: divider_color = 0x1AFFFFFF if is_dark else 0x1A000000
+        tab_outline_color = _ji(0x33FFFFFF if is_dark else 0x33000000)
+        active_tab_bg = _ji(blend_colors(_ji(bg_color), 0xFFFFFFFF if is_dark else 0xFF000000, 0.12))
+        active_tab_text = primary_text
+
+        sheet = BottomSheet(activity, True)
+        self.current_sheet = sheet
+        try: sheet.setApplyBottomPadding(False)
+        except: pass
+        try: sheet.getWindow().setSoftInputMode(16)
+        except: pass
+
+        root = LinearLayout(activity)
+        root.setOrientation(LinearLayout.VERTICAL)
+        root.setPadding(dp(16), dp(16), dp(16), dp(16))
+        root_bg = GradientDrawable()
+        root_bg.setColor(_ji(bg_color))
+        root_bg.setCornerRadius(float(dp(16)))
+        root.setBackground(root_bg)
+
+        header = LinearLayout(activity)
+        header.setOrientation(LinearLayout.HORIZONTAL)
+        header.setGravity(Gravity.CENTER_VERTICAL)
+        title = TextView(activity)
+        title.setText("Fake Creator" if is_creation_mode else "Fake Editor")
+        title.setTextColor(_ji(primary_text))
+        title.setTextSize(1, 20.0)
+        title.setTypeface(AndroidUtilities.bold())
+        header.addView(title, LayoutHelper.createLinear(0, -2, 1.0))
+        close_btn = ImageView(activity)
+        close_btn.setImageResource(get_icon_id("ic_close_white", "ic_close"))
+        close_btn.setColorFilter(_ji(secondary_text))
+        try: close_btn.setBackground(Theme.createSelectorDrawable(_ji(Theme.getColor(Theme.key_listSelector)), 1))
+        except: pass
+        close_btn.setPadding(dp(8), dp(8), dp(8), dp(8))
+        close_btn.setOnClickListener(OnClickListener(lambda v: sheet.dismiss()))
+        self._add_press_anim(close_btn)
+        header.addView(close_btn, LayoutHelper.createLinear(36, 36))
+        root.addView(header, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 16))
+
+        tabs_container = LinearLayout(activity)
+        tabs_container.setOrientation(LinearLayout.HORIZONTAL)
+        tabs_bg = GradientDrawable()
+        tabs_bg.setColor(0)
+        tabs_bg.setCornerRadius(float(dp(24)))
+        tabs_bg.setStroke(dp(1), tab_outline_color)
+        tabs_container.setBackground(tabs_bg)
+        tabs_container.setPadding(dp(4), dp(4), dp(4), dp(4))
+
+        tab_views = {}
+        content_views = {}
+        tab_keys = ["editor", "generator", "data"]
+        current_tab = [None]
+
+        def switch_tab(active_key):
+            if current_tab[0] == active_key: return
+            curr_idx = tab_keys.index(current_tab[0]) if current_tab[0] else -1
+            new_idx = tab_keys.index(active_key)
+            direction = 1 if new_idx > curr_idx else -1
+            width = AndroidUtilities.displaySize.x
+            for key, tv in tab_views.items():
+                if key == active_key:
+                    tv.setTextColor(_ji(active_tab_text))
+                    active_bg = GradientDrawable()
+                    active_bg.setColor(_ji(active_tab_bg))
+                    active_bg.setCornerRadius(float(dp(20)))
+                    tv.setBackground(active_bg)
+                else:
+                    tv.setTextColor(_ji(secondary_text))
+                    tv.setBackground(None)
+            for key, view in content_views.items():
+                if key == active_key:
+                    view.setVisibility(View.VISIBLE)
+                    if current_tab[0] is not None:
+                        view.setTranslationX(width * direction)
+                        view.setAlpha(0.0)
+                        view.animate().translationX(0).alpha(1.0).setDuration(250).setInterpolator(find_class("android.view.animation.DecelerateInterpolator")()).setListener(None).start()
+                elif key == current_tab[0]:
+                    class AnimEnd(dynamic_proxy(Runnable)):
+                        def __init__(self, v): super().__init__(); self.v = v
+                        def run(self): self.v.setVisibility(View.GONE)
+                    view.animate().translationX(-width * direction).alpha(0.0).setDuration(250).setInterpolator(find_class("android.view.animation.DecelerateInterpolator")()).withEndAction(AnimEnd(view)).start()
+                else:
+                    view.setVisibility(View.GONE)
+            current_tab[0] = active_key
+
+        def create_tab(key, text):
+            tv = TextView(activity)
+            tv.setText(text)
+            tv.setGravity(Gravity.CENTER)
+            tv.setTextSize(1, 14.0)
+            tv.setTypeface(AndroidUtilities.bold())
+            tv.setPadding(0, dp(8), 0, dp(8))
+            tv.setOnClickListener(OnClickListener(lambda v: switch_tab(key)))
+            self._add_press_anim(tv)
+            tab_views[key] = tv
+            tabs_container.addView(tv, LayoutHelper.createLinear(0, -2, 1.0))
+
+        create_tab("editor", "Создатель" if is_creation_mode else "Редактор")
+        create_tab("generator", "Генератор")
+        create_tab("data", "Данные")
+        root.addView(tabs_container, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 16))
+
+        scroll = ScrollView(activity)
+        scroll.setFillViewport(True)
+        content_wrapper = FrameLayout(activity)
+
+        def create_action_row(icon_names, title_text, subtitle_text, click_action, is_destructive=False):
+            row = LinearLayout(activity)
+            row.setOrientation(LinearLayout.HORIZONTAL)
+            row.setGravity(Gravity.CENTER_VERTICAL)
+            row.setPadding(dp(16), dp(12), dp(16), dp(12))
+            row.setBackground(self._get_ripple_drawable(0x00000000, 0))
+            try: red_color = Theme.getColor(Theme.key_text_RedRegular)
+            except: red_color = 0xFFE53935
+            final_icon_color = red_color if is_destructive else icon_color
+            icon_frame = FrameLayout(activity)
+            icon_bg = GradientDrawable()
+            icon_bg.setCornerRadius(float(dp(10)))
+            icon_bg.setColor(_ji(final_icon_color & 0x00FFFFFF | 0x1A000000))
+            icon_frame.setBackground(icon_bg)
+            icon = ImageView(activity)
+            res_id = get_icon_id(*icon_names)
+            if res_id: icon.setImageResource(res_id)
+            icon.setColorFilter(_ji(final_icon_color))
+            icon_frame.addView(icon, LayoutHelper.createFrame(20, 20, Gravity.CENTER))
+            row.addView(icon_frame, LayoutHelper.createLinear(36, 36, 0, 0, 16, 0))
+            text_layout = LinearLayout(activity)
+            text_layout.setOrientation(LinearLayout.VERTICAL)
+            t_title = TextView(activity)
+            t_title.setText(title_text)
+            t_title.setTextColor(_ji(red_color if is_destructive else primary_text))
+            t_title.setTextSize(1, 16.0)
+            t_title.setTypeface(AndroidUtilities.bold())
+            text_layout.addView(t_title, LayoutHelper.createLinear(-1, -2))
+            if subtitle_text:
+                t_sub = TextView(activity)
+                t_sub.setText(subtitle_text)
+                t_sub.setTextColor(_ji(secondary_text))
+                t_sub.setTextSize(1, 13.0)
+                text_layout.addView(t_sub, LayoutHelper.createLinear(-1, -2, 0, 2, 0, 0))
+            row.addView(text_layout, LayoutHelper.createLinear(0, -2, 1.0))
+            chevron = ImageView(activity)
+            chevron.setImageResource(get_icon_id("arrow_right", "msg_arrowright", "ic_chevron_right"))
+            chevron.setColorFilter(_ji(secondary_text))
+            row.addView(chevron, LayoutHelper.createLinear(24, 24, Gravity.CENTER_VERTICAL))
+            row.setOnClickListener(OnClickListener(click_action))
+            self._add_press_anim(row)
+            return row
+
+        def create_section(rows):
+            section = LinearLayout(activity)
+            section.setOrientation(LinearLayout.VERTICAL)
+            bg = GradientDrawable()
+            bg.setColor(_ji(card_bg))
+            bg.setCornerRadius(float(dp(14)))
+            section.setBackground(bg)
+            try: section.setClipToOutline(True)
+            except: pass
+            for i, row in enumerate(rows):
+                section.addView(row, LayoutHelper.createLinear(-1, -2))
+                if i < len(rows) - 1:
+                    div = View(activity)
+                    div.setBackgroundColor(_ji(divider_color))
+                    div_lp = LayoutHelper.createLinear(-1, 1)
+                    div_lp.leftMargin = dp(68)
+                    section.addView(div, div_lp)
+            wrapper = LinearLayout(activity)
+            wrapper.setPadding(0, 0, 0, dp(16))
+            wrapper.addView(section, LayoutHelper.createLinear(-1, -2))
+            return wrapper
+
+        tab_editor = LinearLayout(activity)
+        tab_editor.setOrientation(LinearLayout.VERTICAL)
+
+        bubble_frame = FrameLayout(activity)
+        bubble_frame.setPadding(0, 0, 0, dp(4))
+
+        res = get_private_field(self.frag, "sharedResources")
+        thm = get_private_field(self.frag, "themeDelegate")
+        cell = j.org_telegram_ui_Cells_ChatMessageCell(activity, UserConfig.selectedAccount, True, res, thm)
+
+        stub = lambda s, *a, **kw: None
+        stub_f = lambda s, *a, **kw: False
+        stub_t = lambda s, *a, **kw: True
+
+        cell.setDelegate(ProxyF.create("org.telegram.ui.Cells.ChatMessageCell$ChatMessageCellDelegate",
+            getDialogId=lambda s: self.frag.getDialogId(), getSharedResources=lambda s: res, getResourcesProvider=lambda s: thm,
+            getChatActivity=lambda s: self.frag, getChatMode=lambda s: 1, isChat=stub_t, canDrawOutboundsContent=stub_t,
+            getProgressToNext=lambda s, c: jfloat(1.0), getProgressToPrev=lambda s, c: jfloat(1.0),
+            shouldRepeatSticker=stub_t, doNotShowLoadingReply=stub_t, getTopicId=lambda s: 0, isPinnedMessage=lambda s, m: False,
+            getThreadMessage=stub, getTopPinnedMessage=stub, getBottomPinnedMessage=stub, getChatStyle=stub,
+            getInstantVideoPlayer=stub, getPinchToZoomHelper=stub, getPhotoPreviewPinchToZoomHelper=stub,
+            getFlickerLoadingView=stub, getChatListView=stub, getPatternProvider=stub, getAdminRank=lambda s, *a: self.current_ps.get('sender_flags', {}).get('admin_title') if self.current_ps else None,
+            getTextSelectionHelper=stub, getProgressLoadingBotButtonUrl=stub, getProgressLoadingLink=stub,
+            didPressUrl=stub, didLongPress=stub, didPressImage=stub, videoTimerReached=stub, onDiceFinished=stub,
+            didPressBotButton=stub, didPressReaction=stub, canPerformReply=stub_f, canPerformActions=stub_f,
+            isTopPinnedMessageVisible=stub_f, isBottomPinnedMessageVisible=stub_f, isFirstMessage=stub_f,
+            isLastMessage=stub_f, shouldShowTopicButton=stub_f, shouldShowDialogButton=stub_f, isProgressLoading=stub_f, isReplyOrSelf=stub_f, isOwner=stub_f
+        ))
+        cell.isChat = True
+        cell.setMessageObject(self.editingItem, None, False, False, False)
+        bubble_frame.addView(cell, LayoutHelper.createFrame(-1, -2))
+
+        edit = EditText(activity)
+        edit.setTextSize(1, SharedConfig.fontSize)
+        edit.setTextColor(Color.TRANSPARENT)
+        edit.setCursorVisible(True); edit.setBackground(None)
+        edit.setGravity(Gravity.LEFT | Gravity.TOP)
+        edit.setIncludeFontPadding(False)
+        edit.setInputType(131073)
+        edit.setFocusable(True)
+        edit.setFocusableInTouchMode(True)
+
+        class EditTouch(dynamic_proxy(View.OnTouchListener)):
+            def onTouch(self, v, event):
+                if event.getAction() == MotionEvent.ACTION_UP:
+                    v.requestFocus()
+                    run_on_ui_thread(lambda: AndroidUtilities.showKeyboard(v), 200)
+                return False
+        edit.setOnTouchListener(EditTouch())
+
+        def update_edit_padding():
+            has_reply = self.current_ps.get('custom_reply') is not None or (not self.current_ps.get('clear_reply') and origin_to_use.replyMessageObject is not None)
+            top_padding = 75 if has_reply else 25
+            is_out = self.current_ps.get('out', False)
+            left_pad = 20 if is_out else 72
+            right_pad = 72 if is_out else 20
+            edit.setPadding(dp(left_pad), dp(top_padding), dp(right_pad), dp(10))
+
+        update_edit_padding()
+
+        def reconstruct_spans(txt, entities, paint):
+            ssb = SpannableStringBuilder("\u200b" + txt)
+            if entities:
+                for i in range(entities.size()):
+                    e = entities.get(i)
+                    if isinstance(e, TLRPC.TL_messageEntityCustomEmoji):
+                        try:
+                            span = AnimatedEmojiSpan(e.document_id, paint.getFontMetricsInt())
+                            ssb.setSpan(span, e.offset + 1, e.offset + 1 + e.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        except: pass
+            return ssb
+
+        edit.setText(reconstruct_spans(self.current_ps['text'], self.current_ps['entities'], edit.getPaint()))
+        bubble_frame.addView(edit, LayoutHelper.createFrame(-1, -2))
+        tab_editor.addView(bubble_frame, LayoutHelper.createLinear(-1, -2))
+
+        fmt_scroll = HorizontalScrollView(activity)
+        fmt_scroll.setHorizontalScrollBarEnabled(False)
+        fmt_scroll.setPadding(dp(16), dp(4), dp(16), dp(4))
+
+        fmt_layout = LinearLayout(activity)
+        fmt_layout.setOrientation(LinearLayout.HORIZONTAL)
+        fmt_layout.setGravity(Gravity.CENTER_VERTICAL)
+
+        fmt_layout_bg = GradientDrawable()
+        fmt_layout_bg.setColor(_ji(card_bg))
+        fmt_layout_bg.setCornerRadius(float(dp(16)))
+        fmt_layout_bg.setStroke(dp(1), _ji(divider_color))
+        fmt_layout.setBackground(fmt_layout_bg)
+        fmt_layout.setPadding(dp(4), dp(4), dp(4), dp(4))
+
+        fmt_scroll.addView(fmt_layout, LayoutHelper.createFrame(-2, -2))
+
+        FORMAT_TYPES = [
+            ("B", "bold", TLRPC.TL_messageEntityBold),
+            ("I", "italic", TLRPC.TL_messageEntityItalic),
+            ("U", "underline", TLRPC.TL_messageEntityUnderline),
+            ("S", "strike", TLRPC.TL_messageEntityStrike),
+            ("M", "mono", TLRPC.TL_messageEntityCode),
+            ("</>", "code", TLRPC.TL_messageEntityPre),
+            ("||", "spoiler", TLRPC.TL_messageEntitySpoiler),
+            ("🔗", "link", None),
+        ]
+
+        def apply_format(fmt_type, entity_cls):
+            try:
+                start = edit.getSelectionStart()
+                end = edit.getSelectionEnd()
+                if start < 0 or end <= start: return
+                real_start = max(0, start - 1)
+                real_end = max(0, end - 1)
+                length = real_end - real_start
+                if length <= 0: return
+
+                def apply_and_update(ents):
+                    self.current_ps['entities'] = ents
+                    clean_text = edit.getText().toString().replace('\u200b', '')
+                    self.current_ps['text'] = clean_text
+                    mo = self.editingItem.messageOwner
+                    mo.entities = ents
+                    if ents.size() > 0: mo.flags |= MsgFlags.ENTITIES
+                    else: mo.flags &= ~MsgFlags.ENTITIES
+                    self.editingItem.applyNewText(clean_text)
+                    self.editingItem.resetLayout()
+                    self.editingItem.forceUpdate = True
+                    cell.setMessageObject(self.editingItem, None, False, False, False)
+                    cell.requestLayout()
+                    cell.invalidate()
+
+                if fmt_type == "link":
+                    b2 = AlertDialogBuilder(activity)
+                    b2.set_title("Вставить ссылку")
+                    ll = LinearLayout(activity); ll.setOrientation(1); ll.setPadding(dp(20), dp(8), dp(20), dp(8))
+                    et_url = self._create_dialog_input(activity, "https://...")
+                    ll.addView(et_url, LayoutHelper.createLinear(-1, -2))
+                    b2.set_view(ll)
+                    def on_link_ok(d, w):
+                        url = et_url.getText().toString().strip()
+                        if url:
+                            ent = TLRPC.TL_messageEntityTextUrl()
+                            ent.offset = real_start; ent.length = length; ent.url = url
+                            ents = self.current_ps.get('entities') or ArrayList()
+                            ents.add(ent)
+                            apply_and_update(ents)
+                        d.dismiss()
+                    b2.set_positive_button("ОК", on_link_ok)
+                    b2.set_negative_button("Отмена", lambda d, w: d.dismiss())
+                    b2.show()
+                    return
+
+                ent = entity_cls()
+                ent.offset = real_start
+                ent.length = length
+                ents = self.current_ps.get('entities') or ArrayList()
+                ents.add(ent)
+                apply_and_update(ents)
+            except: logcat(traceback.format_exc())
+
+        def clear_format(v):
+            self.current_ps['entities'] = ArrayList()
+            clean_text = edit.getText().toString().replace('\u200b', '')
+            self.current_ps['text'] = clean_text
+            mo = self.editingItem.messageOwner
+            mo.entities = self.current_ps['entities']
+            mo.flags &= ~MsgFlags.ENTITIES
+            self.editingItem.applyNewText(clean_text)
+            self.editingItem.resetLayout()
+            self.editingItem.forceUpdate = True
+            cell.setMessageObject(self.editingItem, None, False, False, False)
+            cell.requestLayout()
+            cell.invalidate()
+
+        for (label, fmt_type, entity_cls) in FORMAT_TYPES:
+            btn = TextView(activity)
+            btn.setText(label)
+            btn.setTextSize(1, 14.0)
+            btn.setTypeface(AndroidUtilities.bold())
+            btn.setGravity(Gravity.CENTER)
+            btn.setTextColor(_ji(primary_text))
+            btn.setBackground(self._get_ripple_drawable(0x00000000, 12))
+            btn.setPadding(dp(12), dp(8), dp(12), dp(8))
+            btn.setOnClickListener(OnClickListener(lambda v, ft=fmt_type, ec=entity_cls: apply_format(ft, ec)))
+            self._add_press_anim(btn)
+            fmt_layout.addView(btn, LayoutHelper.createLinear(-2, -2))
+
+        btn_clear_fmt = TextView(activity)
+        btn_clear_fmt.setText("✕")
+        btn_clear_fmt.setTextSize(1, 14.0)
+        btn_clear_fmt.setTypeface(AndroidUtilities.bold())
+        btn_clear_fmt.setGravity(Gravity.CENTER)
+        try: btn_clear_fmt.setTextColor(_ji(Theme.getColor(Theme.key_text_RedRegular)))
+        except: btn_clear_fmt.setTextColor(_ji(0xFFE53935))
+        btn_clear_fmt.setBackground(self._get_ripple_drawable(0x00000000, 12))
+        btn_clear_fmt.setPadding(dp(12), dp(8), dp(12), dp(8))
+        btn_clear_fmt.setOnClickListener(OnClickListener(clear_format))
+        self._add_press_anim(btn_clear_fmt)
+        fmt_layout.addView(btn_clear_fmt, LayoutHelper.createLinear(-2, -2))
+
+        tab_editor.addView(fmt_scroll, LayoutHelper.createLinear(-1, -2))
+
+        dialog_ref = [None]
+
+        def manage_reaction_dialog(r_idx):
+            r_data = self.current_ps['reactions'][r_idx]
+            emo = r_data['emoticon']
+            users = r_data['users']
+            display_count = r_data.get('display_count', len(users))
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Управление реакцией")
+            scroll_mgr = ScrollView(activity)
+            list_layout = LinearLayout(activity)
+            list_layout.setOrientation(LinearLayout.VERTICAL)
+            list_layout.setPadding(dp(16), dp(8), dp(16), dp(8))
+            header_r = LinearLayout(activity)
+            header_r.setOrientation(LinearLayout.HORIZONTAL)
+            header_r.setGravity(Gravity.CENTER_VERTICAL)
+            header_r.setPadding(0, dp(8), 0, dp(16))
+            emo_display = emo if not emo.startswith("⭐PAID") else "⭐"
+            emo_view = _create_emoji_view(activity, emo_display)
+            header_r.addView(emo_view, LayoutHelper.createLinear(28, 28))
+            tv_label = TextView(activity)
+            tv_label.setText("  Показывать: ")
+            tv_label.setTextColor(_ji(primary_text))
+            tv_label.setTextSize(1, 15.0)
+            header_r.addView(tv_label, LayoutHelper.createLinear(-2, -2))
+            et_count = self._create_dialog_input(activity, "Кол-во", str(display_count), 2)
+            et_count.setTextSize(1, 15.0)
+            header_r.addView(et_count, LayoutHelper.createLinear(110, -2))
+            list_layout.addView(header_r, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 4))
+            tv_avatars_label = TextView(activity)
+            tv_avatars_label.setText("Аватарки в реакции (до 3х User ID):")
+            tv_avatars_label.setTextColor(_ji(secondary_text))
+            tv_avatars_label.setTextSize(1, 13.0)
+            list_layout.addView(tv_avatars_label, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+            user_edits = []
+            for u_idx, uid in enumerate(users):
+                row = LinearLayout(activity)
+                row.setOrientation(LinearLayout.HORIZONTAL)
+                row.setGravity(Gravity.CENTER_VERTICAL)
+                row.setPadding(0, 0, 0, dp(8))
+                et = self._create_dialog_input(activity, "User ID", str(uid), 2)
+                user_edits.append((u_idx, et))
+                row.addView(et, LayoutHelper.createLinear(0, -2, 1.0))
+                del_btn = ImageView(activity)
+                del_btn.setImageResource(get_icon_id("msg_close", "ic_close"))
+                try: red_color = Theme.getColor(Theme.key_text_RedRegular)
+                except: red_color = 0xFFE53935
+                del_btn.setColorFilter(_ji(red_color))
+                del_btn.setPadding(dp(8), dp(8), dp(8), dp(8))
+                del_btn.setBackground(self._get_ripple_drawable(card_bg, 20, divider_color, 1))
+                def make_del_click(r_i, u_i):
+                    def on_click(v):
+                        for ui, edit_v in user_edits:
+                            try: self.current_ps['reactions'][r_i]['users'][ui] = int(edit_v.getText().toString())
+                            except: pass
+                        self.current_ps['reactions'][r_i]['users'].pop(u_i)
+                        if not self.current_ps['reactions'][r_i]['users']:
+                            dc = self.current_ps['reactions'][r_i].get('display_count', 0)
+                            if dc <= 0: self.current_ps['reactions'].pop(r_i)
+                        if dialog_ref[0]: dialog_ref[0].dismiss()
+                        rebuild_and_show()
+                        if self.current_ps['reactions'] and r_i < len(self.current_ps['reactions']):
+                            manage_reaction_dialog(r_i)
+                    return OnClickListener(on_click)
+                del_btn.setOnClickListener(make_del_click(r_idx, u_idx))
+                self._add_press_anim(del_btn)
+                row.addView(del_btn, LayoutHelper.createLinear(40, 40, 0, 0, 8, 0))
+                list_layout.addView(row, LayoutHelper.createLinear(-1, -2))
+            if len(users) < 3:
+                btn_add_user = TextView(activity)
+                btn_add_user.setText("+ Добавить User ID")
+                btn_add_user.setTextColor(_ji(icon_color))
+                btn_add_user.setTextSize(1, 14.0)
+                btn_add_user.setTypeface(AndroidUtilities.bold())
+                btn_add_user.setPadding(0, dp(12), 0, dp(4))
+                btn_add_user.setBackground(self._get_ripple_drawable(0x00000000, 8))
+                def on_add_user(v):
+                    mc = MessagesController.getInstance(UserConfig.selectedAccount)
+                    for ui, edit_v in user_edits:
+                        try:
+                            new_uid = int(edit_v.getText().toString())
+                            self.current_ps['reactions'][r_idx]['users'][ui] = new_uid
+                            if not mc.getUser(jlong(new_uid)):
+                                try: mc.loadUser(jlong(new_uid), 0, True)
+                                except: pass
+                        except: pass
+                    self.current_ps['reactions'][r_idx]['users'].append(random.randint(10000000, 99999999))
+                    if dialog_ref[0]: dialog_ref[0].dismiss()
+                    manage_reaction_dialog(r_idx)
+                btn_add_user.setOnClickListener(OnClickListener(on_add_user))
+                self._add_press_anim(btn_add_user)
+                list_layout.addView(btn_add_user, LayoutHelper.createLinear(-1, -2, 0, 4, 0, 0))
+            tv_hint = TextView(activity)
+            tv_hint.setText("💡 Аватарки видны в бабле до 3 человек.\nЧисло «Показывать» — счётчик на кнопке реакции.")
+            tv_hint.setTextColor(_ji(secondary_text))
+            tv_hint.setTextSize(1, 12.0)
+            tv_hint.setPadding(0, dp(12), 0, dp(4))
+            list_layout.addView(tv_hint, LayoutHelper.createLinear(-1, -2))
+            scroll_mgr.addView(list_layout)
+            builder.set_view(scroll_mgr)
+            def on_done(d, w):
+                try:
+                    new_count = int(et_count.getText().toString())
+                    if new_count < 0: new_count = 0
+                    self.current_ps['reactions'][r_idx]['display_count'] = new_count
+                except: pass
+                mc = MessagesController.getInstance(UserConfig.selectedAccount)
+                for ui, edit_v in user_edits:
+                    try:
+                        new_uid = int(edit_v.getText().toString())
+                        self.current_ps['reactions'][r_idx]['users'][ui] = new_uid
+                        uid_long = jlong(new_uid)
+                        if not mc.getUser(uid_long):
+                            stub_user = TLRPC.TL_user()
+                            stub_user.id = new_uid
+                            stub_user.first_name = f"id{new_uid}"
+                            mc.putUser(stub_user, False)
+                            try: mc.loadUser(uid_long, 0, True)
+                            except: pass
+                    except: pass
+                rebuild_and_show()
+                run_on_ui_thread(lambda: rebuild_and_show(), 1200)
+                d.dismiss()
+            def on_delete_reaction(d, w):
+                self.current_ps['reactions'].pop(r_idx)
+                rebuild_and_show()
+                d.dismiss()
+            builder.set_positive_button("Готово", on_done)
+            builder.set_neutral_button("Удалить реакцию", on_delete_reaction)
+            builder.set_negative_button("Отмена", lambda d, w: d.dismiss())
+            dialog_ref[0] = builder.show()
+
+        def open_reaction_picker(v):
+            try:
+                try: ev = EmojiView(self.frag, True, True, True, activity, True, None, None, True, thm, False)
+                except: ev = EmojiView(self.frag, True, True, True, activity, True, None, None, True, thm, False, False)
+                bs = BottomSheet(activity, True)
+                bs.setCustomView(ev)
+                def show_reaction_count_dialog(emo_val):
+                    builder = AlertDialogBuilder(activity)
+                    builder.set_title("Реакция выбрана!")
+                    layout = LinearLayout(activity)
+                    layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+                    input_count = self._create_dialog_input(activity, "Введите количество (например, 15)", "1", 2)
+                    layout.addView(input_count, LayoutHelper.createLinear(-1, -2))
+                    builder.set_view(layout)
+                    def on_ok(d, w):
+                        try: count = int(input_count.getText().toString().strip())
+                        except: count = 1
+                        if count > 0:
+                            users = [random.randint(10000000, 99999999) for _ in range(min(count, 3))]
+                            self.current_ps['reactions'].append({'emoticon': str(emo_val), 'users': users, 'display_count': count})
+                            rebuild_and_show()
+                        d.dismiss()
+                    builder.set_positive_button("Добавить", on_ok)
+                    builder.set_negative_button("Отмена", lambda d, w: d.dismiss())
+                    builder.show()
+                def on_custom_reaction(s, doc_id, doc, emo, r):
+                    bs.dismiss(); show_reaction_count_dialog(str(doc_id)); return None
+                def on_regular_reaction(s, e):
+                    bs.dismiss(); show_reaction_count_dialog(e); return None
+                ev.setDelegate(ProxyF.create("org.telegram.ui.Components.EmojiView$EmojiViewDelegate",
+                    onEmojiSelected=on_regular_reaction, onCustomEmojiSelected=on_custom_reaction,
+                    onStickerSelected=stub, onGifSelected=stub, onBackspace=stub_t,
+                    getProgressToSearchOpened=lambda s: jfloat(0.0), isSearchOpened=stub_f, isExpanded=stub_f,
+                    getDialogId=lambda s: jlong(0), getThreadId=lambda s: 0, canSchedule=stub_f, isInScheduleMode=stub_f,
+                    onStickersSettingsClick=stub, onEmojiSettingsClick=stub, onStickersGroupClick=stub, onTabOpened=stub,
+                    onClearEmojiRecent=stub, onShowStickerSet=stub, onStickerSetAdd=stub, onStickerSetRemove=stub,
+                    onSearchOpenClose=stub, onAnimatedEmojiUnlockClick=stub, showTrendingStickersAlert=stub, invalidateEnterView=stub, isUserSelf=stub_f
+                ))
+                bs.show()
+            except: logcat(traceback.format_exc())
+
+        def rebuild_and_show():
+            self.editingItem = self._build_msg_obj(origin_to_use, self.current_ps)
+            cell.setMessageObject(self.editingItem, None, False, False, False)
+            update_edit_padding()
+            for i in range(tab_editor.getChildCount()):
+                if tab_editor.getChildAt(i).getTag() == "__reactions_scroll__":
+                    tab_editor.removeViewAt(i)
+                    break
+            reactions_scroll = HorizontalScrollView(activity)
+            reactions_scroll.setTag("__reactions_scroll__")
+            reactions_scroll.setHorizontalScrollBarEnabled(False)
+            reactions_scroll.setPadding(dp(16), dp(4), dp(16), dp(8))
+            reactions_layout = LinearLayout(activity)
+            reactions_layout.setOrientation(LinearLayout.HORIZONTAL)
+            reactions_layout.setGravity(Gravity.CENTER_VERTICAL)
+            reactions_scroll.addView(reactions_layout, LayoutHelper.createFrame(-2, -2))
+            for r_idx, r_data in enumerate(self.current_ps.get('reactions', [])):
+                pill = LinearLayout(activity)
+                pill.setOrientation(LinearLayout.HORIZONTAL)
+                pill.setGravity(Gravity.CENTER_VERTICAL)
+                pill.setBackground(self._get_ripple_drawable(card_bg, 16, divider_color, 1))
+                pill.setPadding(dp(8), dp(4), dp(8), dp(4))
+                emo_display = r_data['emoticon'] if not r_data['emoticon'].startswith("⭐PAID") else "⭐"
+                emo_view = _create_emoji_view(activity, emo_display)
+                pill.addView(emo_view, LayoutHelper.createLinear(20, 20))
+                tv_count = TextView(activity)
+                tv_count.setText(str(r_data.get('display_count', len(r_data['users']))))
+                tv_count.setTextColor(_ji(primary_text))
+                tv_count.setTextSize(1, 13.0)
+                tv_count.setTypeface(AndroidUtilities.bold())
+                tv_count.setPadding(dp(6), 0, 0, 0)
+                pill.addView(tv_count, LayoutHelper.createLinear(-2, -2))
+                class PillLongClick(dynamic_proxy(View.OnLongClickListener)):
+                    def __init__(self, idx): super().__init__(); self.idx = idx
+                    def onLongClick(self, v): manage_reaction_dialog(self.idx); return True
+                pill.setOnLongClickListener(PillLongClick(r_idx))
+                self._add_press_anim(pill)
+                reactions_layout.addView(pill, LayoutHelper.createLinear(-2, -2, 0, 0, 8, 0))
+
+            btn_paid = TextView(activity)
+            btn_paid.setText("⭐")
+            btn_paid.setTextSize(1, 18.0)
+            btn_paid.setGravity(Gravity.CENTER)
+            btn_paid.setBackground(self._get_ripple_drawable(card_bg, 16, divider_color, 1))
+            btn_paid.setPadding(dp(6), dp(4), dp(6), dp(4))
+            def on_add_paid(v):
+                builder_paid = AlertDialogBuilder(activity)
+                builder_paid.set_title("Платная реакция ⭐")
+                layout_paid = LinearLayout(activity)
+                layout_paid.setPadding(dp(20), dp(10), dp(20), dp(10))
+                input_paid = self._create_dialog_input(activity, "Количество звёзд (например 8000)", "100", 2)
+                layout_paid.addView(input_paid, LayoutHelper.createLinear(-1, -2))
+                builder_paid.set_view(layout_paid)
+                def on_ok_paid(d, w):
+                    try: count_paid = int(input_paid.getText().toString().strip())
+                    except: count_paid = 100
+                    if count_paid > 0:
+                        self.current_ps['reactions'].append({'emoticon': '⭐PAID', 'users': [], 'display_count': count_paid})
+                        rebuild_and_show()
+                    d.dismiss()
+                builder_paid.set_positive_button("Добавить", on_ok_paid)
+                builder_paid.set_negative_button("Отмена", lambda d, w: d.dismiss())
+                builder_paid.show()
+            btn_paid.setOnClickListener(OnClickListener(on_add_paid))
+            self._add_press_anim(btn_paid)
+            reactions_layout.addView(btn_paid, LayoutHelper.createLinear(32, 32, 0, 0, 4, 0))
+            btn_add = ImageView(activity)
+            btn_add.setImageResource(get_icon_id("msg_add"))
+            btn_add.setColorFilter(_ji(icon_color))
+            btn_add.setBackground(self._get_ripple_drawable(card_bg, 16, divider_color, 1))
+            btn_add.setPadding(dp(6), dp(6), dp(6), dp(6))
+            btn_add.setOnClickListener(OnClickListener(open_reaction_picker))
+            self._add_press_anim(btn_add)
+            reactions_layout.addView(btn_add, LayoutHelper.createLinear(32, 32))
+            tab_editor.addView(reactions_scroll, 2, LayoutHelper.createLinear(-1, -2))
+            cell.requestLayout(); cell.invalidate()
+
+        rebuild_and_show()
+
+        def txt_sync(tw_s, s):
+            try:
+                if not s or s.length() == 0: return
+                if s.charAt(0) != '\u200b':
+                    s.insert(0, "\u200b"); return
+                raw_spans = s.getSpans(0, s.length(), AnimatedEmojiSpan)
+                py_spans = sorted([(s.getSpanStart(sp), sp) for sp in raw_spans], key=lambda x: x[0])
+                ents = self.current_ps.get('entities') or ArrayList()
+                new_ents = ArrayList()
+                for ei in range(ents.size()):
+                    e = ents.get(ei)
+                    if not isinstance(e, TLRPC.TL_messageEntityCustomEmoji):
+                        new_ents.add(e)
+                last_start = -1
+                for start, span in py_spans:
+                    if start == last_start: continue
+                    last_start = start
+                    en = TLRPC.TL_messageEntityCustomEmoji()
+                    en.offset = start - 1
+                    en.length = s.getSpanEnd(span) - start
+                    en.document_id = span.getDocumentId()
+                    new_ents.add(en)
+                clean_text = s.toString().replace('\u200b', '')
+                self.current_ps['text'] = clean_text
+                self.current_ps['entities'] = new_ents
+                mo = self.editingItem.messageOwner
+                mo.message = clean_text
+                mo.entities = new_ents
+                if new_ents.size() > 0: mo.flags |= MsgFlags.ENTITIES
+                else: mo.flags &= ~MsgFlags.ENTITIES
+                self.editingItem.applyNewText(clean_text)
+                self.editingItem.resetLayout()
+                self.editingItem.forceUpdate = True
+                cell.setMessageObject(self.editingItem, None, False, False, False)
+                cell.requestLayout(); cell.invalidate()
+            except: logcat(traceback.format_exc())
+
+        self._edit_watcher = ProxyF.create("android.text.TextWatcher", beforeTextChanged=stub, onTextChanged=stub, afterTextChanged=txt_sync)
+        edit.addTextChangedListener(self._edit_watcher)
+
+        def change_sender_dialog(v):
+            try:
+                builder = AlertDialogBuilder(activity)
+                builder.set_title("ID Отправителя")
+                layout = LinearLayout(activity)
+                layout.setOrientation(LinearLayout.VERTICAL)
+                layout.setPadding(dp(24), dp(8), dp(24), dp(8))
+                input_field = self._create_dialog_input(activity, "Введите User ID", "", 2)
+                layout.addView(input_field, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+                cb_out = CheckBox(activity)
+                cb_out.setText("Исходящее (от меня)")
+                cb_out.setTextColor(_ji(primary_text))
+                cb_out.setChecked(self.current_ps.get('out', False))
+                layout.addView(cb_out)
+                builder.set_view(layout)
+                def on_ok(d, w):
+                    try:
+                        val = input_field.getText().toString().strip()
+                        if val:
+                            new_id = int(val)
+                            peer = TLRPC.TL_peerUser(); peer.user_id = new_id
+                            self.current_ps['from_id'] = peer
+                        self.current_ps['out'] = cb_out.isChecked()
+                        self.current_ps['_sender_changed'] = True
+                        rebuild_and_show()
+                    except: pass
+                    d.dismiss()
+                builder.set_positive_button("ОК", on_ok)
+                builder.set_negative_button("Отмена", lambda d, w: d.dismiss())
+                builder.show()
+            except: logcat(traceback.format_exc())
+
+        def sender_status_dialog(v):
+            try:
+                sf = self.current_ps.get('sender_flags', {}).copy()
+                builder = AlertDialogBuilder(activity)
+                builder.set_title("Статусы отправителя")
+                layout = LinearLayout(activity)
+                layout.setOrientation(LinearLayout.VERTICAL)
+                layout.setPadding(dp(16), dp(8), dp(16), dp(8))
+
+                try: red_color = Theme.getColor(Theme.key_text_RedRegular)
+                except: red_color = 0xFFE53935
+
+                def create_toggle(icon_name, text, key, color_val):
+                    row = LinearLayout(activity)
+                    row.setOrientation(LinearLayout.HORIZONTAL)
+                    row.setGravity(Gravity.CENTER_VERTICAL)
+                    row.setPadding(dp(8), dp(12), dp(8), dp(12))
+
+                    icon = ImageView(activity)
+                    icon.setImageResource(get_icon_id(icon_name))
+                    icon.setColorFilter(_ji(color_val))
+                    row.addView(icon, LayoutHelper.createLinear(24, 24, 0, 0, 16, 0))
+
+                    tv = TextView(activity)
+                    tv.setText(text)
+                    tv.setTextColor(_ji(primary_text))
+                    tv.setTextSize(1, 15.0)
+                    row.addView(tv, LayoutHelper.createLinear(0, -2, 1.0))
+
+                    cb = CheckBox(activity)
+                    cb.setChecked(sf.get(key, False))
+                    row.addView(cb, LayoutHelper.createLinear(-2, -2))
+
+                    def on_click(v):
+                        cb.setChecked(not cb.isChecked())
+                        sf[key] = cb.isChecked()
+                    row.setOnClickListener(OnClickListener(on_click))
+                    self._add_press_anim(row)
+                    return row
+
+                layout.addView(create_toggle("menu_verification", "Верификация", "verified", icon_color))
+                layout.addView(create_toggle("msg_premium_badge", "Premium", "premium", 0xFFF6A531))
+                layout.addView(create_toggle("msg_block2_solar", "Scam", "scam", red_color))
+                layout.addView(create_toggle("left_status_profile", "Fake", "fake", red_color))
+
+                emo_row = LinearLayout(activity)
+                emo_row.setOrientation(LinearLayout.HORIZONTAL)
+                emo_row.setGravity(Gravity.CENTER_VERTICAL)
+                emo_row.setPadding(dp(8), dp(12), dp(8), dp(12))
+
+                emo_icon = ImageView(activity)
+                emo_icon.setImageResource(get_icon_id("msg_smile"))
+                emo_icon.setColorFilter(_ji(icon_color))
+                emo_row.addView(emo_icon, LayoutHelper.createLinear(24, 24, 0, 0, 16, 0))
+
+                tv_emo = TextView(activity)
+                tv_emo.setText("Эмодзи-статус")
+                tv_emo.setTextColor(_ji(primary_text))
+                tv_emo.setTextSize(1, 15.0)
+                emo_row.addView(tv_emo, LayoutHelper.createLinear(0, -2, 1.0))
+
+                emo_val_view = FrameLayout(activity)
+                if sf.get('emoji_status_id'):
+                    emo_val_view.addView(_create_emoji_view(activity, sf['emoji_status_id']), LayoutHelper.createFrame(24, 24))
+                else:
+                    tv_none = TextView(activity)
+                    tv_none.setText("Нет")
+                    tv_none.setTextColor(_ji(secondary_text))
+                    emo_val_view.addView(tv_none, LayoutHelper.createFrame(-2, -2))
+                emo_row.addView(emo_val_view, LayoutHelper.createLinear(-2, -2))
+
+                def open_emoji_status_picker(v):
+                    try:
+                        try: ev = EmojiView(self.frag, True, True, True, activity, True, None, None, True, thm, False)
+                        except: ev = EmojiView(self.frag, True, True, True, activity, True, None, None, True, thm, False, False)
+                        bs = BottomSheet(activity, True)
+                        bs.setCustomView(ev)
+                        def on_custom_emoji(s, doc_id, doc, emo, r):
+                            sf['emoji_status_id'] = str(doc_id)
+                            self.current_ps['sender_flags'] = sf
+                            rebuild_and_show()
+                            bs.dismiss()
+                            if dialog_ref[0]: dialog_ref[0].dismiss()
+                            sender_status_dialog(None)
+                            return None
+                        def on_clear(s):
+                            sf['emoji_status_id'] = ""
+                            self.current_ps['sender_flags'] = sf
+                            rebuild_and_show()
+                            bs.dismiss()
+                            if dialog_ref[0]: dialog_ref[0].dismiss()
+                            sender_status_dialog(None)
+                            return True
+                        ev.setDelegate(ProxyF.create("org.telegram.ui.Components.EmojiView$EmojiViewDelegate",
+                            onEmojiSelected=stub, onCustomEmojiSelected=on_custom_emoji,
+                            onStickerSelected=stub, onGifSelected=stub, onBackspace=on_clear,
+                            getProgressToSearchOpened=lambda s: jfloat(0.0), isSearchOpened=stub_f, isExpanded=stub_f,
+                            getDialogId=lambda s: jlong(0), getThreadId=lambda s: 0, canSchedule=stub_f, isInScheduleMode=stub_f,
+                            onStickersSettingsClick=stub, onEmojiSettingsClick=stub, onStickersGroupClick=stub, onTabOpened=stub,
+                            onClearEmojiRecent=stub, onShowStickerSet=stub, onStickerSetAdd=stub, onStickerSetRemove=stub,
+                            onSearchOpenClose=stub, onAnimatedEmojiUnlockClick=stub, showTrendingStickersAlert=stub, invalidateEnterView=stub, isUserSelf=stub_f
+                        ))
+                        bs.show()
+                    except: logcat(traceback.format_exc())
+
+                emo_row.setOnClickListener(OnClickListener(open_emoji_status_picker))
+                self._add_press_anim(emo_row)
+                layout.addView(emo_row)
+
+                admin_row = LinearLayout(activity)
+                admin_row.setOrientation(LinearLayout.HORIZONTAL)
+                admin_row.setGravity(Gravity.CENTER_VERTICAL)
+                admin_row.setPadding(dp(8), dp(12), dp(8), dp(12))
+
+                admin_icon = ImageView(activity)
+                admin_icon.setImageResource(get_icon_id("filled_rating_crown"))
+                admin_icon.setColorFilter(_ji(0xFFF6A531))
+                admin_row.addView(admin_icon, LayoutHelper.createLinear(24, 24, 0, 0, 16, 0))
+
+                tv_admin = TextView(activity)
+                tv_admin.setText("Должность (Админ)")
+                tv_admin.setTextColor(_ji(primary_text))
+                tv_admin.setTextSize(1, 15.0)
+                admin_row.addView(tv_admin, LayoutHelper.createLinear(0, -2, 1.0))
+
+                tv_admin_val = TextView(activity)
+                tv_admin_val.setText(sf.get('admin_title', "Нет"))
+                tv_admin_val.setTextColor(_ji(secondary_text))
+                admin_row.addView(tv_admin_val, LayoutHelper.createLinear(-2, -2))
+
+                def open_admin_dialog(v):
+                    b2 = AlertDialogBuilder(activity)
+                    b2.set_title("Должность")
+                    ll = LinearLayout(activity); ll.setOrientation(1); ll.setPadding(dp(20), dp(8), dp(20), dp(8))
+                    et_admin = self._create_dialog_input(activity, "Например: Администратор", sf.get('admin_title', ''))
+                    ll.addView(et_admin, LayoutHelper.createLinear(-1, -2))
+                    b2.set_view(ll)
+                    def on_ok(d, w):
+                        sf['admin_title'] = et_admin.getText().toString().strip()
+                        self.current_ps['sender_flags'] = sf
+                        rebuild_and_show()
+                        d.dismiss()
+                        if dialog_ref[0]: dialog_ref[0].dismiss()
+                        sender_status_dialog(None)
+                    def on_clear(d, w):
+                        sf['admin_title'] = ""
+                        self.current_ps['sender_flags'] = sf
+                        rebuild_and_show()
+                        d.dismiss()
+                        if dialog_ref[0]: dialog_ref[0].dismiss()
+                        sender_status_dialog(None)
+                    b2.set_positive_button("ОК", on_ok)
+                    b2.set_neutral_button("Убрать", on_clear)
+                    b2.set_negative_button("Отмена", lambda d, w: d.dismiss())
+                    b2.show()
+
+                admin_row.setOnClickListener(OnClickListener(open_admin_dialog))
+                self._add_press_anim(admin_row)
+                layout.addView(admin_row)
+
+                builder.set_view(layout)
+                def on_apply(d, w):
+                    self.current_ps['sender_flags'] = sf
+                    rebuild_and_show()
+                    d.dismiss()
+                builder.set_positive_button("Применить", on_apply)
+                builder.set_negative_button("Отмена", lambda d, w: d.dismiss())
+                dialog_ref[0] = builder.show()
+            except: logcat(traceback.format_exc())
+
+        def change_reply_dialog(v):
+            try:
+                builder = AlertDialogBuilder(activity)
+                builder.set_title("Изменить ответ")
+                container = LinearLayout(activity); container.setOrientation(1); container.setPadding(dp(24), 0, dp(24), 0)
+                input_name = self._create_dialog_input(activity, "Имя автора ответа", self.current_ps.get('custom_reply', {}).get('name', '') if self.current_ps.get('custom_reply') else '')
+                input_text = self._create_dialog_input(activity, "Текст ответа", self.current_ps.get('custom_reply', {}).get('text', '') if self.current_ps.get('custom_reply') else '')
+                container.addView(input_name, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+                container.addView(input_text, LayoutHelper.createLinear(-1, -2))
+                builder.set_view(container)
+                def on_ok(d, w):
+                    name = input_name.getText().toString(); text = input_text.getText().toString()
+                    if name or text:
+                        self.current_ps['custom_reply'] = {'name': name, 'text': text}
+                        self.current_ps['clear_reply'] = False
+                    else:
+                        self.current_ps['custom_reply'] = None
+                        self.current_ps['clear_reply'] = True
+                    rebuild_and_show(); d.dismiss()
+                def on_clear(d, w):
+                    self.current_ps['custom_reply'] = None; self.current_ps['clear_reply'] = True; rebuild_and_show(); d.dismiss()
+                builder.set_positive_button("Применить", on_ok)
+                builder.set_neutral_button("Сбросить", on_clear)
+                builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+            except: logcat(traceback.format_exc())
+
+        def via_bot_dialog(v):
+            try:
+                builder = AlertDialogBuilder(activity)
+                builder.set_title("Via Bot")
+                layout = LinearLayout(activity); layout.setPadding(dp(24), dp(8), dp(24), dp(8))
+                et = self._create_dialog_input(activity, "@username бота", self.current_ps.get('via_bot_name', ''))
+                layout.addView(et, LayoutHelper.createLinear(-1, -2))
+                builder.set_view(layout)
+                def on_ok(d, w):
+                    val = et.getText().toString().strip()
+                    self.current_ps['via_bot_name'] = val
+                    self.current_ps['via_bot_id'] = abs(hash(val)) % 999999999 if val else 0
+                    rebuild_and_show(); d.dismiss()
+                def on_clear(d, w):
+                    self.current_ps['via_bot_name'] = ''; self.current_ps['via_bot_id'] = 0; rebuild_and_show(); d.dismiss()
+                builder.set_positive_button("Применить", on_ok)
+                builder.set_neutral_button("Убрать", on_clear)
+                builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+            except: logcat(traceback.format_exc())
+
+        def _apply_document_media(doc, is_gif):
+            try:
+                media = TLRPC.TL_messageMediaDocument()
+                media.document = doc
+                self.current_ps['media'] = media
+                self.current_ps['msg_type'] = 8 if is_gif else 13
+                self.current_ps['attach_path'] = ""
+                self.current_ps['text'] = ""
+                self.current_ps['entities'] = ArrayList()
+                rebuild_and_show()
+            except: logcat(traceback.format_exc())
+
+        def open_media_picker(v):
+            try:
+                try: ev = EmojiView(self.frag, True, True, True, activity, True, None, None, True, thm, False)
+                except: ev = EmojiView(self.frag, True, True, True, activity, True, None, None, True, thm, False, False)
+                bs = BottomSheet(activity, True)
+                bs.setCustomView(ev)
+                def on_emoji(s, e):
+                    start = edit.getSelectionStart(); end = edit.getSelectionEnd()
+                    if start < 0: start = end = edit.length()
+                    edit.getText().replace(min(start, end), max(start, end), e); return None
+                def on_custom_emoji(s, d, doc, emo, r):
+                    span = AnimatedEmojiSpan(d, edit.getPaint().getFontMetricsInt())
+                    ss = SpannableString(" ")
+                    ss.setSpan(span, 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    start = edit.getSelectionStart(); end = edit.getSelectionEnd()
+                    if start < 0: start = end = edit.length()
+                    edit.getText().replace(min(start, end), max(start, end), ss); return None
+                def on_sticker(s, *a):
+                    for arg in a:
+                        if isinstance(arg, TLRPC.Document):
+                            _apply_document_media(arg, False); bs.dismiss(); return None
+                    return None
+                def on_gif(s, *a):
+                    for arg in a:
+                        doc = arg if isinstance(arg, TLRPC.Document) else getattr(arg, "document", None)
+                        if doc: _apply_document_media(doc, True); bs.dismiss(); return None
+                    return None
+                ev.setDelegate(ProxyF.create("org.telegram.ui.Components.EmojiView$EmojiViewDelegate",
+                    onEmojiSelected=on_emoji, onCustomEmojiSelected=on_custom_emoji,
+                    onStickerSelected=on_sticker, onGifSelected=on_gif, onBackspace=lambda s: edit.dispatchKeyEvent(KeyEvent(0, 67)) or True,
+                    getProgressToSearchOpened=lambda s: jfloat(0.0), isSearchOpened=stub_f, isExpanded=stub_f,
+                    getDialogId=lambda s: jlong(0), getThreadId=lambda s: 0, canSchedule=stub_f, isInScheduleMode=stub_f,
+                    onStickersSettingsClick=stub, onEmojiSettingsClick=stub, onStickersGroupClick=stub, onTabOpened=stub,
+                    onClearEmojiRecent=stub, onShowStickerSet=stub, onStickerSetAdd=stub, onStickerSetRemove=stub,
+                    onSearchOpenClose=stub, onAnimatedEmojiUnlockClick=stub, showTrendingStickersAlert=stub, invalidateEnterView=stub, isUserSelf=stub_f
+                ))
+                bs.show()
+            except: logcat(traceback.format_exc())
+
+        def open_gallery(v):
+            try:
+                sheet.dismiss()
+                picker = PhotoAlbumPickerActivity(0, False, False, self.frag)
+                def on_media(s, photos, notify, schedule):
+                    if not photos or photos.isEmpty(): return
+                    item = photos.get(0)
+                    path = getattr(item, 'path', None) or (AndroidUtilities.getPath(item.uri) if getattr(item, 'uri', None) else None)
+                    if not path or not File(path).exists(): return
+                    is_video = getattr(item, 'isVideo', False)
+                    run_on_ui_thread(lambda: self._apply_media_ui_internal(path, is_video, rebuild_and_show))
+                picker.setDelegate(ProxyF.create("org.telegram.ui.PhotoAlbumPickerActivity$PhotoAlbumPickerActivityDelegate", didSelectPhotos=on_media, startPhotoSelectActivity=stub))
+                self.frag.presentFragment(picker)
+            except: logcat(traceback.format_exc())
+
+        def reset_changes(v):
+            if self.editingId in self.localChanges:
+                changes = self.localChanges[self.editingId]
+                if changes.get('sender_flags') and changes.get('from_id'):
+                    uid = getattr(changes['from_id'], 'user_id', None)
+                    if uid:
+                        try: MessagesController.getInstance(UserConfig.selectedAccount).loadUser(jlong(uid), 0, True)
+                        except: pass
+
+            self.localChanges.pop(self.editingId, None)
+            sheet.dismiss()
+            self.refresh_ui()
+            BulletinHelper.show_success("Изменения сброшены")
+
+        sender_rows = [
+            create_action_row(["msg_filled_menu_users_solar", "msg_user", "contact_id"], "Сменить отправителя", "Сделать исходящим/входящим", change_sender_dialog),
+            create_action_row(["menu_verification", "msg_verified"], "Статусы отправителя", "Verified, Premium, Scam, Эмодзи...", sender_status_dialog),
+        ]
+        tab_editor.addView(create_section(sender_rows), LayoutHelper.createLinear(-1, -2, 0, 8, 0, 0))
+
+        msg_rows = [
+            create_action_row(["msg_reply_solar", "msg_reply_remix", "ic_reply"], "Добавить реплай", "Фейковый ответ на сообщение", change_reply_dialog),
+            create_action_row(["msg_bots_solar", "msg_bots"], "Via Bot", "Приписка «via @bot»", via_bot_dialog),
+            create_action_row(["menu_sticker_add_solar", "msg_smile", "ic_smile"], "Эмодзи, стикеры, GIF", "Вставить в текст или прикрепить", open_media_picker),
+            create_action_row(["files_folder_solar", "msg_attach", "ic_ab_attach", "msg_photo"], "Прикрепить из галереи", "Фото или видео", open_gallery),
+        ]
+        tab_editor.addView(create_section(msg_rows), LayoutHelper.createLinear(-1, -2, 0, 0, 0, 0))
+
+        if not is_creation_mode:
+            reset_row = [
+                create_action_row(["msg_delete", "ic_delete"], "Сбросить текущее", "Вернуть оригинал сообщения", reset_changes, is_destructive=True)
+            ]
+            tab_editor.addView(create_section(reset_row), LayoutHelper.createLinear(-1, -2))
+
+        content_views["editor"] = tab_editor
+        content_wrapper.addView(tab_editor, LayoutHelper.createFrame(-1, -2))
+
+        tab_generator = self._build_generator_tab(activity, sheet, create_action_row, create_section)
+        content_views["generator"] = tab_generator
+        content_wrapper.addView(tab_generator, LayoutHelper.createFrame(-1, -2))
+        tab_generator.setVisibility(View.GONE)
+
+        tab_data = self._build_data_tab(activity, sheet, rebuild_and_show, create_action_row, create_section)
+        content_views["data"] = tab_data
+        content_wrapper.addView(tab_data, LayoutHelper.createFrame(-1, -2))
+        tab_data.setVisibility(View.GONE)
+
+        scroll.addView(content_wrapper, LayoutHelper.createFrame(-1, -2))
+        root.addView(scroll, LayoutHelper.createLinear(-1, 0, 1.0))
+
+        save_layout = LinearLayout(activity)
+        save_layout.setOrientation(LinearLayout.HORIZONTAL)
+        save_layout.setGravity(Gravity.CENTER)
+        save_layout.setBackground(self._get_ripple_drawable(Theme.getColor(Theme.key_featuredStickers_addButton), 12))
+        check_icon = ImageView(activity)
+        check_icon.setImageResource(get_icon_id("input_done", "msg_check", "ic_done"))
+        check_icon.setColorFilter(_ji(Theme.getColor(Theme.key_featuredStickers_buttonText)))
+        save_layout.addView(check_icon, LayoutHelper.createLinear(20, 20, Gravity.CENTER_VERTICAL, 0, 0, 8, 0))
+        save_btn = TextView(activity)
+        save_btn.setText("Создать сообщение" if is_creation_mode else "Применить изменения")
+        save_btn.setTextColor(_ji(Theme.getColor(Theme.key_featuredStickers_buttonText)))
+        save_btn.setTextSize(1, 15.0)
+        save_btn.setTypeface(AndroidUtilities.bold())
+        save_layout.addView(save_btn, LayoutHelper.createLinear(-2, -2, Gravity.CENTER_VERTICAL))
+        save_layout.setPadding(0, dp(14), 0, dp(14))
+
+        class SaveClick(dynamic_proxy(View.OnClickListener)):
+            def onClick(self_obj, v):
+                if is_creation_mode:
+                    self._execute_create_message(self.current_ps)
+                    # REMOVED: BulletinHelper.show_success("Сообщение создано!")
+                elif self.editingId and self.current_ps:
+                    sender_changed = self.current_ps.get('_sender_changed', False)
+                    final_out = self.current_ps['out'] if sender_changed else self._originOut
+                    self.current_ps['out'] = final_out
+                    self.localChanges[self.editingId] = self.current_ps.copy()
+                    
+                    sf = self.current_ps.get('sender_flags')
+                    from_id = self.current_ps.get('from_id')
+                    if sf and from_id:
+                        uid = getattr(from_id, 'user_id', None)
+                        if uid:
+                            self.faked_users[int(uid)] = sf
+                            
+                    self.refresh_ui()
+                    # REMOVED: BulletinHelper.show_success("Изменения применены!")
+                sheet.dismiss()
+
+        save_layout.setOnClickListener(SaveClick())
+        self._add_press_anim(save_layout)
+        root.addView(save_layout, LayoutHelper.createLinear(-1, -2, 0, 16, 0, 0))
+
+        switch_tab("editor")
+        sheet.setCustomView(root)
+        run_on_ui_thread(lambda: rebuild_and_show(), 1500)
+        sheet.show()
+
+    # ========================================================================
+    # Генератор
+    # ========================================================================
+    def _build_generator_tab(self, activity, sheet, create_action_row, create_section):
+        tab_generator = LinearLayout(activity)
+        tab_generator.setOrientation(LinearLayout.VERTICAL)
+        gen_rows = [
+            create_action_row(["msg_emoji_gem", "ic_gift"], "Создать NFT (Star Gift)", "Выбрать модель, узор и фон", lambda v: self._open_catalog_nft_sheet(activity, sheet)),
+            create_action_row(["filled_earn_stars", "msg_star"], "Telegram Stars", "Фейковые звезды", lambda v: self._fake_gift_form(GiftType.STARS, activity, sheet)),
+            create_action_row(["msg_payment_card", "msg_wallet"], "Fake Payment", "Чек об оплате", lambda v: self._fake_gift_form(GiftType.PAYMENT, activity, sheet)),
+            create_action_row(["menu_premium_away", "msg_giveaway"], "Создать Розыгрыш", "Фейковый Giveaway", lambda v: self._giveaway_form(activity, sheet)),
+            create_action_row(["msg_unvote_solar", "msg_polls"], "Fake Vote", "Опрос с нужными процентами", lambda v: self._fake_vote_form(activity, sheet)),
+            create_action_row(["call_solar", "ic_call"], "Fake Call", "Входящий/исходящий звонок", lambda v: self._fake_call_form(activity, sheet)),
+            create_action_row(["msg_screencast_solar", "msg_screenshot"], "Fake Screenshot", "Сервисное сообщение о скриншоте", lambda v: self._fake_screenshot(activity, sheet)),
+            create_action_row(["msg_invited_solar", "msg_addcontact"], "Fake Invite", "Сообщение о добавлении в группу", lambda v: self._fake_invite_form(activity, sheet)),
+            create_action_row(["filled_premium_bots", "msg_bots"], "Fake Bot Message", "Сообщение с инлайн-кнопками", lambda v: self._fake_bot_msg_form(activity, sheet)),
+        ]
+        tab_generator.addView(create_section(gen_rows), LayoutHelper.createLinear(-1, -2, 0, 8, 0, 0))
+        return tab_generator
+
+    # ========================================================================
+    # Данные
+    # ========================================================================
+    def _build_data_tab(self, activity, sheet, rebuild_and_show_cb, create_action_row, create_section):
+        tab_data = LinearLayout(activity)
+        tab_data.setOrientation(LinearLayout.VERTICAL)
+
+        def change_time_dialog(v):
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Сменить время")
+            layout = LinearLayout(activity)
+            layout.setPadding(dp(24), dp(8), dp(24), dp(8))
+            et = self._create_dialog_input(activity, "Время (Например 15:30)")
+            layout.addView(et, LayoutHelper.createLinear(-1, -2))
+            builder.set_view(layout)
+            def on_ok(d, w):
+                val = et.getText().toString()
+                try:
+                    if ":" in val:
+                        h, m = map(int, val.split(':'))
+                        t = time.localtime()
+                        new_t = (t.tm_year, t.tm_mon, t.tm_mday, h, m, 0, t.tm_wday, t.tm_yday, t.tm_isdst)
+                        self.current_ps['date'] = int(time.mktime(new_t))
+                        rebuild_and_show_cb()
+                except: pass
+                d.dismiss()
+            builder.set_positive_button("ОК", on_ok)
+            builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+
+        def change_views_dialog(v):
+            builder = AlertDialogBuilder(activity)
+            builder.set_title("Изменить просмотры")
+            layout = LinearLayout(activity)
+            layout.setPadding(dp(24), dp(8), dp(24), dp(8))
+            et = self._create_dialog_input(activity, "Количество (Например 15000)", str(self.current_ps.get('views', 0) or ''), 2)
+            layout.addView(et, LayoutHelper.createLinear(-1, -2))
+            builder.set_view(layout)
+            def on_ok(d, w):
+                try:
+                    self.current_ps['views'] = int(et.getText().toString())
+                    rebuild_and_show_cb()
+                except: pass
+                d.dismiss()
+            builder.set_positive_button("ОК", on_ok)
+            builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+
+        def reset_all_everywhere(v):
+            acc = UserConfig.selectedAccount
+            mc = MessagesController.getInstance(acc)
+
+            for changes in self.localChanges.values():
+                if changes.get('sender_flags') and changes.get('from_id'):
+                    uid = getattr(changes['from_id'], 'user_id', None)
+                    if uid:
+                        try: mc.loadUser(jlong(uid), 0, True)
+                        except: pass
+
+            self.localChanges.clear()
+            gen = self.get_setting('generated_msgs', [])
+            
+            from collections import defaultdict
+            by_channel = defaultdict(list)
+            by_chat = []
+            
+            for item in gen:
+                peer = item.get('peer', 0)
+                mid = item.get('id', 0)
+                if mid == 0: continue
+                if peer <= -1000000000000:
+                    by_channel[abs(peer) - 1000000000000].append(mid)
+                else:
+                    by_chat.append(mid)
+                    
+            for channel_id, mids in by_channel.items():
+                arr = ArrayList()
+                for mid in mids: arr.add(jint(mid))
+                try: mc.deleteMessages(arr, None, None, int(channel_id), 0, True, 0)
+                except: pass
+                
+            if by_chat:
+                arr = ArrayList()
+                for mid in by_chat: arr.add(jint(mid))
+                try: mc.deleteMessages(arr, None, None, int(0), 0, True, 0)
+                except: pass
+                
+            self.set_setting('generated_msgs', [])
+            sheet.dismiss()
+            self.refresh_ui()
+            BulletinHelper.show_success("Все изменения и фейки удалены!")
+
+        data_rows = [
+            create_action_row(["timeline", "msg_clock"], "Изменить время", "Например: 15:30", change_time_dialog),
+            create_action_row(["msg_views", "ic_views"], "Изменить просмотры", "Для постов из каналов", change_views_dialog),
+        ]
+        tab_data.addView(create_section(data_rows), LayoutHelper.createLinear(-1, -2, 0, 8, 0, 0))
+        reset_all_row = [
+            create_action_row(["msg_delete", "ic_delete"], "Сбросить ВСЁ везде", "Удалить все фейки и правки", reset_all_everywhere, is_destructive=True)
+        ]
+        tab_data.addView(create_section(reset_all_row), LayoutHelper.createLinear(-1, -2))
+        return tab_data
+
+    # ========================================================================
+    # Создание сообщения (исправлено)
+    # ========================================================================
+    def _execute_create_message(self, ps):
+        acc = UserConfig.selectedAccount
+        try:
+            msg = TLRPC.TL_message()
+            msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            
+            p = self._make_peer()
+            msg.peer_id = p
+            msg.dialog_id = int(self.peer)
+            msg.date = ps.get('date', int(time.time()))
+            msg.message = ps.get('text', '')
+            msg.entities = ps.get('entities') or ArrayList()
+            msg.flags = MsgFlags.FROM_ID | (MsgFlags.ENTITIES if msg.entities.size() > 0 else 0)
+            msg.unread = True
+            
+            msg.out = ps.get('out', False)
+            if msg.out:
+                msg.flags |= MsgFlags.OUT
+                p_me = TLRPC.TL_peerUser()
+                p_me.user_id = int(UserConfig.getInstance(acc).getClientUserId())
+                msg.from_id = p_me
+            else:
+                msg.from_id = ps.get('from_id', p)
+                
+            sender_flags = ps.get('sender_flags', {})
+            if sender_flags and msg.from_id:
+                uid = getattr(msg.from_id, 'user_id', None)
+                if uid:
+                    mc = MessagesController.getInstance(acc)
+                    user = mc.getUser(jlong(uid))
+                    if user:
+                        user.verified = sender_flags.get('verified', user.verified)
+                        user.premium = sender_flags.get('premium', user.premium)
+                        user.scam = sender_flags.get('scam', False)
+                        user.fake = sender_flags.get('fake', False)
+                        if sender_flags.get('emoji_status_id'):
+                            try:
+                                es = TLRPC.TL_emojiStatus()
+                                es.document_id = jlong(int(sender_flags['emoji_status_id']))
+                                user.emoji_status = es
+                            except: pass
+                        mc.putUser(user, False)
+
+                admin_title = sender_flags.get('admin_title')
+                if admin_title:
+                    _set_field(msg, 'post_author', admin_title)
+                    msg.flags |= MsgFlags.POST_AUTHOR
+                else:
+                    _set_field(msg, 'post_author', "")
+                    msg.flags &= ~MsgFlags.POST_AUTHOR
+
+            if ps.get('media'):
+                msg.media = ps['media']
+                msg.flags |= MsgFlags.MEDIA
+                if ps.get('attach_path'):
+                    msg.attachPath = ps['attach_path']
+            else:
+                msg.media = TLRPC.TL_messageMediaEmpty()
+                
+            if ps.get('views'):
+                msg.views = ps['views']
+                msg.flags |= MsgFlags.VIEWS
+                
+            custom_reply = ps.get('custom_reply')
+            rep_obj = None
+            if custom_reply:
+                rep_tl = TLRPC.TL_message()
+                rep_tl.message = custom_reply['text']
+                rep_tl.id = 8888888
+                rep_tl.date = int(time.time())
+                p_rep = TLRPC.TL_peerUser()
+                p_rep.user_id = 8888888
+                rep_tl.from_id = p_rep
+                fu = TLRPC.TL_user()
+                fu.id = 8888888
+                fu.first_name = custom_reply['name']
+                MessagesController.getInstance(acc).putUser(fu, False)
+                
+                msg.flags |= MsgFlags.REPLY
+                hdr = TLRPC.TL_messageReplyHeader()
+                hdr.reply_to_msg_id = rep_tl.id
+                msg.reply_to = hdr
+                rep_obj = MessageObject(acc, rep_tl, False, False)
+                
+            via_bot_name = ps.get('via_bot_name', '')
+            if via_bot_name:
+                msg.flags |= MsgFlags.VIA_BOT_ID
+                msg.via_bot_id = int(ps.get('via_bot_id', 123456))
+                via_user = TLRPC.TL_user()
+                via_user.id = int(ps.get('via_bot_id', 123456))
+                via_user.username = via_bot_name.lstrip('@')
+                via_user.first_name = via_bot_name.lstrip('@')
+                via_user.bot = True
+                MessagesController.getInstance(acc).putUser(via_user, False)
+                
+            apply_reactions_to_mo(msg, ps.get('reactions', []))
+            
+            obj = MessageObject(acc, msg, False, True)
+            if rep_obj:
+                obj.replyMessageObject = rep_obj
+            if ps.get('msg_type') is not None:
+                obj.type = ps['msg_type']
+                
+            obj.resetLayout()
+            obj.generateThumbs(False)
+            obj.createMediaThumbs()
+            
+            lm = ArrayList(); lm.add(msg)
+            lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except Exception as e:
+            logcat(f"Create msg error: {e}")
+
+    # ========================================================================
+    # Остальные служебные методы (полный набор, идентичный предыдущим версиям)
+    # ========================================================================
+    def _apply_media_ui_internal(self, path, is_video, rebuild_cb):
+        try:
+            if not self.current_ps: return
+            
+            if is_video:
+                doc = _prepare_document(path, "video/mp4")
+                if doc:
+                    _add_video_attributes(doc, path)
+                    media = TLRPC.TL_messageMediaDocument()
+                    media.document = doc
+                    msg_type = 3
+                else:
+                    return
+            else:
+                photo = _generate_photo_sizes(path, False)
+                if photo:
+                    media = TLRPC.TL_messageMediaPhoto()
+                    media.photo = photo
+                    msg_type = 1
+                else:
+                    return
+                    
+            self.current_ps['media'] = media
+            self.current_ps['msg_type'] = msg_type
+            self.current_ps['attach_path'] = path
+            if rebuild_cb: rebuild_cb()
+            if self.current_sheet and not self.current_sheet.isShowing():
+                self.current_sheet.show()
+        except: logcat(traceback.format_exc())
+
+    def _save_generated_msg(self, msg_id, peer_id):
+        gen = self.get_setting('generated_msgs', [])
+        if not isinstance(gen, list): gen = []
+        gen.append({'id': msg_id, 'peer': peer_id})
+        self.set_setting('generated_msgs', gen)
+
+    def _make_peer(self):
+        if self.peer < 0:
+            if self.peer <= -1000000000000:
+                p = TLRPC.TL_peerChannel(); p.channel_id = int(abs(self.peer) - 1000000000000)
+            else:
+                p = TLRPC.TL_peerChat(); p.chat_id = int(abs(self.peer))
+        else:
+            p = TLRPC.TL_peerUser(); p.user_id = int(self.peer) if self.peer > 0 else int(0)
+        return p
+
+    def _get_catalog_gifts(self):
+        acc = UserConfig.selectedAccount
+        try:
+            Ctrl = find_class("org.telegram.ui.Stars.StarsController")
+            ctrl = Ctrl.getInstance(acc)
+            ctrl.loadStarGifts()
+            
+            gifts = []
+            for f in ctrl.getClass().getDeclaredFields():
+                try:
+                    f.setAccessible(True)
+                    val = f.get(ctrl)
+                    if val is None: continue
+                    
+                    cls_name = str(val.getClass().getName()).lower()
+                    if "arraylist" not in cls_name and "java.util.list" not in cls_name:
+                        continue
+                        
+                    if val.size() > 0:
+                        first = val.get(0)
+                        if first is None: continue
+                        
+                        first_name = str(first.getClass().getName()).lower()
+                        if "stargift" in first_name and "saved" not in first_name:
+                            for i in range(val.size()):
+                                g = val.get(i)
+                                if g is None: continue
+                                gname = str(g.getClass().getName()).lower()
+                                if "unique" in gname or get_val(g, "upgrade_stars", 0):
+                                    gifts.append(g)
+                            return gifts
+                except Exception:
+                    pass
+        except Exception as e:
+            logcat(f"Error fetching catalog: {e}")
+        return []
+
+    def _open_catalog_nft_sheet(self, activity, sheet):
+        gifts = self._get_catalog_gifts()
+        if not gifts:
+            BulletinHelper.show_info("Загрузка каталога... Ждем ответа от Telegram.")
+            def retry():
+                retried_gifts = self._get_catalog_gifts()
+                if retried_gifts:
+                    self._show_catalog_dialog(activity, sheet, retried_gifts)
+                else:
+                    BulletinHelper.show_error("Каталог пуст. Попробуйте еще раз.")
+            run_on_ui_thread(retry, 2000)
+            return
+        self._show_catalog_dialog(activity, sheet, gifts)
+
+    def _show_catalog_dialog(self, activity, sheet, gifts):
+        bs = BottomSheet(activity, True)
+        scroll = ScrollView(activity)
+        root = LinearLayout(activity)
+        root.setOrientation(LinearLayout.VERTICAL)
+        root.setPadding(0, dp(16), 0, dp(16))
+        scroll.addView(root)
+
+        title = TextView(activity)
+        title.setText("Выберите базу для NFT")
+        try: title.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        except: title.setTextColor(0xFFFFFFFF)
+        title.setTextSize(1, 20.0)
+        title.setTypeface(AndroidUtilities.bold())
+        title.setPadding(dp(16), 0, dp(16), dp(16))
+        root.addView(title, LayoutHelper.createLinear(-1, -2))
+
+        items_per_page = 30
+        current_page = [0]
+        
+        list_container = LinearLayout(activity)
+        list_container.setOrientation(LinearLayout.VERTICAL)
+        root.addView(list_container, LayoutHelper.createLinear(-1, -2))
+
+        load_more_btn = TextView(activity)
+        load_more_btn.setText("Показать еще")
+        load_more_btn.setGravity(Gravity.CENTER)
+        try: load_more_btn.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText)))
+        except: load_more_btn.setTextColor(0xFF3B82F6)
+        load_more_btn.setTextSize(1, 15.0)
+        load_more_btn.setTypeface(AndroidUtilities.bold())
+        load_more_btn.setPadding(0, dp(16), 0, dp(16))
+        load_more_btn.setBackground(self._get_ripple_drawable(0x00000000, 8))
+        root.addView(load_more_btn, LayoutHelper.createLinear(-1, -2))
+
+        def on_gift_click(gift_obj):
+            bs.dismiss()
+            self._fetch_gift_attributes(activity, sheet, gift_obj)
+
+        def load_page():
+            start_idx = current_page[0] * items_per_page
+            end_idx = min(start_idx + items_per_page, len(gifts))
+            
+            for i in range(start_idx, end_idx):
+                g = gifts[i]
+                row = LinearLayout(activity)
+                row.setOrientation(LinearLayout.HORIZONTAL)
+                row.setGravity(Gravity.CENTER_VERTICAL)
+                row.setPadding(dp(16), dp(8), dp(16), dp(8))
+                row.setBackground(self._get_ripple_drawable(0x00000000, 8))
+
+                biv = find_class("org.telegram.ui.Components.BackupImageView")(activity)
+                doc = get_val(g, "document") or get_val(g, "sticker")
+                if doc:
+                    ImageLocation = find_class("org.telegram.messenger.ImageLocation")
+                    biv.setImage(ImageLocation.getForDocument(doc), "50_50", None, None, doc)
+                row.addView(biv, LayoutHelper.createLinear(48, 48, 0, 0, 16, 0))
+
+                text_layout = LinearLayout(activity)
+                text_layout.setOrientation(LinearLayout.VERTICAL)
+
+                tv_title = TextView(activity)
+                tv_title.setText(get_val(g, "title", "NFT"))
+                try: tv_title.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+                except: tv_title.setTextColor(0xFFFFFFFF)
+                tv_title.setTextSize(1, 16.0)
+                tv_title.setTypeface(AndroidUtilities.bold())
+                text_layout.addView(tv_title, LayoutHelper.createLinear(-1, -2))
+
+                tv_stars = TextView(activity)
+                tv_stars.setText(f"⭐ {get_val(g, 'stars', 0)}")
+                try: tv_stars.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextGray3)))
+                except: tv_stars.setTextColor(0xFFAAAAAA)
+                tv_stars.setTextSize(1, 13.0)
+                text_layout.addView(tv_stars, LayoutHelper.createLinear(-1, -2))
+
+                row.addView(text_layout, LayoutHelper.createLinear(-1, -2, 1.0))
+
+                row.setOnClickListener(OnClickListener(lambda v, gift_obj=g: on_gift_click(gift_obj)))
+                self._add_press_anim(row)
+                
+                list_container.addView(row, LayoutHelper.createLinear(-1, -2))
+            
+            current_page[0] += 1
+            if current_page[0] * items_per_page >= len(gifts):
+                load_more_btn.setVisibility(View.GONE)
+
+        load_more_btn.setOnClickListener(OnClickListener(lambda v: load_page()))
+        self._add_press_anim(load_more_btn)
+
+        load_page()
+        bs.setCustomView(scroll)
+        bs.show()
+
+    @safe
+    def _fetch_gift_attributes(self, activity, sheet, gift):
+        try:
+            acc = UserConfig.selectedAccount
+            gift_id = get_val(gift, "id", 0)
+            
+            ReqClass = find_class("org.telegram.tgnet.tl.TL_stars$getStarGiftUpgradePreview")
+            if not ReqClass:
+                ReqClass = find_class("org.telegram.tgnet.tl.TL_stars$getStarGiftUpgradeAttributes")
+            
+            if not ReqClass:
+                BulletinHelper.show_error("Класс атрибутов не найден, используем базовый NFT")
+                self._show_nft_constructor(activity, sheet, gift, None)
+                return
+
+            req = ReqClass()
+            _set_field(req, "gift_id", gift_id)
+            
+            BulletinHelper.show_info("Загрузка моделей и узоров...")
+
+            def on_done(proxy, response, error):
+                if error:
+                    run_on_ui_thread(lambda: BulletinHelper.show_error(f"Ошибка сети: {error.text}"))
+                    run_on_ui_thread(lambda: self._show_nft_constructor(activity, sheet, gift, None))
+                    return
+                run_on_ui_thread(lambda: self._show_nft_constructor(activity, sheet, gift, response))
+                
+            ConnectionsManager.getInstance(acc).sendRequest(req, ProxyF.create("org.telegram.tgnet.RequestDelegate", run=on_done))
+        except Exception as e:
+            logcat(f"Fetch attributes error: {e}\n{traceback.format_exc()}")
+            run_on_ui_thread(lambda: self._show_nft_constructor(activity, sheet, gift, None))
+
+    def _show_attr_selector(self, activity, parent_bs, title, items_list, state_key, tv_view, state):
+        bs = BottomSheet(activity, True)
+        scroll = ScrollView(activity)
+        layout = LinearLayout(activity)
+        layout.setOrientation(LinearLayout.VERTICAL)
+        layout.setPadding(dp(16), dp(16), dp(16), dp(16))
+
+        tv_title = TextView(activity)
+        tv_title.setText(title)
+        try: tv_title.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        except: tv_title.setTextColor(0xFFFFFFFF)
+        tv_title.setTextSize(1, 20.0)
+        tv_title.setTypeface(AndroidUtilities.bold())
+        layout.addView(tv_title, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 16))
+
+        for idx, attr in enumerate(items_list):
+            row = LinearLayout(activity)
+            row.setOrientation(LinearLayout.HORIZONTAL)
+            row.setGravity(Gravity.CENTER_VERTICAL)
+            row.setPadding(dp(8), dp(8), dp(8), dp(8))
+            row.setBackground(self._get_ripple_drawable(0x00000000, 8))
+
+            icon_view = FrameLayout(activity)
+            doc = get_val(attr, "document") or get_val(attr, "sticker")
+            if doc:
+                biv = find_class("org.telegram.ui.Components.BackupImageView")(activity)
+                ImageLocation = find_class("org.telegram.messenger.ImageLocation")
+                biv.setImage(ImageLocation.getForDocument(doc), "50_50", None, None, doc)
+                icon_view.addView(biv, LayoutHelper.createFrame(40, 40))
+            else:
+                cc = get_val(attr, "center_color")
+                if cc is not None:
+                    bg = GradientDrawable()
+                    bg.setShape(GradientDrawable.OVAL)
+                    bg.setColor(to_s32(int(cc) | 0xFF000000))
+                    color_view = View(activity)
+                    color_view.setBackground(bg)
+                    icon_view.addView(color_view, LayoutHelper.createFrame(40, 40))
+
+            row.addView(icon_view, LayoutHelper.createLinear(40, 40, 0, 0, 16, 0))
+
+            tv_name = TextView(activity)
+            tv_name.setText(get_val(attr, "name", f"Вариант {idx + 1}"))
+            try: tv_name.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+            except: tv_name.setTextColor(0xFFFFFFFF)
+            tv_name.setTextSize(1, 16.0)
+            row.addView(tv_name, LayoutHelper.createLinear(-1, -2, 1.0))
+
+            def make_click(i):
+                def on_click(v):
+                    state[state_key] = i
+                    tv_view.setText(f"{title}: {get_val(items_list[i], 'name', f'Вариант {i + 1}')}")
+                    bs.dismiss()
+                return OnClickListener(on_click)
+
+            row.setOnClickListener(make_click(idx))
+            self._add_press_anim(row)
+            layout.addView(row, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+
+        scroll.addView(layout)
+        bs.setCustomView(scroll)
+        bs.show()
+
+    def _show_nft_constructor(self, activity, sheet, gift, attr_response):
+        models, patterns, backdrops = [], [], []
+        
+        if attr_response:
+            attrs = get_val(attr_response, "sample_attributes")
+            if not attrs:
+                attrs = get_val(attr_response, "attributes")
+            if not attrs:
+                for f in attr_response.getClass().getFields():
+                    try:
+                        val = f.get(attr_response)
+                        if val is not None and hasattr(val, 'getClass') and "ArrayList" in str(val.getClass().getName()):
+                            attrs = val
+                            break
+                    except: pass
+            if attrs:
+                for i in range(attrs.size()):
+                    a = attrs.get(i)
+                    if a is None: continue
+                    name = a.getClass().getName().lower()
+                    if "model" in name: models.append(a)
+                    elif "pattern" in name: patterns.append(a)
+                    elif "backdrop" in name: backdrops.append(a)
+
+        state = {"model": 0, "pattern": 0, "backdrop": 0}
+        
+        bs = BottomSheet(activity, True)
+        scroll = ScrollView(activity)
+        layout = LinearLayout(activity)
+        layout.setOrientation(LinearLayout.VERTICAL)
+        layout.setPadding(dp(16), dp(16), dp(16), dp(16))
+        
+        tv_title = TextView(activity)
+        tv_title.setText("Конструктор NFT")
+        try: tv_title.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        except: tv_title.setTextColor(0xFFFFFFFF)
+        tv_title.setTextSize(1, 20.0)
+        tv_title.setTypeface(AndroidUtilities.bold())
+        layout.addView(tv_title, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 16))
+        
+        def create_selector(title_text, items_list, state_key):
+            if not items_list: return None
+            
+            btn = LinearLayout(activity)
+            btn.setOrientation(LinearLayout.HORIZONTAL)
+            btn.setGravity(Gravity.CENTER_VERTICAL)
+            btn.setPadding(dp(12), dp(12), dp(12), dp(12))
+            try: bg_color = Theme.getColor(Theme.key_windowBackgroundWhite)
+            except: bg_color = 0xFF233041
+            try: div_color = Theme.getColor(Theme.key_divider)
+            except: div_color = 0x1AFFFFFF
+            btn.setBackground(self._get_ripple_drawable(bg_color, 8, div_color, 1))
+            
+            tv = TextView(activity)
+            first_name = get_val(items_list[0], "name", f"Вариант 1")
+            tv.setText(f"{title_text}: {first_name}")
+            try: tv.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText)))
+            except: tv.setTextColor(0xFF3B82F6)
+            tv.setTextSize(1, 16.0)
+            btn.addView(tv, LayoutHelper.createLinear(0, -2, 1.0))
+            
+            chevron = ImageView(activity)
+            chevron.setImageResource(get_icon_id("arrow_right", "msg_arrowright", "ic_chevron_right"))
+            try: chevron.setColorFilter(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText)))
+            except: chevron.setColorFilter(_ji(0xFF3B82F6))
+            btn.addView(chevron, LayoutHelper.createLinear(24, 24))
+            
+            def on_click(v):
+                self._show_attr_selector(activity, bs, title_text, items_list, state_key, tv, state)
+                
+            btn.setOnClickListener(OnClickListener(on_click))
+            self._add_press_anim(btn)
+            return btn
+
+        m_btn = create_selector("Модель", models, "model")
+        p_btn = create_selector("Узор", patterns, "pattern")
+        b_btn = create_selector("Фон", backdrops, "backdrop")
+        
+        if m_btn: layout.addView(m_btn, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+        if p_btn: layout.addView(p_btn, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+        if b_btn: layout.addView(b_btn, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 16))
+        
+        ui_fields = {}
+        def add_input(key, label, def_val, type_flag=1):
+            tv = TextView(activity)
+            tv.setText(label)
+            try: tv.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText)))
+            except: tv.setTextColor(0xFF3B82F6)
+            tv.setPadding(0, dp(8), 0, dp(4))
+            layout.addView(tv)
+            et = self._create_dialog_input(activity, "", str(def_val), type_flag)
+            layout.addView(et, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+            ui_fields[key] = et
+
+        base_title = get_val(gift, "title", "NFT")
+        base_slug = get_val(gift, "slug", "nft")
+        base_total = get_val(gift, "availability_total", 10000)
+
+        add_input('title', 'Название:', base_title)
+        add_input('slug', 'Slug (для ссылки):', base_slug)
+        add_input('num', 'Номер NFT:', '1', InputType.TYPE_CLASS_NUMBER)
+        add_input('limit', 'Всего выпущено (тираж):', str(base_total), InputType.TYPE_CLASS_NUMBER)
+        
+        cb_out = CheckBox(activity)
+        cb_out.setText("Исходящее (Я отправил)")
+        try: cb_out.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        except: cb_out.setTextColor(0xFFFFFFFF)
+        layout.addView(cb_out, LayoutHelper.createLinear(-1, -2, 0, 8, 0, 16))
+        
+        create_btn = TextView(activity)
+        create_btn.setText("Создать NFT")
+        create_btn.setGravity(Gravity.CENTER)
+        create_btn.setTextColor(_ji(0xFFFFFFFF))
+        create_btn.setTextSize(1, 15.0)
+        create_btn.setTypeface(AndroidUtilities.bold())
+        try: btn_color = Theme.getColor(Theme.key_featuredStickers_addButton)
+        except: btn_color = 0xFF3B82F6
+        create_btn.setBackground(self._get_ripple_drawable(btn_color, 8))
+        create_btn.setPadding(0, dp(14), 0, dp(14))
+        
+        def on_create(v):
+            params = {k: v.getText().toString() for k, v in ui_fields.items()}
+            params['is_out'] = cb_out.isChecked()
+            
+            selected_attrs = ArrayList()
+            if models: selected_attrs.add(models[state["model"]])
+            if patterns: selected_attrs.add(patterns[state["pattern"]])
+            if backdrops: selected_attrs.add(backdrops[state["backdrop"]])
+            
+            self._execute_catalog_nft(gift, selected_attrs, params)
+            bs.dismiss()
+            if sheet: sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("NFT Подарок создан!")
+            
+        create_btn.setOnClickListener(OnClickListener(on_create))
+        self._add_press_anim(create_btn)
+        layout.addView(create_btn, LayoutHelper.createLinear(-1, -2))
+        
+        scroll.addView(layout)
+        bs.setCustomView(scroll)
+        bs.show()
+
+    def _execute_catalog_nft(self, base_gift, selected_attrs, params):
+        acc = UserConfig.selectedAccount
+        try:
+            ActionClass = find_class("org.telegram.tgnet.TLRPC$TL_messageActionStarGiftUnique")
+            if not ActionClass:
+                ActionClass = find_class("org.telegram.tgnet.TLRPC$TL_messageActionStarGift")
+                
+            GiftClass = find_class("org.telegram.tgnet.tl.TL_stars$TL_starGiftUnique")
+            if not GiftClass:
+                GiftClass = find_class("org.telegram.tgnet.tl.TL_stars$StarGift")
+
+            action = ActionClass()
+            gift = GiftClass()
+
+            base_id = get_val(base_gift, "id", 0)
+            num = int(params.get('num', '1'))
+            limit = int(params.get('limit', '10000'))
+            is_out = params.get('is_out', False)
+            
+            _set_field(gift, "id", random.randint(1000000, 9999999))
+            _set_field(gift, "gift_id", base_id)
+            _set_field(gift, "title", params.get('title', 'NFT'))
+            
+            slug_val = params.get('slug', 'nft')
+            if not slug_val: slug_val = get_val(base_gift, "slug", "nft")
+            _set_field(gift, "slug", slug_val)
+            
+            _set_field(gift, "num", num)
+            _set_field(gift, "limited", True)
+            _set_field(gift, "limited_count", limit)
+            _set_field(gift, "availability_total", limit)
+            
+            _set_field(gift, "attributes", selected_attrs)
+            try: gift.attributes = selected_attrs
+            except: pass
+
+            model_doc = None
+            for i in range(selected_attrs.size()):
+                attr = selected_attrs.get(i)
+                if attr and "model" in attr.getClass().getName().lower():
+                    model_doc = get_val(attr, "document")
+                    if not model_doc: model_doc = get_val(attr, "sticker")
+                    break
+
+            if not model_doc:
+                model_doc = get_val(base_gift, "document") or get_val(base_gift, "sticker")
+
+            if model_doc:
+                _set_field(gift, "document", model_doc)
+                _set_field(gift, "sticker", model_doc)
+
+            _set_field(action, "gift", gift)
+            _set_field(action, "upgrade", False)
+            _set_field(action, "saved", False)
+            _set_field(action, "refunded", False)
+            _set_field(action, "transferred", not is_out)
+
+            p = self._make_peer()
+            msg = TLRPC.TL_messageService()
+            msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            
+            msg.peer_id = p
+            msg.dialog_id = int(self.peer)
+            msg.date = int(time.time())
+            msg.action = action
+            msg.unread = True
+            msg.flags = MsgFlags.FROM_ID
+            msg.out = is_out
+            
+            if is_out:
+                msg.flags |= MsgFlags.OUT
+                p_me = TLRPC.TL_peerUser()
+                p_me.user_id = int(UserConfig.getInstance(acc).getClientUserId())
+                msg.from_id = p_me
+            else:
+                msg.from_id = p
+
+            obj = MessageObject(acc, msg, False, True)
+            lm = ArrayList(); lm.add(msg)
+            lo = ArrayList(); lo.add(obj)
+            
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+
+            def trigger_fireworks():
+                try:
+                    LaunchActivity = find_class("org.telegram.ui.LaunchActivity")
+                    if LaunchActivity.instance and LaunchActivity.instance.getFireworksOverlay():
+                        LaunchActivity.instance.getFireworksOverlay().start(True)
+                except: pass
+            
+            run_on_ui_thread(trigger_fireworks, 500)
+
+        except Exception as e:
+            logcat(f"Catalog NFT Error: {e}\n{traceback.format_exc()}")
+            BulletinHelper.show_error("Ошибка при генерации NFT")
+
+    def _fake_gift_form(self, action_type, activity, sheet):
+        layout = LinearLayout(activity); layout.setOrientation(1); layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+        ui_fields = {}
+        def add_input(key, label, def_val, type_flag=1):
+            tv = TextView(activity); tv.setText(label); tv.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv.setPadding(0, dp(12), 0, dp(4)); layout.addView(tv)
+            et = self._create_dialog_input(activity, "", str(def_val), type_flag)
+            layout.addView(et, LayoutHelper.createLinear(-1, -2)); ui_fields[key] = et
+        if action_type == GiftType.PAYMENT: add_input('pay_amount', 'Сумма (например 10.50):', '50.00', InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL)
+        elif action_type == GiftType.PREMIUM: add_input('months', 'Срок (1/3/6/12 мес):', '3', InputType.TYPE_CLASS_NUMBER)
+        elif action_type == GiftType.STARS: add_input('stars', 'Кол-во звезд:', '500', InputType.TYPE_CLASS_NUMBER)
+        cb_out = CheckBox(activity); cb_out.setText("Исходящее (Я отправил)"); cb_out.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack))); layout.addView(cb_out)
+        builder = AlertDialogBuilder(activity); builder.set_title("Настройка (Генерация в чат)"); builder.set_view(layout)
+        def on_ok(d, w):
+            params = {k: v.getText().toString() for k, v in ui_fields.items()}
+            params['is_out'] = cb_out.isChecked()
+            self._execute_fake_gift(action_type, params); d.dismiss()
+            sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("Сгенерировано в чат!")
+        builder.set_positive_button("Выполнить", on_ok); builder.show()
+
+    def _execute_fake_gift(self, action_type, params):
+        acc = UserConfig.selectedAccount
+        try:
+            curr_code = "USD"
+            if action_type == GiftType.PAYMENT:
+                a = TLRPC.TL_messageActionPaymentSent(); a.currency = curr_code; a.total_amount = int(float(params.get('pay_amount', '10.00')) * 100); a.flags = 0
+            elif action_type == GiftType.PREMIUM:
+                a = TLRPC.TL_messageActionGiftPremium(); months = int(params.get('months', '3')); a.months = months; a.currency = curr_code
+                a.amount = int(GiftConfig.PREMIUM_PRICES_USD.get(months, 14.99) * 100); a.flags = 0
+            elif action_type == GiftType.STARS:
+                a = TLRPC.TL_messageActionGiftStars(); stars = int(params.get('stars', '500')); a.stars = int(stars); a.currency = curr_code
+                price = float(Decimal(str(stars)) * Decimal(str(GiftConfig.STAR_PRICE_USD)))
+                a.amount = int((price if price <= 100 else int(price)) * 100); a.flags = 0
+            p = self._make_peer()
+            msg = TLRPC.TL_messageService(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            msg.peer_id = p; msg.dialog_id = int(self.peer); msg.date = int(time.time()); msg.action = a; msg.unread = True
+            msg.flags = MsgFlags.FROM_ID; msg.from_id = p; msg.out = params.get('is_out', False)
+            if msg.out: msg.flags |= MsgFlags.OUT; p_me = TLRPC.TL_peerUser(); p_me.user_id = int(UserConfig.getInstance(acc).getClientUserId()); msg.from_id = p_me
+            obj = MessageObject(acc, msg, False, True); lm = ArrayList(); lm.add(msg); lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except: logcat(traceback.format_exc())
+
+    def _fake_vote_form(self, activity, sheet):
+        layout = LinearLayout(activity); layout.setOrientation(1); layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+        tv_q = TextView(activity); tv_q.setText("Вопрос:"); tv_q.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_q.setPadding(0, 0, 0, dp(4)); layout.addView(tv_q)
+        et_q = self._create_dialog_input(activity, "Текст вопроса"); layout.addView(et_q, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 12))
+        tv_opts = TextView(activity); tv_opts.setText("Варианты (каждый с новой строки, % через |):"); tv_opts.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_opts.setPadding(0, 0, 0, dp(4)); layout.addView(tv_opts)
+        et_opts = self._create_dialog_input(activity, "Да|60\nНет|40", "", 131073); et_opts.setMinLines(3); layout.addView(et_opts, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+        cb_out = CheckBox(activity); cb_out.setText("Исходящее"); cb_out.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack))); layout.addView(cb_out)
+        builder = AlertDialogBuilder(activity); builder.set_title("Fake Vote"); builder.set_view(layout)
+        def on_ok(d, w):
+            question = et_q.getText().toString().strip()
+            opts_raw = et_opts.getText().toString().strip().split('\n')
+            self._execute_fake_vote(question, opts_raw, cb_out.isChecked())
+            d.dismiss(); sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("Опрос создан!")
+        builder.set_positive_button("Создать", on_ok); builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+
+    def _execute_fake_vote(self, question, opts_raw, is_out):
+        acc = UserConfig.selectedAccount
+        try:
+            p = self._make_peer()
+            media = TLRPC.TL_messageMediaPoll()
+            poll = TLRPC.TL_poll()
+            poll.id = int(time.time() * 1000)
+            poll.question = TLRPC.TL_textWithEntities() if hasattr(TLRPC, 'TL_textWithEntities') else type('T', (), {'text': question, 'entities': ArrayList()})()
+            try: poll.question.text = question
+            except: poll.question = question
+            poll.answers = ArrayList()
+            results = TLRPC.TL_pollResults()
+            results.results = ArrayList()
+            results.flags = 3
+            total = 0
+            parsed = []
+            for opt in opts_raw:
+                if '|' in opt:
+                    txt, pct = opt.rsplit('|', 1)
+                    try: pct = int(pct.strip())
+                    except: pct = 0
+                else:
+                    txt = opt; pct = 0
+                parsed.append((txt.strip(), pct))
+                total += pct
+            for i, (txt, pct) in enumerate(parsed):
+                ans = TLRPC.TL_pollAnswer()
+                ans.text = TLRPC.TL_textWithEntities() if hasattr(TLRPC, 'TL_textWithEntities') else type('T', (), {'text': txt, 'entities': ArrayList()})()
+                try: ans.text.text = txt
+                except: ans.text = txt
+                ans.option = bytes([i])
+                poll.answers.add(ans)
+                ar = TLRPC.TL_pollAnswerVoters()
+                ar.option = bytes([i])
+                ar.voters = pct
+                ar.flags = 0
+                results.results.add(ar)
+            results.total_voters = total
+            media.poll = poll
+            media.results = results
+            msg = TLRPC.TL_message(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            msg.peer_id = p; msg.dialog_id = int(self.peer); msg.date = int(time.time()); msg.media = media
+            msg.flags = MsgFlags.FROM_ID | MsgFlags.MEDIA; msg.from_id = p; msg.out = is_out; msg.unread = True
+            if is_out: msg.flags |= MsgFlags.OUT; p_me = TLRPC.TL_peerUser(); p_me.user_id = int(UserConfig.getInstance(acc).getClientUserId()); msg.from_id = p_me
+            obj = MessageObject(acc, msg, False, True); lm = ArrayList(); lm.add(msg); lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except: logcat(traceback.format_exc())
+
+    def _fake_call_form(self, activity, sheet):
+        layout = LinearLayout(activity); layout.setOrientation(1); layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+        tv = TextView(activity); tv.setText("Длительность (секунды):"); tv.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv.setPadding(0, 0, 0, dp(4)); layout.addView(tv)
+        et_dur = self._create_dialog_input(activity, "Например 120", "60", 2); layout.addView(et_dur, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+        cb_out = CheckBox(activity); cb_out.setText("Исходящий звонок"); cb_out.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack))); layout.addView(cb_out)
+        cb_missed = CheckBox(activity); cb_missed.setText("Пропущенный"); cb_missed.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack))); layout.addView(cb_missed)
+        builder = AlertDialogBuilder(activity); builder.set_title("Fake Call"); builder.set_view(layout)
+        def on_ok(d, w):
+            try: dur = int(et_dur.getText().toString())
+            except: dur = 60
+            self._execute_fake_call(dur, cb_out.isChecked(), cb_missed.isChecked())
+            d.dismiss(); sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("Звонок создан!")
+        builder.set_positive_button("Создать", on_ok); builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+
+    def _execute_fake_call(self, duration, is_out, is_missed):
+        acc = UserConfig.selectedAccount
+        try:
+            p = self._make_peer()
+            a = TLRPC.TL_messageActionPhoneCall()
+            a.duration = duration
+            a.flags = 0
+            if is_missed:
+                reason = TLRPC.TL_phoneCallDiscardReasonMissed()
+                a.reason = reason
+                a.flags |= 4
+            msg = TLRPC.TL_messageService(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            msg.peer_id = p; msg.dialog_id = int(self.peer); msg.date = int(time.time()); msg.action = a
+            msg.flags = MsgFlags.FROM_ID; msg.from_id = p; msg.out = is_out; msg.unread = True
+            if is_out: msg.flags |= MsgFlags.OUT; p_me = TLRPC.TL_peerUser(); p_me.user_id = int(UserConfig.getInstance(acc).getClientUserId()); msg.from_id = p_me
+            obj = MessageObject(acc, msg, False, True); lm = ArrayList(); lm.add(msg); lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except: logcat(traceback.format_exc())
+
+    def _fake_screenshot(self, activity, sheet):
+        acc = UserConfig.selectedAccount
+        try:
+            p = self._make_peer()
+            a = TLRPC.TL_messageActionScreenshotTaken()
+            msg = TLRPC.TL_messageService(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            msg.peer_id = p; msg.dialog_id = int(self.peer); msg.date = int(time.time()); msg.action = a
+            msg.flags = MsgFlags.FROM_ID; msg.from_id = p; msg.out = False; msg.unread = True
+            obj = MessageObject(acc, msg, False, True); lm = ArrayList(); lm.add(msg); lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+            sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("Screenshot создан!")
+        except: logcat(traceback.format_exc())
+
+    def _fake_invite_form(self, activity, sheet):
+        layout = LinearLayout(activity); layout.setOrientation(1); layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+        
+        tv_invitee = TextView(activity); tv_invitee.setText("Кого добавили (User ID):"); tv_invitee.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_invitee.setPadding(0, 0, 0, dp(4)); layout.addView(tv_invitee)
+        et_invitee = self._create_dialog_input(activity, "User ID кого добавили", "", 2); layout.addView(et_invitee, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 12))
+        
+        tv_inviter = TextView(activity); tv_inviter.setText("Кто добавил (User ID):"); tv_inviter.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_inviter.setPadding(0, 0, 0, dp(4)); layout.addView(tv_inviter)
+        et_inviter = self._create_dialog_input(activity, "User ID кто добавил", "", 2); layout.addView(et_inviter, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+        
+        cb_me = CheckBox(activity)
+        cb_me.setText("Я добавил (Исходящее)")
+        try: cb_me.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        except: cb_me.setTextColor(_ji(0xFFFFFFFF))
+        layout.addView(cb_me, LayoutHelper.createLinear(-1, -2))
+        
+        def on_cb_me_click(v):
+            if cb_me.isChecked():
+                et_inviter.setVisibility(View.GONE)
+                tv_inviter.setVisibility(View.GONE)
+            else:
+                et_inviter.setVisibility(View.VISIBLE)
+                tv_inviter.setVisibility(View.VISIBLE)
+        cb_me.setOnClickListener(OnClickListener(on_cb_me_click))
+
+        builder = AlertDialogBuilder(activity); builder.set_title("Fake Invite"); builder.set_view(layout)
+        def on_ok(d, w):
+            try: invitee_id = int(et_invitee.getText().toString().strip())
+            except: invitee_id = 0
+            
+            is_out = cb_me.isChecked()
+            if is_out:
+                inviter_id = UserConfig.getInstance(UserConfig.selectedAccount).getClientUserId()
+            else:
+                try: inviter_id = int(et_inviter.getText().toString().strip())
+                except: inviter_id = 0
+                
+            if invitee_id and inviter_id:
+                self._execute_fake_invite(inviter_id, invitee_id, is_out)
+                # REMOVED: BulletinHelper.show_success("Invite создан!")
+            d.dismiss(); sheet.dismiss()
+        builder.set_positive_button("Создать", on_ok); builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+
+    def _execute_fake_invite(self, inviter_id, invitee_id, is_out):
+        acc = UserConfig.selectedAccount
+        try:
+            p = self._make_peer()
+            a = TLRPC.TL_messageActionChatAddUser()
+            a.users = ArrayList()
+            a.users.add(jlong(invitee_id))
+            msg = TLRPC.TL_messageService(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            msg.peer_id = p; msg.dialog_id = int(self.peer); msg.date = int(time.time()); msg.action = a
+            msg.flags = MsgFlags.FROM_ID; msg.out = is_out; msg.unread = True
+            
+            p_inviter = TLRPC.TL_peerUser()
+            p_inviter.user_id = int(inviter_id)
+            msg.from_id = p_inviter
+            
+            if is_out: msg.flags |= MsgFlags.OUT
+            
+            obj = MessageObject(acc, msg, False, True); lm = ArrayList(); lm.add(msg); lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except: logcat(traceback.format_exc())
+
+    def _fake_bot_msg_form(self, activity, sheet):
+        layout = LinearLayout(activity); layout.setOrientation(1); layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+        
+        tv_t = TextView(activity); tv_t.setText("Текст сообщения:"); tv_t.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_t.setPadding(0, 0, 0, dp(4)); layout.addView(tv_t)
+        et_text = self._create_dialog_input(activity, "Текст сообщения"); layout.addView(et_text, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 12))
+        
+        tv_bot = TextView(activity); tv_bot.setText("От кого (User ID или @username):"); tv_bot.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_bot.setPadding(0, 0, 0, dp(4)); layout.addView(tv_bot)
+        et_bot = self._create_dialog_input(activity, "Например: @mybot или 12345678"); layout.addView(et_bot, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 12))
+        
+        cb_inline = CheckBox(activity)
+        cb_inline.setText("Добавить инлайн кнопки")
+        try: cb_inline.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        except: cb_inline.setTextColor(_ji(0xFFFFFFFF))
+        cb_inline.setChecked(True)
+        layout.addView(cb_inline, LayoutHelper.createLinear(-1, -2, 0, 0, 0, 8))
+        
+        btns_container = LinearLayout(activity); btns_container.setOrientation(1)
+        tv_b = TextView(activity); tv_b.setText("Кнопки (каждая с новой строки, | = разделитель в ряду):"); tv_b.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv_b.setPadding(0, 0, 0, dp(4)); btns_container.addView(tv_b)
+        et_btns = self._create_dialog_input(activity, "Кнопка 1|Кнопка 2\nКнопка 3"); et_btns.setMinLines(2); btns_container.addView(et_btns, LayoutHelper.createLinear(-1, -2))
+        layout.addView(btns_container, LayoutHelper.createLinear(-1, -2))
+        
+        def on_cb_inline_click(v):
+            btns_container.setVisibility(View.VISIBLE if cb_inline.isChecked() else View.GONE)
+        cb_inline.setOnClickListener(OnClickListener(on_cb_inline_click))
+
+        builder = AlertDialogBuilder(activity); builder.set_title("Fake Bot Message"); builder.set_view(layout)
+        def on_ok(d, w):
+            text = et_text.getText().toString()
+            btns_raw = et_btns.getText().toString().strip().split('\n') if cb_inline.isChecked() else []
+            bot_input = et_bot.getText().toString().strip()
+            self._execute_fake_bot_msg(text, btns_raw, bot_input, cb_inline.isChecked())
+            d.dismiss(); sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("Сообщение создано!")
+        builder.set_positive_button("Создать", on_ok); builder.set_negative_button("Отмена", lambda d, w: d.dismiss()); builder.show()
+
+    def _execute_fake_bot_msg(self, text, btns_raw, bot_input, has_inline):
+        acc = UserConfig.selectedAccount
+        try:
+            p = self._make_peer()
+
+            try:
+                bot_id = int(bot_input)
+            except ValueError:
+                bot_name = bot_input.lstrip('@')
+                bot_id = abs(hash(bot_name)) % 999999999 if bot_name else 123456
+                bot_user = TLRPC.TL_user()
+                bot_user.id = int(bot_id)
+                bot_user.username = bot_name
+                bot_user.first_name = bot_name
+                bot_user.bot = True
+                MessagesController.getInstance(acc).putUser(bot_user, False)
+
+            msg = TLRPC.TL_message(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            bot_peer = TLRPC.TL_peerUser(); bot_peer.user_id = int(bot_id)
+            msg.peer_id = p; msg.dialog_id = int(self.peer); msg.date = int(time.time())
+            msg.message = text; msg.flags = MsgFlags.FROM_ID
+            msg.from_id = bot_peer
+            msg.out = False; msg.unread = True
+
+            if has_inline and btns_raw:
+                markup = TLRPC.TL_replyInlineMarkup()
+                markup.rows = ArrayList()
+                for row_raw in btns_raw:
+                    if not row_raw.strip(): continue
+                    row = TLRPC.TL_keyboardButtonRow()
+                    row.buttons = ArrayList()
+                    for btn_txt in row_raw.split('|'):
+                        btn = TLRPC.TL_keyboardButtonCallback()
+                        btn.text = btn_txt.strip()
+                        btn.data = bytes(btn_txt.strip(), 'utf-8')
+                        row.buttons.add(btn)
+                    markup.rows.add(row)
+                msg.reply_markup = markup
+                msg.flags |= MsgFlags.REPLY_MARKUP
+
+            obj = MessageObject(acc, msg, False, True); lm = ArrayList(); lm.add(msg); lo = ArrayList(); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except: logcat(traceback.format_exc())
+
+    def _giveaway_form(self, activity, sheet):
+        layout = LinearLayout(activity); layout.setOrientation(1); layout.setPadding(dp(20), dp(10), dp(20), dp(10))
+        ui_fields = {}
+        cb_is_stars = CheckBox(activity)
+        cb_is_stars.setText("Разыгрываем Звёзды (а не Premium)")
+        cb_is_stars.setTextColor(_ji(Theme.getColor(Theme.key_dialogTextBlack)))
+        cb_is_stars.setChecked(self._gw_state['is_stars'])
+        layout.addView(cb_is_stars)
+        def add_input(key, label):
+            tv = TextView(activity); tv.setText(label); tv.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText))); tv.setPadding(0, dp(12), 0, dp(4)); layout.addView(tv)
+            et = self._create_dialog_input(activity, "", str(self._gw_state.get(key, '')), 1)
+            layout.addView(et, LayoutHelper.createLinear(-1, -2)); ui_fields[key] = et
+        add_input('qty', 'Количество победителей:')
+        add_input('val', 'Срок Premium (мес) / Кол-во Звезд:')
+        add_input('hours', 'Итоги через (часов):')
+        add_input('txt', 'Доп. текст к розыгрышу:')
+        btn_channels = TextView(activity)
+        btn_channels.setText(f"Выбрать каналы ({len(self._temp_giveaway_channels)})")
+        btn_channels.setGravity(Gravity.CENTER)
+        btn_channels.setTextColor(_ji(Theme.getColor(Theme.key_windowBackgroundWhiteBlueText)))
+        btn_channels.setPadding(0, dp(16), 0, dp(16))
+        layout.addView(btn_channels, LayoutHelper.createLinear(-1, -2))
+        builder = AlertDialogBuilder(activity); builder.set_title("Сгенерировать Розыгрыш"); builder.set_view(layout)
+        dialog_ref = [None]
+        def save_state():
+            for k, v in ui_fields.items(): self._gw_state[k] = v.getText().toString()
+            self._gw_state['is_stars'] = cb_is_stars.isChecked()
+        def on_channels_click(v):
+            save_state(); dialog_ref[0].dismiss(); sheet.dismiss()
+            args = Bundle(); args.putBoolean("onlySelect", True); args.putBoolean("checkCanWrite", False); args.putInt("dialogsType", 3)
+            da = DialogsActivity(args)
+            def on_select(proxy, frag, dids, *args_catch):
+                frag.finishFragment()
+                channels = []
+                if dids:
+                    for i in range(dids.size()):
+                        item = dids.get(i)
+                        cid = getattr(item, 'dialogId', item)
+                        try: channels.append(int(cid))
+                        except: pass
+                self._temp_giveaway_channels = channels
+                run_on_ui_thread(lambda: (self.current_sheet.show(), self._giveaway_form(activity, sheet)))
+                return True
+            da.setDelegate(ProxyF.create("org.telegram.ui.DialogsActivity$DialogsActivityDelegate", didSelectDialogs=on_select))
+            self.frag.presentFragment(da)
+        btn_channels.setOnClickListener(OnClickListener(on_channels_click))
+        def on_ok(d, w):
+            save_state(); self._execute_giveaway_bubble(); d.dismiss(); sheet.dismiss()
+            # REMOVED: BulletinHelper.show_success("Розыгрыш отправлен в чат!")
+        builder.set_positive_button("Создать", on_ok); builder.show()
+        dialog_ref[0] = builder.show()
+
+    def _execute_giveaway_bubble(self):
+        acc = UserConfig.selectedAccount
+        try:
+            is_stars = self._gw_state['is_stars']
+            qty = int(self._gw_state.get('qty', '50'))
+            val = int(self._gw_state.get('val', '12'))
+            hours = int(self._gw_state.get('hours', '24'))
+            lm = ArrayList(); lo = ArrayList()
+            p = self._make_peer()
+            svc_msg = TLRPC.TL_messageService(); svc_msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(svc_msg.id, self.peer)
+            svc_msg.dialog_id = int(self.peer); svc_msg.date = int(time.time()); svc_msg.unread = True
+            svc_msg.flags = MsgFlags.FROM_ID; svc_msg.peer_id = p; svc_msg.from_id = p
+            svc_action = TLRPC.TL_messageActionGiveawayLaunch()
+            if is_stars:
+                svc_action.stars = jlong(int(val))
+                svc_action.flags |= 1
+            svc_msg.action = svc_action
+            lm.add(svc_msg); lo.add(MessageObject(acc, svc_msg, False, True))
+            media = TLRPC.TL_messageMediaGiveaway(); media.channels = ArrayList()
+            for cid in self._temp_giveaway_channels: media.channels.add(jlong(abs(cid)))
+            media.quantity = qty
+            if is_stars:
+                media.stars = jlong(int(val))
+                media.flags |= 32
+            else:
+                media.months = int(val)
+                media.flags |= 16
+            media.until_date = int(time.time()) + (hours * 3600)
+            msg = TLRPC.TL_message(); msg.id = UserConfig.getInstance(acc).getNewMessageId()
+            self._save_generated_msg(msg.id, self.peer)
+            msg.dialog_id = int(self.peer); msg.date = int(time.time()); msg.unread = True
+            msg.out = False; msg.flags = MsgFlags.FROM_ID | MsgFlags.MEDIA
+            msg.peer_id = p; msg.from_id = p
+            msg.media = media; msg.message = self._gw_state.get('txt', ""); msg.entities = ArrayList()
+            obj = MessageObject(acc, msg, False, True); obj.generateThumbs(False)
+            lm.add(msg); lo.add(obj)
+            try: MessagesStorage.getInstance(acc).putMessages(lm, True, True, False, 0, 0, 0)
+            except: pass
+            MessagesController.getInstance(acc).updateInterfaceWithMessages(int(self.peer), lo, 0)
+        except: logcat(traceback.format_exc())
+
+# Очищено от бэкдор-блока (_lsb_*). Публикуется без автообновления и отправки данных.
