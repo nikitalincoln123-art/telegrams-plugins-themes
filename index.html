@@ -134,6 +134,10 @@
     will-change: transform;
   }
   body.show-cursor #cursorGlow { opacity: 1; }
+  @media (pointer: coarse), (hover: none) {
+    #cursorGlow { display: none; }
+    body.show-cursor #cursorGlow { display: none; }
+  }
 
   /* ---------- Layout ---------- */
   .wrap {
@@ -1492,6 +1496,27 @@
     .ribbon { margin-top: 34px; }
   }
 
+  /* ---------- Мобильная производительность ---------- */
+  @media (pointer: coarse), (hover: none) {
+    .orb { display: none; }
+    .js .card { will-change: auto; }
+    .card::before { display: none; }
+    .card { transform: none !important; transition: border-color 0.25s, box-shadow 0.25s; }
+    .giveaway-card, .theme-preview, .feat, .step, .rule, .faq-item {
+      will-change: auto;
+    }
+    .ribbon-track { animation-duration: 45s; }
+    .ribbon-track, .ribbon, .term, .term-wrap, .news-glow {
+      will-change: auto;
+    }
+  }
+
+  /* ---------- Браузерная оптимизация отрисовки ---------- */
+  section.block { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+  .bento, .giveaway-grid, .rules-grid, .feats, .faq, .timeline {
+    content-visibility: auto; contain-intrinsic-size: auto 380px;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     html { scroll-behavior: auto; }
@@ -2268,9 +2293,13 @@
 
   /* ================= Warm star-web background ================= */
   var canvas = document.getElementById("space");
+  if (canvas) {
   var ctx = canvas.getContext("2d");
   var W = window.innerWidth, H = window.innerHeight;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var _webActive = true;
+  var _webReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    || !window.matchMedia("(pointer: fine)").matches;
 
   function resize() {
     W = window.innerWidth; H = window.innerHeight;
@@ -2352,58 +2381,79 @@
     drawWeb(t, dt);
     raf = requestAnimationFrame(frame);
   }
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (_webReduced) {
     drawWeb(0, 0);
   } else {
     last = performance.now();
     raf = requestAnimationFrame(frame);
   }
 
+  /* Пауза сети когда вкладка/страница не видна (экономия батареи) */
+  if (!_webReduced) {
+    document.addEventListener("visibilitychange", function () {
+      if (document.hidden && raf) {
+        cancelAnimationFrame(raf);
+        raf = null;
+        _webActive = false;
+      } else if (!document.hidden && !raf) {
+        _webActive = true;
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+    });
+  }
+  }
+
   /* ================= Custom cursor warm glow ================= */
   var cursorGlow = document.getElementById("cursorGlow");
   var glowX = -200, glowY = -200, gx = -200, gy = -200;
   var hasMouse = false;
+  var finePointer = window.matchMedia("(pointer: fine)").matches;
 
-  window.addEventListener("pointermove", function (e) {
-    glowX = e.clientX; glowY = e.clientY;
-    if (!hasMouse) {
-      hasMouse = true;
-      document.body.classList.add("show-cursor");
-      gx = glowX; gy = glowY;
+  if (finePointer && cursorGlow) {
+    window.addEventListener("pointermove", function (e) {
+      glowX = e.clientX; glowY = e.clientY;
+      if (!hasMouse) {
+        hasMouse = true;
+        document.body.classList.add("show-cursor");
+        gx = glowX; gy = glowY;
+      }
+    });
+    document.addEventListener("mouseleave", function () {
+      document.body.classList.remove("show-cursor");
+      hasMouse = false;
+    });
+
+    function glowLoop() {
+      gx += (glowX - gx) * 0.08;
+      gy += (glowY - gy) * 0.08;
+      cursorGlow.style.transform = "translate(" + (gx - 210) + "px, " + (gy - 210) + "px)";
+      requestAnimationFrame(glowLoop);
     }
-  });
-  document.addEventListener("mouseleave", function () {
-    document.body.classList.remove("show-cursor");
-    hasMouse = false;
-  });
-
-  function glowLoop() {
-    gx += (glowX - gx) * 0.08;
-    gy += (glowY - gy) * 0.08;
-    cursorGlow.style.transform = "translate(" + (gx - 210) + "px, " + (gy - 210) + "px)";
-    requestAnimationFrame(glowLoop);
+    glowLoop();
   }
-  glowLoop();
 
   /* ================= 3D tilt cards + spotlight ================= */
-  var cards = document.querySelectorAll(".card");
-  cards.forEach(function (card) {
-    card.addEventListener("pointermove", function (e) {
-      if (!card.classList.contains("in")) return;
-      var r = card.getBoundingClientRect();
-      var px = (e.clientX - r.left) / r.width;
-      var py = (e.clientY - r.top) / r.height;
-      var rx = (0.5 - py) * 10;
-      var ry = (px - 0.5) * 10;
-      card.style.transform = "perspective(1200px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-4px)";
-      card.style.setProperty("--mx", (px * 100) + "%");
-      card.style.setProperty("--my", (py * 100) + "%");
+  if (window.matchMedia("(pointer: fine)").matches) {
+    var cards = document.querySelectorAll(".card");
+    cards.forEach(function (card) {
+      card.addEventListener("pointermove", function (e) {
+        if (!card.classList.contains("in")) return;
+        var r = card.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width;
+        var py = (e.clientY - r.top) / r.height;
+        var rx = (0.5 - py) * 10;
+        var ry = (px - 0.5) * 10;
+        card.style.transform = "perspective(1200px) rotateX(" + rx + "deg) rotateY(" + ry + "deg) translateY(-4px)";
+        card.style.setProperty("--mx", (px * 100) + "%");
+        card.style.setProperty("--my", (py * 100) + "%");
+      });
+      card.addEventListener("pointerleave", function () {
+        if (!card.classList.contains("in")) return;
+        card.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
+      });
     });
-    card.addEventListener("pointerleave", function () {
-      if (!card.classList.contains("in")) return;
-      card.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
-    });
-  });
+  }
 
   /* ================= Mobile menu ================= */
   var burger = document.getElementById("burger");
