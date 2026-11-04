@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400" font-family="'Segoe UI', Roboto, system-ui, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#191510"/>
+      <stop offset="1" stop-color="#0d0b09"/>
+    </linearGradient>
+    <linearGradient id="geye" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8c9a0"/>
+      <stop offset="1" stop-color="#d99a5b"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="400" fill="url(#bg)"/>
+  <rect x="24" y="20" width="592" height="360" rx="18" fill="#14110d" stroke="#2b241c"/>
+  <rect x="24" y="20" width="592" height="44" rx="18" fill="#191510"/>
+  <rect x="24" y="46" width="592" height="18" fill="#191510"/>
+  <circle cx="46" cy="42" r="5" fill="#3a322a"/>
+  <circle cx="62" cy="42" r="5" fill="#3a322a"/>
+  <circle cx="78" cy="42" r="5" fill="#3a322a"/>
+  <text x="320" y="48" text-anchor="middle" font-size="14" font-weight="600" fill="#c9bda9">Lincoln Ghost · Невидимка</text>
+
+  <circle cx="124" cy="170" r="60" fill="url(#geye)"/>
+  <circle cx="124" cy="170" r="60" fill="none" stroke="#e0b178" stroke-width="3" opacity="0.45"/>
+  <circle cx="124" cy="170" r="44" fill="none" stroke="#e0b178" stroke-width="1.4" opacity="0.35"/>
+  <path d="M76 170 a48 48 0 0 1 96 0 l-6 6 -20 -16 -16 12 -24 -14z" fill="#14110d" opacity="0.82"/>
+  <path d="M104 170a20 20 0 0 1 40 0l-4 4-16-10-12 8-8-2z" fill="#14110d"/>
+  <text x="124" y="258" text-anchor="middle" font-size="15" font-weight="800" fill="#c9bda9">Ghost-режим</text>
+  <text x="124" y="278" text-anchor="middle" font-size="12" fill="#8a8073">Вы невидимы</text>
+
+  <rect x="230" y="104" width="150" height="110" rx="14" fill="#1c1610" stroke="#3a322a"/>
+  <path d="M280 116 l46 28 -10 22 -36 -8z" fill="#2b4a6b"/>
+  <text x="305" y="170" text-anchor="middle" font-size="13" font-weight="700" fill="#c9bda9">«в сети»</text>
+  <path d="M254 150 l52 -12" stroke="#4fae6a" stroke-width="3" stroke-linecap="round"/>
+  <text x="305" y="198" text-anchor="middle" font-size="11" font-weight="600" fill="#7fd39a">скрыто</text>
+
+  <rect x="394" y="104" width="150" height="110" rx="14" fill="#1c1610" stroke="#3a322a"/>
+  <rect x="424" y="130" width="90" height="16" rx="4" fill="#2b4a6b"/>
+  <rect x="434" y="146" width="60" height="16" rx="4" fill="#7f96ad"/>
+  <circle cx="464" cy="164" r="5" fill="#8a8073"/>
+  <text x="469" y="196" text-anchor="middle" font-size="11" font-weight="600" fill="#7fd39a">печатает скрыто</text>
+
+  <rect x="230" y="228" width="314" height="128" rx="14" fill="#1c1610" stroke="#3a322a"/>
+  <text x="254" y="258" font-size="13" font-weight="700" fill="#c9bda9">Как работает</text>
+  <text x="254" y="284" font-size="12.5" fill="#8a8073">Перехват сетевых запросов:</text>
+  <text x="254" y="304" font-size="11.5" fill="#8a8073">• TL_account_updateStatus — «в сети»</text>
+  <text x="254" y="322" font-size="11.5" fill="#8a8073">• TL_messages_readHistory — «прочитано»</text>
+  <text x="254" y="340" font-size="11.5" fill="#8a8073">Не зависит от версии клиента</text>
+</svg>
