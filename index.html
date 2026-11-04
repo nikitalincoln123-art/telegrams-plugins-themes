@@ -144,14 +144,27 @@
   .brand .brand-text em { font-style: normal; color: var(--peach); }
 
   .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
-  .nav-links a {
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 14.5px;
-    font-weight: 500;
-    transition: color 0.25s;
-  }
-  .nav-links a:hover { color: var(--creme); }
+.nav-links a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14.5px;
+  font-weight: 500;
+  transition: color 0.25s;
+  position: relative;
+}
+.nav-links a::after {
+  content: "";
+  position: absolute;
+  left: 0; bottom: -5px;
+  width: 100%; height: 2px;
+  background: linear-gradient(90deg, var(--peach), var(--gold));
+  border-radius: 2px;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s var(--ease);
+}
+.nav-links a:hover { color: var(--creme); }
+.nav-links a:hover::after { transform: scaleX(1); }
 
   .btn {
     display: inline-flex;
@@ -180,18 +193,29 @@
   }
   .btn svg { flex: none; }
 
-  .btn-warm {
-    background: linear-gradient(135deg, #f8f2e6, #e7c9a2);
-    color: #100d08;
-    border: none;
-    box-shadow: 0 6px 28px rgba(224, 177, 120, 0.25);
-  }
-  .btn-warm:hover {
-    background: linear-gradient(135deg, #fffdf6, #eed3ae);
-    color: #100d08;
-    border: none;
-    box-shadow: 0 12px 40px rgba(224, 177, 120, 0.38);
-  }
+.btn-warm {
+  background: linear-gradient(135deg, #f8f2e6, #e7c9a2);
+  color: #100d08;
+  border: none;
+  box-shadow: 0 6px 28px rgba(224, 177, 120, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+.btn-warm::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 20%, rgba(255, 255, 255, 0.55) 50%, transparent 80%);
+  transform: translateX(-120%);
+  transition: transform 0.7s var(--ease);
+}
+.btn-warm:hover::before { transform: translateX(120%); }
+.btn-warm:hover {
+  background: linear-gradient(135deg, #fffdf6, #eed3ae);
+  color: #100d08;
+  border: none;
+  box-shadow: 0 12px 40px rgba(224, 177, 120, 0.38);
+}
 
   .nav-cta { padding: 10px 20px; font-size: 14px; }
 
@@ -446,6 +470,25 @@
   .card:hover {
     border-color: rgba(255, 245, 230, 0.2);
     box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+  }
+  /* сверкающая рамка-градиент */
+  .card::after {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, rgba(237, 201, 160, 0.5), transparent 35%, transparent 65%, rgba(255, 245, 230, 0.35));
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .card:hover::after { opacity: 1; animation: borderSpin 3.5s linear infinite; }
+  @keyframes borderSpin {
+    to { transform: rotate(360deg); }
   }
   .card > * { transform: translateZ(22px); }
 
@@ -712,13 +755,65 @@
   }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* ---------- Reveal ---------- */
+  /* ---------- Reveal: раскрытие (шторка) ---------- */
   .reveal {
     opacity: 0;
-    transform: translateY(28px);
-    transition: opacity 0.8s var(--ease), transform 0.8s var(--ease);
+    transform: translateY(40px);
+    transition:
+      opacity 0.9s var(--ease),
+      transform 0.9s var(--ease),
+      clip-path 0.9s var(--ease);
+    clip-path: inset(0% 0% 100% 0%);
   }
-  .reveal.in { opacity: 1; transform: none; }
+  .reveal.in {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(0% 0% 0% 0%);
+  }
+
+  /* Карточки внутри контейнера раскрываются по отдельности */
+  .reveal.in { will-change: transform, clip-path; }
+
+  /* ---------- Дополнительный фон: дрейфующие сферы ---------- */
+  .orb {
+    position: fixed;
+    z-index: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    filter: blur(60px);
+    opacity: 0.5;
+    will-change: transform;
+  }
+  .orb-1 {
+    width: 520px; height: 520px;
+    left: -140px; top: 12%;
+    background: radial-gradient(circle at 50% 50%, rgba(224, 177, 120, 0.28), transparent 70%);
+    animation: orbDrift1 26s ease-in-out infinite alternate;
+  }
+  .orb-2 {
+    width: 420px; height: 420px;
+    right: -120px; top: 55%;
+    background: radial-gradient(circle at 50% 50%, rgba(237, 201, 160, 0.2), transparent 70%);
+    animation: orbDrift2 32s ease-in-out infinite alternate;
+  }
+  .orb-3 {
+    width: 340px; height: 340px;
+    left: 30%; bottom: -120px;
+    background: radial-gradient(circle at 50% 50%, rgba(255, 245, 230, 0.14), transparent 70%);
+    animation: orbDrift3 24s ease-in-out infinite alternate;
+  }
+  @keyframes orbDrift1 {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(70px, 40px) scale(1.15); }
+  }
+  @keyframes orbDrift2 {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(-60px, -50px) scale(1.1); }
+  }
+  @keyframes orbDrift3 {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(50px, -30px) scale(1.2); }
+  }
 
   /* ---------- Responsive ---------- */
   @media (max-width: 960px) {
@@ -748,6 +843,9 @@
 <body>
 
 <canvas id="space" aria-hidden="true"></canvas>
+<div class="orb orb-1" aria-hidden="true"></div>
+<div class="orb orb-2" aria-hidden="true"></div>
+<div class="orb orb-3" aria-hidden="true"></div>
 <div class="warm-glow" aria-hidden="true"></div>
 <div class="vignette" aria-hidden="true"></div>
 <div id="cursorGlow" aria-hidden="true"></div>
@@ -1167,6 +1265,7 @@
   var cards = document.querySelectorAll(".card");
   cards.forEach(function (card) {
     card.addEventListener("pointermove", function (e) {
+      if (!card.classList.contains("in")) return;
       var r = card.getBoundingClientRect();
       var px = (e.clientX - r.left) / r.width;
       var py = (e.clientY - r.top) / r.height;
@@ -1177,6 +1276,7 @@
       card.style.setProperty("--my", (py * 100) + "%");
     });
     card.addEventListener("pointerleave", function () {
+      if (!card.classList.contains("in")) return;
       card.style.transform = "perspective(1200px) rotateX(0deg) rotateY(0deg)";
     });
   });
@@ -1226,7 +1326,18 @@
   });
   applyThemeFilter();
 
-  /* ================= Reveal on scroll (stagger) ================= */
+  /* ================= Parallax orbs on scroll ================= */
+  var orbs = document.querySelectorAll(".orb");
+  function orbParallax() {
+    var y = window.scrollY || 0;
+    if (orbs[0]) orbs[0].style.transform = "translate(0, " + (y * 0.03) + "px)";
+    if (orbs[1]) orbs[1].style.transform = "translate(0, " + (y * -0.05) + "px)";
+    if (orbs[2]) orbs[2].style.transform = "translate(0, " + (y * 0.04) + "px)";
+  }
+  window.addEventListener("scroll", orbParallax, { passive: true });
+  orbParallax();
+
+  /* ================= Reveal on scroll: раскрытие-шторка ================= */
   var revealEls = document.querySelectorAll(".reveal");
   if ("IntersectionObserver" in window) {
     var io = new IntersectionObserver(function (entries) {
@@ -1236,13 +1347,13 @@
           var parent = en.target.closest(".bento, .feats, .faq");
           if (parent) {
             var idx = Array.prototype.indexOf.call(parent.children, en.target);
-            delay = Math.min(idx * 60, 400);
+            delay = Math.min(idx * 70, 420);
           }
           setTimeout(function () { en.target.classList.add("in"); }, delay);
           io.unobserve(en.target);
         }
       });
-    }, { threshold: 0.08 });
+    }, { threshold: 0.12 });
     revealEls.forEach(function (el) { io.observe(el); });
   } else {
     revealEls.forEach(function (el) { el.classList.add("in"); });
