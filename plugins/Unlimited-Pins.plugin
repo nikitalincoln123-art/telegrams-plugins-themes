@@ -131,12 +131,10 @@ class LincolnUnlimitedPinsPlugin(BasePlugin):
     def _install_method_hooks(self) -> None:
         try:
             mc = jclass("org.telegram.messenger.MessagesController")
-            json_object = jclass("org.telegram.tgnet.TLRPC$TL_jsonObject")
-            method = mc.getClass().getDeclaredMethod("applyAppConfig", json_object)
-            method.setAccessible(True)
-            ref = self.hook_method(method, LincolnUnlimitedPinsPlugin._AppConfigHook(self))
-            if ref is not None:
-                self._hook_refs.append(ref)
+            refs = self.hook_all_methods(mc.getClass(), "applyAppConfig",
+                                          LincolnUnlimitedPinsPlugin._AppConfigHook(self))
+            if refs:
+                self._hook_refs.extend(refs)
         except Exception as e:
             log("[unlimited_pins] applyAppConfig hook error: %s" % e)
 
