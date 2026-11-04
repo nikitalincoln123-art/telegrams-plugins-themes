@@ -1,0 +1,137 @@
+__id__ = "lincoln_ghost"
+__name__ = "Lincoln Ghost"
+__description__ = "Скрывает статус «в сети» для собеседников и не отправляет отметку «прочитано», даже когда вы заходите в чат. Всё работает локально, на сервер ничего не отправляется."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_invisible"
+__min_version__ = "11.9.0"
+
+from base_plugin import BasePlugin, MethodReplacement
+from ui.settings import Header, Switch, Divider, Text
+
+from org.telegram.messenger import AccountInstance, ConnectionsManager, MessagesController
+
+
+class BlockReadReceipts(MethodReplacement):
+    """Перехватывает методы отметки «прочитано» и не даёт им выполниться."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        # чтобы не ломать чужую логику, проверяем настройку внутри хука
+        if self.plugin.get_setting("no_read", True):
+            return None
+        return param.getDefaultReturnValue()
+
+
+class FakeOffline(MethodReplacement):
+    """Заставляет клиент выглядеть «не в сети» для собеседников."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        if not self.plugin.get_setting("ghost_online", True):
+            return param.getDefaultReturnValue()
+        # для boolean-методов возвращаем False (не в сети)
+        try:
+            rt = param.getReturnType()
+            rtn = str(rt.getName() if rt is not None else "")
+            if "boolean" in rtn:
+                return False
+        except Exception:
+            pass
+        return None
+
+
+class LincolnGhostPlugin(BasePlugin):
+
+    def _hook_methods_by_name(self, cls, names, hook):
+        """Хукает все методы класса, чьё имя входит в список паттернов."""
+        hooked = []
+        try:
+            for method in cls.getDeclaredMethods():
+                name = str(method.getName())
+                if not any(name == n or name.startswith(n) or n in name for n in names):
+                    continue
+                try:
+                    method.setAccessible(True)
+                    self.hook_method(method, hook)
+                    hooked.append("%s.%s" % (cls.getSimpleName(), name))
+                except Exception:
+                    continue
+        except Exception:
+            pass
+        return hooked
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self._read_hooks = []
+        self._online_hooks = []
+
+        try:
+            self._read_hooks += self._hook_methods_by_name(
+                MessagesController,
+                ("markDialogAsRead", "markMessageAsRead", "markMessageContentAsRead",
+                 "markMessagesAsRead", "markFragmentsAsRead"),
+                BlockReadReceipts(self),
+            )
+        except Exception:
+            pass
+
+        try:
+            self._online_hooks += self._hook_methods_by_name(
+                AccountInstance,
+                ("isOnline", "isHiddenOnline", "updateOnlineStatus"),
+                FakeOffline(self),
+            )
+        except Exception:
+            pass
+
+        try:
+            # «разбуживание» связи на переднем плане делает нас «в сети» —
+            # блокируем его, чтобы не отправлять статус онлайн
+            self._online_hooks += self._hook_methods_by_name(
+                ConnectionsManager,
+                ("setAppPaused",),
+                FakeOffline(self),
+            )
+        except Exception:
+            pass
+
+    def create_settings(self):
+        return [
+            Header(text="Lincoln Ghost"),
+            Switch(
+                key="ghost_online",
+                text="Скрывать «в сети»",
+                subtext="Собеседники не видят вас онлайн",
+                default=True,
+                icon="msg_invisible",
+            ),
+            Switch(
+                key="no_read",
+                text="Не отправлять «прочитано»",
+                subtext="Отметка не уходит, даже при открытии чата",
+                default=True,
+                icon="msg_unread",
+            ),
+            Divider(),
+            Text(
+                text="Примечание",
+                subtext="Если после установки не сработало — перезапустите клиент. Найдено хуков: чтение %d, онлайн %d."
+                       % (len(self._read_hooks), len(self._online_hooks)),
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnGhostPlugin()
+
+
+def get_plugin():
+    return LincolnGhostPlugin()
