@@ -1,5 +1,5 @@
 /* Lincoln-Plugin — service worker (кэш для офлайн-режима) */
-var CACHE = "lincoln-plugin-v4";
+var CACHE = "lincoln-plugin-v5";
 var CORE = [
   "./",
   "./index.html",
