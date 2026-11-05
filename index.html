@@ -2238,6 +2238,63 @@
   #backTop:hover { border-color: rgba(237, 201, 160, 0.7); color: var(--peach); }
   #backTop.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Плавающая CTA-панель (мобильные) ---------- */
+  .m-cta {
+    position: fixed;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%) translateY(120%);
+    z-index: 95;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--panel-solid);
+    border: 1px solid rgba(237, 201, 160, 0.3);
+    border-radius: 999px;
+    padding: 8px 10px 8px 8px;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+    transition: transform 0.45s var(--ease);
+    white-space: nowrap;
+  }
+  .m-cta.show { transform: translateX(-50%) translateY(0); }
+  .m-cta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--btn-bg);
+    border: 1px solid var(--border);
+    transition: background 0.3s, color 0.3s;
+  }
+  .m-cta-btn.m-cta-warm {
+    background: linear-gradient(135deg, #f8f2e6, #e7c9a2);
+    color: #100d08;
+    border: none;
+  }
+  .m-cta-close {
+    width: 30px;
+    height: 30px;
+    flex: none;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.3s, border-color 0.3s;
+  }
+  .m-cta-close:hover { color: var(--peach); border-color: rgba(237, 201, 160, 0.5); }
+  /* Только на экранах ≤600px */
+  @media (min-width: 601px) {
+    .m-cta { display: none; }
+  }
+
   /* ---------- Reveal: раскрытие (шторка) — только при работающем JS ---------- */
   /* По умолчанию контент ВИДЕН (безопасно). Класс .js на <html> включает
      анимацию; если JS упал — страница остаётся полностью доступной. */
@@ -3271,6 +3328,12 @@
     </div>
   </section>
 </main>
+
+<div class="m-cta" id="mobileCta" role="region" aria-label="Быстрые действия" hidden>
+  <a href="#plugins" class="m-cta-btn" id="ctaPick">Выбрать плагин</a>
+  <a href="#install" class="m-cta-btn m-cta-warm" id="ctaInstall">Как установить</a>
+  <button type="button" class="m-cta-close" id="ctaClose" aria-label="Скрыть панель">✕</button>
+</div>
 
 <footer class="site">
   <div class="wrap foot">
@@ -4315,6 +4378,39 @@
       showToast("Чат с @LincolnWasted открыт — отправьте сообщение");
     });
   }
+
+  /* ================= Плавающая CTA (мобильные) ================= */
+  (function () {
+    var cta = document.getElementById("mobileCta");
+    if (!cta) return;
+    var closeBtn = document.getElementById("ctaClose");
+    var hiddenByUser = false;
+    try { hiddenByUser = localStorage.getItem("lincoln-cta-hidden") === "1"; } catch (e) {}
+    if (hiddenByUser || window.matchMedia("(min-width: 601px)").matches) return;
+    var lastY = 0;
+    var shown = false;
+    function update() {
+      if (cta.hasAttribute("hidden") || hiddenByUser) return;
+      var y = window.scrollY || 0;
+      var goingDown = y > lastY + 4;
+      lastY = y;
+      var want = y > 320 && !goingDown;
+      if (want !== shown) {
+        shown = want;
+        cta.classList.toggle("show", want);
+      }
+    }
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+    if (closeBtn) {
+      closeBtn.addEventListener("click", function () {
+        hiddenByUser = true;
+        try { localStorage.setItem("lincoln-cta-hidden", "1"); } catch (e) {}
+        cta.classList.remove("show");
+        setTimeout(function () { cta.setAttribute("hidden", ""); }, 450);
+      });
+    }
+  })();
 
   /* ================= Динамический заголовок вкладки ================= */
   var defaultTitle = document.title;
