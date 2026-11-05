@@ -1407,6 +1407,16 @@
   .lightbox-close:hover { border-color: rgba(237, 201, 160, 0.5); transform: rotate(90deg); }
   @media (max-width: 560px) {
     .lightbox { padding: 14px; }
+    .modal-overlay { padding: 12px; align-items: flex-end; }
+    .modal {
+      max-height: 92vh;
+      border-radius: 22px 22px 14px 14px;
+      padding: 22px 18px 24px;
+    }
+    .modal .m-shots { grid-template-columns: repeat(2, 1fr); }
+    .modal .modal-actions .btn,
+    .modal .modal-actions .m-copy { flex: 1 1 auto; justify-content: center; }
+    .m-code { max-height: 200px; font-size: 11px; }
   }
 
   .hidden { display: none !important; }
@@ -2213,6 +2223,7 @@
   @media (max-width: 860px) {
     .foot-share { width: 100%; justify-content: center; margin-top: 10px; }
     .foot .links { flex-wrap: wrap; }
+    .install-pwa-btn { width: 100%; justify-content: center; margin-top: 4px; }
   }
 
   /* ---------- Toast ---------- */
@@ -2314,6 +2325,10 @@
     .wrap { padding: 0 16px; }
     .bento { grid-template-columns: 1fr; }
     .ribbon { margin-top: 34px; }
+    .section-head { align-items: flex-start; gap: 14px; margin-bottom: 24px; }
+    .section-tabs { align-self: stretch; justify-content: center; width: 100%; }
+    .section-tabs button { flex: 1; padding: 9px 12px; font-size: 13px; }
+    .jump-btns { width: 100%; justify-content: center; }
   }
 
   /* ---------- Мобильная производительность ---------- */
@@ -4901,17 +4916,30 @@ if ("serviceWorker" in navigator && window.location.protocol === "https:") {
   var installBtn = document.getElementById("installPwa");
   if (!installBtn) return;
   var deferredPrompt = null;
+  var supported = false;
   window.addEventListener("beforeinstallprompt", function (e) {
     e.preventDefault();
     deferredPrompt = e;
+    supported = true;
     installBtn.hidden = false;
     installBtn.classList.add("visible");
   });
   installBtn.addEventListener("click", function () {
-    if (!deferredPrompt) return;
+    if (!deferredPrompt) {
+      // Fallback: iOS Safari или браузер без beforeinstallprompt
+      if (typeof showToast === "function") {
+        showToast("На iOS: Поделиться → «На экран „Домой“»");
+      }
+      return;
+    }
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function (choice) {
-      if (choice && choice.outcome === "dismissed") deferredPrompt = null;
+      deferredPrompt = null;
+      if (choice && choice.outcome === "dismissed") {
+        // Скрыть кнопку после отклонения — иначе она «мёртвая»
+        installBtn.hidden = true;
+        installBtn.classList.remove("visible");
+      }
     });
   });
   window.addEventListener("appinstalled", function () {
@@ -4922,6 +4950,15 @@ if ("serviceWorker" in navigator && window.location.protocol === "https:") {
     if (toast) toast.textContent = "Lincoln-Plugin установлен";
     setTimeout(function () { if (toast) toast.textContent = ""; }, 3000);
   });
+  // Через 3 секунды: если событие так и не пришло (iOS Safari, старый браузер) —
+  // показываем кнопку как подсказку «Добавить на главный экран»
+  setTimeout(function () {
+    if (!supported && !deferredPrompt) {
+      installBtn.hidden = false;
+      installBtn.classList.add("visible");
+      installBtn.setAttribute("data-ios-hint", "1");
+    }
+  }, 3000);
 })();
 </script>
 </body>
