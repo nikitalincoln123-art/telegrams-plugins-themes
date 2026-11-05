@@ -1,0 +1,459 @@
+__id__ = "lincoln_funpack"
+__name__ = "Fun-Pack"
+__description__ = "Развлекательный набор: пранк-набор текста (показывает собеседнику «печатает…», «записывает голосовое» или «записывает видео» при входящих сообщениях) и генератор ников — команда /nick открывает панель со стильными вариантами, тап копирует в буфер."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_edit"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["tools"]
+
+import random
+import threading
+import time
+from typing import Any, Dict, List
+
+from base_plugin import BasePlugin, HookResult, HookStrategy
+from ui.settings import Header, Switch, Input, Divider, Text
+from android_utils import log, run_on_ui_thread, OnClickListener
+from client_utils import get_last_fragment
+
+# ---------------------------------------------------------------- пранк-набор
+
+PRANK_ACTIONS = {
+    "typing": "TL_sendMessageTypingAction",
+    "voice": "TL_sendMessageRecordAudioAction",
+    "video": "TL_sendMessageRecordVideoAction",
+}
+
+# ------------------------------------------------------------- генератор ников
+
+NICK_BARS = ["_", "--", "__", "_-_", "_._", "-", "..", "._.", "_"]
+NICK_DECOS = ["✦", "✧", "☆", "♛", "✪", "♪", "☾", "ツ", "🔥", "💎", "⭐", "🎧", "🖤", "☂", "✈", "ᴳ", "ᵀ"]
+NICK_SUFFIXES = ["007", "777", "228", "off", "666", "88", "01", "zz", "x"]
+
+
+def _gen_nicks(base: str) -> List[str]:
+    out = []
+    b = base.capitalize()
+    bars = random.sample(NICK_BARS, min(5, len(NICK_BARS)))
+    for bar in bars:
+        out.append(b + bar)
+        out.append(bar + b)
+        out.append(bar + b + bar)
+    for s in NICK_SUFFIXES:
+        out.append(b + "_" + s)
+        out.append(b + s)
+    decos = random.sample(NICK_DECOS, min(4, len(NICK_DECOS)))
+    for d in decos:
+        out.append(d + " " + b + " " + d)
+        out.append(b + " " + d)
+    return out
+
+
+def _dialog_selector(normal, pressed):
+    try:
+        ColorDrawable = jclass("android.graphics.drawable.ColorDrawable")
+        StateListDrawable = jclass("android.graphics.drawable.StateListDrawable")
+        sel = StateListDrawable()
+        sel.addState([-16842910], ColorDrawable(normal))
+        sel.addState([16842919], ColorDrawable(pressed))
+        sel.addState([], ColorDrawable(normal))
+        return sel
+    except Exception:
+        try:
+            GradientDrawable = jclass("android.graphics.drawable.GradientDrawable")
+            gd = GradientDrawable()
+            gd.setColor(normal)
+            return gd
+        except Exception:
+            return None
+
+
+class NickPanel:
+
+    def __init__(self, plugin, activity, variants):
+        self.plugin = plugin
+        self.activity = activity
+        self.variants = variants
+        self.sheet = None
+
+    def _build(self):
+        LinearLayout = jclass("android.widget.LinearLayout")
+        TextView = jclass("android.widget.TextView")
+        ScrollView = jclass("android.widget.ScrollView")
+        View = jclass("android.view.View")
+        Gravity = jclass("android.view.Gravity")
+        Typeface = jclass("android.graphics.Typeface")
+        Theme = find_class("org.telegram.ui.ActionBar.Theme")
+        LayoutHelper = find_class("org.telegram.ui.Components.LayoutHelper")
+
+        def color(key, fallback):
+            try:
+                return Theme.getColor(key)
+            except Exception:
+                return fallback
+
+        bg = color(Theme.key_dialogBackground, 0xFF101318)
+        text = color(Theme.key_dialogTextBlack, 0xFFFFFFFF)
+        hint = color(Theme.key_dialogTextHint, 0xFF888888)
+        accent = color(Theme.key_featuredStickers_addButton, 0xFF3390EC)
+
+        root = LinearLayout(self.activity)
+        root.setOrientation(LinearLayout.VERTICAL)
+        root.setBackgroundColor(bg)
+
+        header = LinearLayout(self.activity)
+        header.setOrientation(LinearLayout.VERTICAL)
+        header.setPadding(22, 18, 22, 10)
+        title = TextView(self.activity)
+        title.setText("Ники · " + self.plugin._last_base)
+        title.setTextColor(text)
+        title.setTextSize(1, 16.0)
+        title.setTypeface(None, Typeface.BOLD)
+        header.addView(title, LayoutHelper.createLinear(-1, -2))
+        sub = TextView(self.activity)
+        sub.setText("Тап по варианту — копировать")
+        sub.setTextColor(hint)
+        sub.setTextSize(1, 12.0)
+        header.addView(sub, LayoutHelper.createLinear(-1, -2, 0.0, 2, 0, 0, 0))
+        root.addView(header, LayoutHelper.createLinear(-1, -2))
+
+        scroll = ScrollView(self.activity)
+        content = LinearLayout(self.activity)
+        content.setOrientation(LinearLayout.VERTICAL)
+
+        for nick in self.variants:
+            row = LinearLayout(self.activity)
+            row.setOrientation(LinearLayout.HORIZONTAL)
+            row.setGravity(Gravity.CENTER_VERTICAL)
+            row.setPadding(22, 12, 22, 12)
+            row.setBackground(_dialog_selector(0x00000000, 0x14FFFFFF))
+
+            name = TextView(self.activity)
+            name.setText(nick)
+            name.setTextColor(text)
+            name.setTextSize(1, 15.0)
+            name.setTypeface(None, Typeface.BOLD)
+            name.setSingleLine(True)
+            row.addView(name, LayoutHelper.createLinear(0, -2, 1.0))
+
+            copy = TextView(self.activity)
+            copy.setText("КОПИРОВАТЬ")
+            copy.setTextColor(accent)
+            copy.setTextSize(1, 11.0)
+            copy.setTypeface(None, Typeface.BOLD)
+            row.addView(copy, LayoutHelper.createLinear(-2, -2, 0.0, 0, 0, 0, 12))
+
+            row.setOnClickListener(OnClickListener(lambda v, n=nick: self.plugin._copy_nick(n)))
+            content.addView(row, LayoutHelper.createLinear(-1, -2))
+
+        scroll.addView(content, LayoutHelper.createFrame(-1, -2))
+        root.addView(scroll, LayoutHelper.createLinear(-1, -2, 1.0))
+        return root
+
+    def show(self):
+        try:
+            BottomSheet = find_class("org.telegram.ui.ActionBar.BottomSheet")
+            self.sheet = BottomSheet(self.activity, False)
+            self.sheet.setCustomView(self._build())
+            self.sheet.show()
+        except Exception as e:
+            log("[funpack] sheet show error: %s" % e)
+
+    def dismiss(self):
+        try:
+            if self.sheet is not None:
+                self.sheet.dismiss()
+        except Exception:
+            pass
+        self.sheet = None
+
+
+class LincolnFunPackPlugin(BasePlugin):
+
+    def __init__(self):
+        super().__init__()
+        self._last_base = "Nick"
+        self._sessions: Dict[int, float] = {}
+        self._timers: Dict[int, threading.Timer] = {}
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self.add_hook("TL_updateNewChannelMessage")
+        try:
+            self.add_hook("TL_messages_sendMessage")
+        except Exception:
+            pass
+
+    # ===================================================== пранк-набор (часть 1)
+
+    def _peer_id(self, message):
+        peer = getattr(message, "peer_id", None)
+        val = getattr(peer, "chat_id", None) or getattr(peer, "user_id", None) or \
+            getattr(peer, "channel_id", None)
+        if val is None and peer is not None:
+            try:
+                val = int(peer)
+            except Exception:
+                val = None
+        return val
+
+    def _is_target(self, peer_id: int) -> bool:
+        mode = str(self.get_setting("prank_mode", "all") or "all").strip().lower()
+        raw = str(self.get_setting("prank_chats", "") or "")
+        chats = []
+        for part in raw.replace(" ", "").replace("\n", ",").replace(";", ",").split(","):
+            part = part.strip()
+            if part:
+                try:
+                    chats.append(int(part))
+                except Exception:
+                    pass
+        if mode == "only":
+            return peer_id in chats
+        if mode == "except":
+            return peer_id not in chats
+        return True
+
+    def _send_prank_action(self, account: int, peer_id: int, action_name: str):
+        try:
+            from org.telegram.messenger import AccountInstance
+            from org.telegram.tgnet import TLRPC
+
+            inst = AccountInstance.getInstance(account)
+            if inst is None:
+                return
+            controller = inst.getMessagesController()
+            peer_input = controller.getInputPeer(int(peer_id))
+            if peer_input is None:
+                return
+            action_cls = getattr(TLRPC, action_name, None)
+            if action_cls is None:
+                return
+            req = TLRPC.TL_messages_setTyping()
+            req.peer = peer_input
+            req.action = action_cls()
+            inst.getConnectionsManager().sendRequest(req, lambda res, err: None)
+        except Exception as e:
+            log("[funpack] prank send error: %s" % e)
+
+    def _send_prank_cancel(self, account: int, peer_id: int):
+        try:
+            from org.telegram.messenger import AccountInstance
+            from org.telegram.tgnet import TLRPC
+
+            inst = AccountInstance.getInstance(account)
+            if inst is None:
+                return
+            controller = inst.getMessagesController()
+            peer_input = controller.getInputPeer(int(peer_id))
+            if peer_input is None:
+                return
+            req = TLRPC.TL_messages_setTyping()
+            req.peer = peer_input
+            req.action = TLRPC.TL_sendMessageCancelAction()
+            inst.getConnectionsManager().sendRequest(req, lambda res, err: None)
+        except Exception:
+            pass
+
+    def _start_prank(self, account: int, peer_id: int):
+        now = time.time()
+        prev = self._sessions.get(peer_id, 0)
+        if now - prev < 3:
+            return
+        self._sessions[peer_id] = now
+
+        try:
+            duration = float(str(self.get_setting("prank_duration", "8") or "8").strip())
+        except Exception:
+            duration = 8.0
+        if duration <= 0:
+            duration = 8.0
+
+        chosen = None
+        for key, clsname in PRANK_ACTIONS.items():
+            if self.get_setting(key, False):
+                chosen = clsname
+                break
+        if chosen is None:
+            chosen = PRANK_ACTIONS["typing"]
+
+        stop_at = now + duration
+        interval = 4.0
+
+        def _tick():
+            try:
+                if time.time() > stop_at:
+                    self._send_prank_cancel(account, peer_id)
+                    self._timers.pop(peer_id, None)
+                    return
+                self._send_prank_action(account, peer_id, chosen)
+                t = threading.Timer(interval, _tick)
+                t.daemon = True
+                self._timers[peer_id] = t
+                t.start()
+            except Exception:
+                self._timers.pop(peer_id, None)
+
+        t = threading.Timer(0.3, _tick)
+        t.daemon = True
+        self._timers[peer_id] = t
+        t.start()
+
+    def on_update_hook(self, update_name: str, account: int, update: Any) -> HookResult:
+        try:
+            if not self.get_setting("prank_enabled", True):
+                return HookResult()
+            if update_name not in ("TL_updateNewMessage", "TL_updateNewChannelMessage"):
+                return HookResult()
+            message = getattr(update, "message", None)
+            if message is None:
+                return HookResult()
+            if bool(getattr(message, "out", False)):
+                return HookResult()
+            text = getattr(message, "message", "") or ""
+            if not text and getattr(message, "media", None) is None:
+                return HookResult()
+            peer_id = self._peer_id(message)
+            if peer_id is None:
+                return HookResult()
+            if peer_id > 0 and not self.get_setting("prank_private", True):
+                return HookResult()
+            if not self._is_target(peer_id):
+                return HookResult()
+            self._start_prank(account, peer_id)
+        except Exception as e:
+            log("[funpack] prank hook error: %s" % e)
+        return HookResult()
+
+    # ===================================================== /nick (часть 2)
+
+    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
+        try:
+            if not self.get_setting("nick_enabled", True):
+                return HookResult()
+            text = getattr(params, "message", None)
+            if not isinstance(text, str):
+                return HookResult()
+            text = text.strip()
+            if not text.lower().startswith("/nick"):
+                return HookResult()
+            parts = text.split(None, 1)
+            base = parts[1].strip() if len(parts) > 1 else ""
+            if not base:
+                base = "Nick"
+            if len(base) > 24:
+                base = base[:24]
+            self._last_base = base
+            variants = self._gen_variants(base)
+            run_on_ui_thread(lambda: self._show_panel(variants))
+            return HookResult(strategy=HookStrategy.CANCEL)
+        except Exception as e:
+            log("[funpack] nick hook error: %s" % e)
+        return HookResult()
+
+    def _gen_variants(self, base: str) -> List[str]:
+        seen = []
+        for v in _gen_nicks(base):
+            if v not in seen:
+                seen.append(v)
+        return seen[:16]
+
+    def _show_panel(self, variants):
+        try:
+            fragment = get_last_fragment()
+            if fragment is None:
+                return
+            activity = fragment.getParentActivity()
+            if activity is None:
+                return
+            sheet = NickPanel(self, activity, variants)
+            sheet.show()
+        except Exception as e:
+            log("[funpack] nick panel error: %s" % e)
+
+    def _copy_nick(self, nick):
+        try:
+            from android.content import ClipboardManager, Context
+            from android.widget import Toast
+            from org.telegram.messenger import ApplicationLoader
+
+            ctx = ApplicationLoader.applicationContext
+            if ctx is None:
+                return
+            cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
+            if cm is not None:
+                cm.setText(nick)
+            try:
+                Toast.makeText(ctx, "Скопировано: " + nick, Toast.LENGTH_SHORT).show()
+            except Exception:
+                pass
+            log("[funpack] copied: %s" % nick[:40])
+        except Exception:
+            pass
+
+    # ============================================================== настройки
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Fun-Pack"),
+            Header(text="Пранк-набор текста"),
+            Switch(key="prank_enabled", text="Включить пранк-набор", default=True, icon="msg_switcher_on"),
+            Divider(),
+            Header(text="Что показывать"),
+            Switch(key="typing", text="«Печатает…»", default=True, icon="msg_edit"),
+            Switch(key="voice", text="«Записывает голосовое…»", default=False, icon="msg_mic"),
+            Switch(key="video", text="«Записывает видео…»", default=False, icon="msg_camera"),
+            Input(
+                key="prank_duration",
+                text="Длительность (сек)",
+                default="8",
+                subtext="Сколько секунд собеседник видит «печатает»",
+                icon="msg_timer",
+            ),
+            Divider(),
+            Header(text="Чаты"),
+            Switch(key="prank_private", text="Только личные чаты", default=True, icon="msg_user"),
+            Input(
+                key="prank_mode",
+                text="Режим чатов",
+                default="all",
+                subtext="all — все, only — только из списка, except — все, кроме списка",
+                icon="msg_filter",
+            ),
+            Input(
+                key="prank_chats",
+                text="ID чатов",
+                default="",
+                subtext="Через запятую, например: 123456789, -1001234567890",
+                icon="msg_group",
+            ),
+            Divider(),
+            Header(text="Генератор ников"),
+            Switch(key="nick_enabled", text="Включить /nick", default=True, icon="msg_switcher_on"),
+            Text(
+                text="Команда",
+                subtext="Напишите /nick слово в любом чате — откроется панель с вариантами.",
+                icon="msg_edit",
+            ),
+            Text(
+                text="Копирование",
+                subtext="Тап по варианту копирует его в буфер обмена — вставьте в «Изменить профиль».",
+                icon="msg_copy",
+            ),
+            Divider(),
+            Text(
+                text="Как работает",
+                subtext="Пранк-набор шлёт «печатает» по протоколу Telegram и сам отменяет по таймеру (дедуп: одна сессия на чат раз в 3 сек). Ники генерируются локально, на сервер ничего не отправляется.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnFunPackPlugin()
+
+
+def get_plugin():
+    return LincolnFunPackPlugin()
