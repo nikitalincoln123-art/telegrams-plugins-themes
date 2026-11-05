@@ -2,13 +2,18 @@
   "name": "Lincoln-Plugin — плагины и темы для Telegram",
   "short_name": "Lincoln-Plugin",
   "description": "Коллекция красивых тем и полезных плагинов для Telegram. Установка в один клик, локальная кастомизация профиля.",
+  "id": "lincoln-plugin",
   "lang": "ru",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "background_color": "#070604",
   "theme_color": "#070604",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
     {
       "src": "icon-192.png",
@@ -23,7 +28,7 @@
       "purpose": "any"
     },
     {
-      "src": "icon-512.png",
+      "src": "icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
