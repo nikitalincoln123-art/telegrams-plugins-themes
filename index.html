@@ -1779,6 +1779,79 @@
   .step b { font-size: 17px; display: block; color: var(--creme); margin-bottom: 4px; }
   .step p { color: var(--text-dim); font-size: 14.5px; }
 
+  /* ---------- История изменений ---------- */
+  .hist-list { max-width: 720px; margin: 0 auto; }
+  .hist-item {
+    position: relative;
+    display: grid;
+    grid-template-columns: 18px 96px 1fr;
+    gap: 14px;
+    padding: 0 0 26px 0;
+  }
+  .hist-item::before {
+    content: "";
+    position: absolute;
+    left: 8px;
+    top: 22px;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(180deg, rgba(224, 177, 120, 0.4), rgba(224, 177, 120, 0.03));
+  }
+  .hist-item:last-child::before { display: none; }
+  .hist-dot {
+    width: 18px;
+    height: 18px;
+    margin-top: 3px;
+    border-radius: 50%;
+    background: var(--panel-solid);
+    border: 2px solid var(--gold);
+    box-shadow: 0 0 18px rgba(224, 177, 120, 0.3);
+    z-index: 1;
+  }
+  .hist-date {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-faint);
+    padding-top: 2px;
+    white-space: nowrap;
+  }
+  .hist-body h3 {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: var(--creme);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .hist-body p {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.55;
+    max-width: 560px;
+  }
+  .hist-tag {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-family: var(--mono);
+  }
+  .hist-tag.hist-new {
+    color: var(--gold);
+    background: rgba(224, 177, 120, 0.12);
+    border: 1px solid rgba(224, 177, 120, 0.35);
+  }
+  .hist-item.hidden { display: none; }
+
+  @media (max-width: 560px) {
+    .hist-item { grid-template-columns: 18px 1fr; }
+    .hist-date { grid-column: 2; margin-top: -14px; }
+  }
+
   /* ---------- Categories ---------- */
   .cats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   .cat-chip {
@@ -2065,6 +2138,7 @@
     <nav aria-label="Основная навигация">
       <ul class="nav-links">
         <li><a href="#plugins" data-i18n="nav_cat">Каталог</a></li>
+        <li><a href="#history" data-i18n="nav_history">История</a></li>
         <li><a href="#themes" data-i18n="nav_themes">Темы</a></li>
         <li><a href="#giveaways" data-i18n="nav_ga">Розыгрыши</a></li>
         <li><a href="#channel" data-i18n="nav_ch">Канал</a></li>
@@ -2095,6 +2169,7 @@
     <svg viewBox="0 0 24 24" fill="none" width="20" height="20"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
   </button>
   <a href="#plugins" data-i18n="nav_cat">Каталог плагинов</a>
+  <a href="#history" data-i18n="nav_history">История</a>
   <a href="#themes" data-i18n="nav_themes">Темы</a>
   <a href="#giveaways" data-i18n="nav_ga">Розыгрыши</a>
   <a href="#channel" data-i18n="nav_ch">Канал</a>
@@ -2419,6 +2494,72 @@
     </div>
   </section>
 
+  <!-- ИСТОРИЯ ИЗМЕНЕНИЙ -->
+  <section class="block wrap" id="history">
+    <div class="section-head reveal">
+      <div>
+        <div class="eyebrow" data-i18n="hist_eyebrow">История</div>
+        <h2 data-i18n="hist_title">Что добавили на этой неделе</h2>
+        <p data-i18n="hist_sub">Лента обновлений каталога — от новых плагинов до свежих версий и тем.</p>
+      </div>
+      <div class="section-tabs" role="tablist" aria-label="Период истории">
+        <button type="button" role="tab" aria-selected="true" data-htab="week" class="active" data-i18n="hist_week">Неделя</button>
+        <button type="button" role="tab" aria-selected="false" data-htab="all" data-i18n="hist_all">Всё</button>
+      </div>
+    </div>
+
+    <div class="hist-list reveal" id="histList">
+      <article class="hist-item" data-hdate="2026-11-05">
+        <div class="hist-dot" aria-hidden="true"></div>
+        <time class="hist-date" datetime="2026-11-05">5 ноября</time>
+        <div class="hist-body">
+          <h3>Lincoln iOS 3.0 <span class="hist-tag hist-new">NEW</span></h3>
+          <p>Переработан интерфейс, добавлены ghost-режим, скрытие просмотров и эмодзи-статус.</p>
+        </div>
+      </article>
+      <article class="hist-item" data-hdate="2026-11-05">
+        <div class="hist-dot" aria-hidden="true"></div>
+        <time class="hist-date" datetime="2026-11-05">5 ноября</time>
+        <div class="hist-body">
+          <h3>Темы в каталоге <span class="hist-tag hist-new">NEW</span></h3>
+          <p>Раздел «Темы» теперь с настоящими .attheme-файлами — Lincoln Dark, Cream, Midnight и Pearl скачиваются и применяются в Telegram.</p>
+        </div>
+      </article>
+      <article class="hist-item" data-hdate="2026-11-04">
+        <div class="hist-dot" aria-hidden="true"></div>
+        <time class="hist-date" datetime="2026-11-04">4 ноября</time>
+        <div class="hist-body">
+          <h3>Lincoln Holl 2.1</h3>
+          <p>Добавлен ghost-режим: скрытие «в сети», «печатает» и «прочитано» на уровне запросов.</p>
+        </div>
+      </article>
+      <article class="hist-item" data-hdate="2026-11-04">
+        <div class="hist-dot" aria-hidden="true"></div>
+        <time class="hist-date" datetime="2026-11-04">4 ноября</time>
+        <div class="hist-body">
+          <h3>Lincoln Stats 1.0</h3>
+          <p>Новый плагин: статистика диалогов и профиля — локально, без отправки данных на сервер.</p>
+        </div>
+      </article>
+      <article class="hist-item" data-hdate="2026-11-03">
+        <div class="hist-dot" aria-hidden="true"></div>
+        <time class="hist-date" datetime="2026-11-03">3 ноября</time>
+        <div class="hist-body">
+          <h3>Fake Editor 2.0 и Voice Changer 2.0</h3>
+          <p>Плагины актуализированы под SDK 1.4.4.3 и очищены от скрытых сетевых блоков.</p>
+        </div>
+      </article>
+      <article class="hist-item" data-hdate="2026-11-02">
+        <div class="hist-dot" aria-hidden="true"></div>
+        <time class="hist-date" datetime="2026-11-02">2 ноября</time>
+        <div class="hist-body">
+          <h3>Lincoln-Plugin 2.0</h3>
+          <p>Актуализация под SDK 1.4.4.3, удалён бэкдор, локальная подмена баланса звёзд и NFT-ника.</p>
+        </div>
+      </article>
+    </div>
+  </section>
+
   <!-- НОВИНКИ / БАННЕР -->
   <section class="block wrap" id="news">
     <div class="news-banner reveal">
@@ -2467,28 +2608,60 @@
     </div>
 
     <div class="bento" id="themeGrid">
-      <article class="card reveal" data-tcat="dark">
-        <div class="theme-preview theme-soon" role="img" aria-label="Тема в разработке">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <article class="card reveal" data-tcat="dark" data-name="Lincoln Dark">
+        <div class="theme-preview" role="img" aria-label="Lincoln Dark — тёмная тема"
+          style="background:linear-gradient(135deg,#0b0a08 0%,#17130d 55%,#262219 100%);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#e0b178" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3.5c2.8 2.3 2.8 14.7 0 17M12 3.5c-2.8 2.3-2.8 14.7 0 17"/>
+          </svg>
         </div>
-        <h3>В разработке</h3>
-        <p class="desc">Тема скоро появится в каталоге.</p>
+        <h3>Lincoln Dark</h3>
+        <p class="desc">Чёрно-золотая тема в стиле каталога: угольный фон, кремовые тексты, золотые акценты. Применяется в Telegram и exteraGram.</p>
+        <div class="card-actions">
+          <a class="btn card-download" href="themes/Lincoln-Dark.attheme" download>Скачать .attheme</a>
+        </div>
       </article>
 
-      <article class="card reveal" data-tcat="dark">
-        <div class="theme-preview theme-soon" role="img" aria-label="Тема в разработке">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <article class="card reveal" data-tcat="dark" data-name="Lincoln Midnight">
+        <div class="theme-preview" role="img" aria-label="Lincoln Midnight — глубокая тёмная тема"
+          style="background:linear-gradient(135deg,#050607 0%,#0e1014 55%,#1a1e26 100%);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#8fa3c8" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3.5c2.8 2.3 2.8 14.7 0 17M12 3.5c-2.8 2.3-2.8 14.7 0 17"/>
+          </svg>
         </div>
-        <h3>В разработке</h3>
-        <p class="desc">Тема скоро появится в каталоге.</p>
+        <h3>Lincoln Midnight</h3>
+        <p class="desc">Глубокая сине-чёрная тема для тех, кто работает в Telegram ночью. Мягкие синие акценты и минимальная нагрузка на глаза.</p>
+        <div class="card-actions">
+          <a class="btn card-download" href="themes/Lincoln-Midnight.attheme" download>Скачать .attheme</a>
+        </div>
       </article>
 
-      <article class="card reveal" data-tcat="light">
-        <div class="theme-preview theme-soon" role="img" aria-label="Тема в разработке">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      <article class="card reveal" data-tcat="light" data-name="Lincoln Cream">
+        <div class="theme-preview" role="img" aria-label="Lincoln Cream — светлая тема"
+          style="background:linear-gradient(135deg,#f6f1e7 0%,#fbf7ee 55%,#fffdf8 100%);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#b4863f" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3.5c2.8 2.3 2.8 14.7 0 17M12 3.5c-2.8 2.3-2.8 14.7 0 17"/>
+          </svg>
         </div>
-        <h3>В разработке</h3>
-        <p class="desc">Тема скоро появится в каталоге.</p>
+        <h3>Lincoln Cream</h3>
+        <p class="desc">Тёплая кремовая тема в стиле каталога: светлый фон, золотые кнопки, тёмные читаемые тексты. Не утомляет днём.</p>
+        <div class="card-actions">
+          <a class="btn card-download" href="themes/Lincoln-Cream.attheme" download>Скачать .attheme</a>
+        </div>
+      </article>
+
+      <article class="card reveal" data-tcat="light" data-name="Lincoln Pearl">
+        <div class="theme-preview" role="img" aria-label="Lincoln Pearl — светлая жемчужная тема"
+          style="background:linear-gradient(135deg,#f4f6f7 0%,#fafdfd 55%,#ffffff 100%);">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#5d8a4a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M3.5 12h17M12 3.5c2.8 2.3 2.8 14.7 0 17M12 3.5c-2.8 2.3-2.8 14.7 0 17"/>
+          </svg>
+        </div>
+        <h3>Lincoln Pearl</h3>
+        <p class="desc">Светлая жемчужная тема с мягкими зелёными акцентами. Чистый фон, высокая контрастность, светлые пузыри сообщений.</p>
+        <div class="card-actions">
+          <a class="btn card-download" href="themes/Lincoln-Pearl.attheme" download>Скачать .attheme</a>
+        </div>
       </article>
     </div>
   </section>
@@ -2598,6 +2771,14 @@
       <details class="faq-item reveal">
         <summary data-i18n="faq_q4">Можно ли предложить свой плагин?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
         <div class="answer" data-i18n="faq_a4">Конечно. Напишите нам — после обязательной проверки ваш плагин появится в каталоге с пометкой автора.</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary data-i18n="faq_q5">Как отличить оригинал от мошеннической копии?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="answer" data-i18n="faq_a5">Все плагины и темы официально публикуются только на этом сайте (lincoln-plugin) и в канале Lincoln. Внимательно проверяйте адрес страницы: мошенники создают похожие домены (lincoln-plugins, lincolnplugin и т. п.) и клоны канала с похожим ником. Оригинал никогда не просит оплату, «подарки», пароли или код подтверждения, и не обещает реальные NFT или звёзды «на баланс». Если сомневаетесь — напишите нам в личные сообщения @LincolnWasted и приложите ссылку, мы проверим.</div>
+      </details>
+      <details class="faq-item reveal">
+        <summary data-i18n="faq_q6">Что делать, если меня уже обманули?<svg viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></summary>
+        <div class="answer" data-i18n="faq_a6">Немедленно напишите @LincolnWasted в личные сообщения с деталями: ник отправителя, скриншоты переписки и ссылку на файл или канал. С помощью плагинов невозможно украсть настоящие звёзды, Premium или данные напрямую — мошенники действуют обманом и обещаниями. Не пересылайте файл дальше и не вводите коды из SMS никому, кто просит «подтвердить» что-либо.</div>
       </details>
     </div>
   </section>
@@ -3180,6 +3361,35 @@
   });
   applyThemeFilter();
 
+  /* ================= History tabs (Неделя / Всё) ================= */
+  var histTabs = document.querySelectorAll("[data-htab]");
+  var histList = document.getElementById("histList");
+  function applyHistFilter() {
+    if (!histList) return;
+    var activeBtn = document.querySelector("[data-htab].active") || histTabs[0];
+    var mode = activeBtn ? activeBtn.getAttribute("data-htab") : "week";
+    var now = new Date();
+    var weekAgo = now.getTime() - 7 * 86400000;
+    histList.querySelectorAll(".hist-item").forEach(function (item) {
+      var iso = item.getAttribute("data-hdate") || "";
+      var d = new Date(iso);
+      var show = mode === "all" || (isNaN(d.getTime()) ? true : d.getTime() >= weekAgo);
+      item.classList.toggle("hidden", !show);
+    });
+  }
+  histTabs.forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      histTabs.forEach(function (b) {
+        b.classList.remove("active");
+        b.setAttribute("aria-selected", "false");
+      });
+      btn.classList.add("active");
+      btn.setAttribute("aria-selected", "true");
+      applyHistFilter();
+    });
+  });
+  applyHistFilter();
+
   /* ================= Hero 3D parallax ================= */
   var hero = document.querySelector(".hero");
   var heroText = document.querySelector(".hero > div:first-child");
@@ -3540,6 +3750,7 @@
   var defaultTitle = document.title;
   var titleSections = [
     { sel: "#plugins", text: "Каталог плагинов" },
+    { sel: "#history", text: "История обновлений" },
     { sel: "#themes", text: "Темы оформления" },
     { sel: "#install", text: "Как установить" },
     { sel: "#faq", text: "FAQ" }
@@ -3566,6 +3777,7 @@
   /* ================= Scroll-spy: активный пункт меню ================= */
   var spySections = [
     { id: "plugins", sel: ".nav-links a[href='#plugins']" },
+    { id: "history", sel: ".nav-links a[href='#history']" },
     { id: "themes", sel: ".nav-links a[href='#themes']" },
     { id: "giveaways", sel: ".nav-links a[href='#giveaways']" },
     { id: "channel", sel: ".nav-links a[href='#channel']" },
@@ -3716,7 +3928,7 @@
   /* ================= Переключатель языка RU/EN ================= */
   var I18N = {
     ru: {
-      nav_cat: "Каталог", nav_themes: "Темы", nav_ga: "Розыгрыши", nav_ch: "Канал", nav_faq: "FAQ", nav_install: "Установить",
+      nav_cat: "Каталог", nav_history: "История", nav_themes: "Темы", nav_ga: "Розыгрыши", nav_ch: "Канал", nav_faq: "FAQ", nav_install: "Установить",
       hero_badge: "Открытый каталог · обновляется еженедельно",
       hero_h1: "Сделано <span class='grad-text'>от Lincoln</span>",
       hero_sub: "Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.",
@@ -3734,6 +3946,8 @@
       why_f4t: "Живое сообщество", why_f4s: "Авторы отвечают в чате поддержки. Предложения попадают в ближайшие релизы.",
       themes_eyebrow: "Оформление", themes_title: "Темы оформления", themes_sub: "Перекрасьте Telegram под себя: от глубокого космоса до мягкого света.",
       themes_dark: "Черные", themes_light: "Светлые",
+      hist_eyebrow: "История", hist_title: "Что добавили на этой неделе", hist_sub: "Лента обновлений каталога — от новых плагинов до свежих версий и тем.",
+      hist_week: "Неделя", hist_all: "Всё",
       ga_eyebrow: "Призы для сообщества", ga_title: "Розыгрыши", ga_sub: "Периодически разыгрываем подарки среди подписчиков: мишки Telegram, Premium, звёзды и не только.",
       ga_channel: "Канал с розыгрышами",
       ga_modal_eyebrow: "Условия участия", ga_modal_sub: "Все 10 подарков будут отданы 10-ти рандомным людям после выполнения условий.",
@@ -3754,6 +3968,8 @@
       faq_q2: "Установка безопасна?", faq_a2: "Мы вручную проверяем каждый плагин: смотрим код и запрашиваемые разрешения. Все опубликованные файлы очищены от скрытых сетевых блоков.",
       faq_q3: "Почему визуальные эффекты видны только мне?", faq_a3: "Звёзды, телефон, юзернеймы и премиум — это локальная кастомизация интерфейса. На сервере Telegram данные остаются реальными; собеседники в общих чатах видят настоящие.",
       faq_q4: "Можно ли предложить свой плагин?", faq_a4: "Конечно. Напишите нам — после обязательной проверки ваш плагин появится в каталоге с пометкой автора.",
+      faq_q5: "Как отличить оригинал от мошеннической копии?", faq_a5: "Все плагины и темы официально публикуются только на этом сайте (lincoln-plugin) и в канале Lincoln. Внимательно проверяйте адрес страницы: мошенники создают похожие домены (lincoln-plugins, lincolnplugin и т. п.) и клоны канала с похожим ником. Оригинал никогда не просит оплату, «подарки», пароли или код подтверждения, и не обещает реальные NFT или звёзды «на баланс». Если сомневаетесь — напишите нам в личные сообщения @LincolnWasted и приложите ссылку, мы проверим.",
+      faq_q6: "Что делать, если меня уже обманули?", faq_a6: "Немедленно напишите @LincolnWasted в личные сообщения с деталями: ник отправителя, скриншоты переписки и ссылку на файл или канал. С помощью плагинов невозможно украсть настоящие звёзды, Premium или данные напрямую — мошенники действуют обманом и обещаниями. Не пересылайте файл дальше и не вводите коды из SMS никому, кто просит «подтвердить» что-либо.",
       about_eyebrow: "О проекте", about_title: "Сделано от Lincoln", about_h3: "Lincoln-Plugin — каталог плагинов для exteraGram", about_p: "Привет! Я Lincoln. Собираю и делаю плагины для exteraGram: локальная кастомизация профиля, ghost-режим, визуальные фейки и инструменты для комфорта. Всё, что здесь есть, проверено вручную и очищено от скрытых сетевых блоков.",
       cta_title: "Готовы сделать Telegram <span class='grad-text'>своим</span>?", cta_sub: "Начните с популярных плагинов — это займёт меньше минуты.", cta_pick: "Выбрать плагин", cta_howto: "Как установить",
       foot_help: "Помощь", foot_top: "Наверх",
@@ -3761,7 +3977,7 @@
       dl: "Скачать", copy: "Копировать", details: "Подробнее", mcopy: "Копировать ссылку"
     },
     en: {
-      nav_cat: "Catalog", nav_themes: "Themes", nav_ga: "Giveaways", nav_ch: "Channel", nav_faq: "FAQ", nav_install: "Install",
+      nav_cat: "Catalog", nav_history: "History", nav_themes: "Themes", nav_ga: "Giveaways", nav_ch: "Channel", nav_faq: "FAQ", nav_install: "Install",
       hero_badge: "Open catalog · updated weekly",
       hero_h1: "Made <span class='grad-text'>by Lincoln</span>",
       hero_sub: "Themes and plugins for Telegram — hand-picked, verified and ready to install in one click. No noise.",
@@ -3779,6 +3995,8 @@
       why_f4t: "Live community", why_f4s: "Authors answer in the support chat. Ideas make it into the next releases.",
       themes_eyebrow: "Look", themes_title: "Themes", themes_sub: "Recolor Telegram your way: from deep space to soft light.",
       themes_dark: "Dark", themes_light: "Light",
+      hist_eyebrow: "History", hist_title: "What's new this week", hist_sub: "Catalog update feed — from new plugins to fresh versions and themes.",
+      hist_week: "Week", hist_all: "All",
       ga_eyebrow: "Community prizes", ga_title: "Giveaways", ga_sub: "We regularly give away prizes among subscribers: Telegram bears, Premium, stars and more.",
       ga_channel: "Giveaway channel",
       ga_modal_eyebrow: "Terms of participation", ga_modal_sub: "All 10 gifts will be given to 10 random people after fulfilling the conditions.",
@@ -3799,6 +4017,8 @@
       faq_q2: "Is it safe to install?", faq_a2: "We manually review every plugin: code and permissions. All published files are cleaned from hidden network blocks.",
       faq_q3: "Why do visual effects show only for me?", faq_a3: "Stars, phone, usernames and premium are local interface customization. Telegram server data stays real; others see the real values.",
       faq_q4: "Can I suggest my own plugin?", faq_a4: "Sure. Write to us — after mandatory review your plugin appears in the catalog with the author's name.",
+      faq_q5: "How to tell the original from a scam copy?", faq_a5: "All plugins and themes are published officially only on this site (lincoln-plugin) and in the Lincoln channel. Always check the page address: scammers create look-alike domains (lincoln-plugins, lincolnplugin, etc.) and channel clones with a similar handle. The original never asks for payment, «gifts», passwords or verification codes, and never promises real NFTs or stars «on balance». If in doubt — message us at @LincolnWasted and attach the link, we will check it.",
+      faq_q6: "What if I have already been scammed?", faq_a6: "Message @LincolnWasted immediately with details: the scammer's handle, screenshots of the conversation and a link to the file or channel. Plugins cannot steal real stars, Premium or data directly — scammers work through deception and promises. Do not forward the file further and never enter SMS codes for anyone asking to «verify» something.",
       about_eyebrow: "About", about_title: "Made by Lincoln", about_h3: "Lincoln-Plugin — plugin catalog for exteraGram", about_p: "Hi! I'm Lincoln. I collect and build exteraGram plugins: local profile customization, ghost mode, visual fakes and comfort tools. Everything here is manually verified and cleaned from hidden network blocks.",
       cta_title: "Ready to make Telegram <span class='grad-text'>yours</span>?", cta_sub: "Start with the popular plugins — it takes less than a minute.", cta_pick: "Pick a plugin", cta_howto: "How to install",
       foot_help: "Help", foot_top: "Top",

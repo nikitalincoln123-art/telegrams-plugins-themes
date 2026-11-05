@@ -1,5 +1,5 @@
 /* Lincoln-Plugin — service worker (кэш для офлайн-режима) */
-var CACHE = "lincoln-plugin-v1";
+var CACHE = "lincoln-plugin-v2";
 var CORE = [
   "./",
   "./index.html",
@@ -51,7 +51,7 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  if (url.pathname.indexOf("/plugins/") !== -1) {
+  if (url.pathname.indexOf("/plugins/") !== -1 || url.pathname.indexOf("/themes/") !== -1) {
     e.respondWith(
       caches.match(req).then(function (hit) {
         if (hit) return hit;
