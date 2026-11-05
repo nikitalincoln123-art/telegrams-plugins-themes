@@ -3274,10 +3274,10 @@
       <a href="#" class="share-btn share-tg" data-share="tg" title="Поделиться в Telegram" aria-label="Поделиться в Telegram">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M21.9 4.3 18.8 19c-.2 1-.8 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.4-4.8L18.3 6c.4-.3-.1-.5-.6-.2L7 12.4l-4.6-1.4c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg>
       </a>
-      <button type="button" class="install-pwa-btn" id="installPwa" hidden>
+      <a href="app/lincoln-plugin.apk" download class="install-pwa-btn" id="installPwa">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
         <span>Установить приложение</span>
-      </button>
+      </a>
       <a href="#" class="share-btn share-vk" data-share="vk" title="Поделиться ВКонтакте" aria-label="Поделиться ВКонтакте">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12.8 18.5c-6 0-9.5-4.1-9.6-11h3c.1 5 2.3 7.1 4 7.5V7.5h2.9v4.3c1.7-.2 3.5-2.1 4.1-4.3h2.9c-.5 2.7-2.4 4.6-3.8 5.4 1.4.7 3.6 2.4 4.4 5.6h-3.2c-.7-2-2.3-3.6-4.4-3.8v3.8h-.3z"/></svg>
       </a>
@@ -3327,25 +3327,6 @@
       <a class="btn btn-warm" href="#" id="mDownload" download>Скачать плагин</a>
       <button type="button" class="btn btn-info" id="mShowCode">Показать код</button>
       <button type="button" class="m-copy" id="mCopy">Копировать ссылку</button>
-    </div>
-  </div>
-</div>
-
-<!-- Модальное окно «Установить приложение» -->
-<div class="modal-overlay" id="installModal" aria-hidden="true">
-  <div class="modal ga-modal" role="dialog" aria-modal="true">
-    <button type="button" class="modal-close" id="installModalClose" aria-label="Закрыть">✕</button>
-    <span class="ga-modal-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
-    </span>
-    <h3>Установить приложение</h3>
-    <p class="m-desc">Поставьте Lincoln-Plugin на главный экран — он откроется как обычное приложение.</p>
-    <div class="ga-modal-rules">
-      <div class="rule"><b>Android (Chrome):</b> кнопка «Установить» в адресной строке или меню «⋮» → «Установить приложение» / «Добавить на главный экран».</div>
-      <div class="rule"><b>iPhone / iPad (Safari):</b> кнопка «Поделиться» ⎋ → «На экран „Домой“» → «Добавить».</div>
-    </div>
-    <div class="modal-actions" style="justify-content:center;">
-      <button type="button" class="btn btn-warm" id="installModalOk">Понятно</button>
     </div>
   </div>
 </div>
@@ -4935,72 +4916,23 @@ if ("serviceWorker" in navigator && window.location.protocol === "https:") {
   });
 }
 
-/* ================= PWA: кнопка «Установить приложение» ================= */
+/* ================= Скачивание приложения (APK) ================= */
 (function () {
   var installBtn = document.getElementById("installPwa");
   if (!installBtn) return;
-  var deferredPrompt = null;
-  var supported = false;
-  window.addEventListener("beforeinstallprompt", function (e) {
-    e.preventDefault();
-    deferredPrompt = e;
-    supported = true;
-    installBtn.hidden = false;
-    installBtn.classList.add("visible");
-  });
   installBtn.addEventListener("click", function () {
-    if (!deferredPrompt) {
-      // Fallback: iOS Safari или браузер без beforeinstallprompt — показать инструкцию
-      var m = document.getElementById("installModal");
-      if (m) {
-        m.classList.add("open");
-        m.setAttribute("aria-hidden", "false");
-        document.body.style.overflow = "hidden";
-      } else if (typeof showToast === "function") {
-        showToast("На iOS: Поделиться → «На экран „Домой“»");
+    try {
+      if (typeof showToast === "function") {
+        showToast("Скачивание приложения… файл появится в загрузках");
       }
-      return;
-    }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function (choice) {
-      // Всегда сбрасываем: при повторном клике Chrome сам решит, показать ли prompt снова
-      deferredPrompt = null;
-      if (typeof showToast === "function" && choice && choice.outcome === "dismissed") {
-        showToast("Установка отменена — кнопка доступна повторно");
-      }
-    });
-  });
-  var installModal = document.getElementById("installModal");
-  var installModalClose = document.getElementById("installModalClose");
-  var installModalOk = document.getElementById("installModalOk");
-  function closeInstallModal() {
-    if (!installModal) return;
-    installModal.classList.remove("open");
-    installModal.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
-  if (installModalClose) installModalClose.addEventListener("click", closeInstallModal);
-  if (installModalOk) installModalOk.addEventListener("click", closeInstallModal);
-  if (installModal) installModal.addEventListener("click", function (e) {
-    if (e.target === installModal) closeInstallModal();
+    } catch (e) {}
   });
   window.addEventListener("appinstalled", function () {
-    deferredPrompt = null;
-    installBtn.hidden = true;
-    installBtn.classList.remove("visible");
+    installBtn.style.display = "none";
     var toast = document.getElementById("toast");
     if (toast) toast.textContent = "Lincoln-Plugin установлен";
     setTimeout(function () { if (toast) toast.textContent = ""; }, 3000);
   });
-  // Через 3 секунды: если событие так и не пришло (iOS Safari, старый браузер) —
-  // показываем кнопку как подсказку «Добавить на главный экран»
-  setTimeout(function () {
-    if (!supported && !deferredPrompt) {
-      installBtn.hidden = false;
-      installBtn.classList.add("visible");
-      installBtn.setAttribute("data-ios-hint", "1");
-    }
-  }, 3000);
 })();
 </script>
 </body>
