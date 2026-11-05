@@ -3329,6 +3329,25 @@
   </div>
 </div>
 
+<!-- Модальное окно «Установить приложение» -->
+<div class="modal-overlay" id="installModal" aria-hidden="true">
+  <div class="modal ga-modal" role="dialog" aria-modal="true">
+    <button type="button" class="modal-close" id="installModalClose" aria-label="Закрыть">✕</button>
+    <span class="ga-modal-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+    </span>
+    <h3>Установить приложение</h3>
+    <p class="m-desc">Поставьте Lincoln-Plugin на главный экран — он откроется как обычное приложение.</p>
+    <div class="ga-modal-rules">
+      <div class="rule"><b>Android (Chrome):</b> кнопка «Установить» в адресной строке или меню «⋮» → «Установить приложение» / «Добавить на главный экран».</div>
+      <div class="rule"><b>iPhone / iPad (Safari):</b> кнопка «Поделиться» ⎋ → «На экран „Домой“» → «Добавить».</div>
+    </div>
+    <div class="modal-actions" style="justify-content:center;">
+      <button type="button" class="btn btn-warm" id="installModalOk">Понятно</button>
+    </div>
+  </div>
+</div>
+
 <!-- Лайтбокс просмотра скриншота -->
 <div class="lightbox" id="shotLightbox" aria-hidden="true" role="dialog" aria-modal="true">
   <button type="button" class="lightbox-close" id="lightboxClose" aria-label="Закрыть">✕</button>
@@ -4929,21 +4948,39 @@ if ("serviceWorker" in navigator && window.location.protocol === "https:") {
   });
   installBtn.addEventListener("click", function () {
     if (!deferredPrompt) {
-      // Fallback: iOS Safari или браузер без beforeinstallprompt
-      if (typeof showToast === "function") {
+      // Fallback: iOS Safari или браузер без beforeinstallprompt — показать инструкцию
+      var m = document.getElementById("installModal");
+      if (m) {
+        m.classList.add("open");
+        m.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+      } else if (typeof showToast === "function") {
         showToast("На iOS: Поделиться → «На экран „Домой“»");
       }
       return;
     }
     deferredPrompt.prompt();
     deferredPrompt.userChoice.then(function (choice) {
+      // Всегда сбрасываем: при повторном клике Chrome сам решит, показать ли prompt снова
       deferredPrompt = null;
-      if (choice && choice.outcome === "dismissed") {
-        // Скрыть кнопку после отклонения — иначе она «мёртвая»
-        installBtn.hidden = true;
-        installBtn.classList.remove("visible");
+      if (typeof showToast === "function" && choice && choice.outcome === "dismissed") {
+        showToast("Установка отменена — кнопка доступна повторно");
       }
     });
+  });
+  var installModal = document.getElementById("installModal");
+  var installModalClose = document.getElementById("installModalClose");
+  var installModalOk = document.getElementById("installModalOk");
+  function closeInstallModal() {
+    if (!installModal) return;
+    installModal.classList.remove("open");
+    installModal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+  }
+  if (installModalClose) installModalClose.addEventListener("click", closeInstallModal);
+  if (installModalOk) installModalOk.addEventListener("click", closeInstallModal);
+  if (installModal) installModal.addEventListener("click", function (e) {
+    if (e.target === installModal) closeInstallModal();
   });
   window.addEventListener("appinstalled", function () {
     deferredPrompt = null;
