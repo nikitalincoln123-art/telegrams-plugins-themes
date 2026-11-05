@@ -12,12 +12,25 @@ import math
 import random
 import re
 import time
-import requests
 import traceback
 import datetime
 from decimal import Decimal, getcontext
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
-from bs4 import BeautifulSoup
+
+# Сетевые модули могут отсутствовать в рантайме exteraGram — не даём плагину упасть на импорте
+REQUESTS_OK = False
+BS4_OK = False
+try:
+    import requests
+    REQUESTS_OK = True
+except Exception:
+    requests = None
+try:
+    from bs4 import BeautifulSoup
+    BS4_OK = True
+except Exception:
+    BeautifulSoup = None
+
 from java import dynamic_proxy, jclass
 from java.lang import Boolean, Integer, Runnable
 from java.lang.reflect import Modifier
@@ -101,6 +114,8 @@ def parse_float_or_default(value, default):
         return default
 
 def fetch_ton_usd_rate():
+    if not REQUESTS_OK:
+        return None
     try:
         r = requests.get(COINGECKO_TON_PRICE_URL, headers={'User-Agent': 'Mozilla/5.0'}, timeout=10)
         if r.status_code != 200:
@@ -6778,6 +6793,8 @@ class Plugin(BasePlugin):
             run_on_ui_thread(lambda: BulletinHelper.show_error(f'Не удалось вставить NFT по ссылке: {err}'))
 
     def _fetch_nft_page_info(self, url: str) -> Dict[str, Any]:
+        if not REQUESTS_OK or not BS4_OK:
+            raise RuntimeError('Сетевые модули (requests/bs4) недоступны в этом клиенте — вставка NFT по ссылке отключена')
         headers = {'User-Agent': 'Mozilla/5.0 (Android; Mobile; rv:122.0) Gecko/122.0 Firefox/122.0', 'Accept-Language': 'en-US,en;q=0.9,ru;q=0.8'}
         response = requests.get(url, headers=headers, timeout=15)
         response.raise_for_status()
