@@ -908,6 +908,28 @@
   }
   .card .new-badge { margin: 0; }
 
+  /* Бейдж «Доступно обновление» */
+  .update-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(214, 148, 66, 0.16);
+    color: #e8a35c;
+    border: 1px solid rgba(214, 148, 66, 0.5);
+    box-shadow: 0 4px 18px rgba(214, 148, 66, 0.25);
+    z-index: 5;
+    white-space: nowrap;
+  }
+  .card .update-badge { margin: 0; }
+
   /* ---------- Плашка-предупреждение владельца ---------- */
   .owner-warning {
     display: flex;
@@ -1141,15 +1163,33 @@
     padding: 0;
     margin-bottom: 26px;
   }
-  .modal .m-changelog li {
-    padding: 9px 12px;
-    border-left: 2px solid var(--gold);
+  .modal .m-changelog .m-chg-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 10px 14px;
+    border-left: 3px solid var(--gold);
     background: var(--panel);
-    border-radius: 0 10px 10px 0;
+    border-radius: 0 12px 12px 0;
     margin-bottom: 8px;
     font-size: 14px;
     color: var(--text-dim);
+  }
+  .modal .m-changelog .m-chg-ver {
+    flex: none;
     font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(224, 177, 120, 0.1);
+    border: 1px solid rgba(224, 177, 120, 0.25);
+    padding: 2px 9px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+  }
+  .modal .m-changelog .m-chg-body {
+    min-width: 0;
+    line-height: 1.5;
   }
   .modal .modal-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .modal .m-copy {
@@ -3308,18 +3348,26 @@
     }
     var ul = document.getElementById("mChangelog");
     ul.innerHTML = "";
-    changelog.split(";").forEach(function (item) {
-      var v = item.trim();
-      if (!v) return;
+    var entries = changelog.split(";").map(function (s) { return s.trim(); }).filter(Boolean);
+    if (!entries.length) entries = ["Первоначальный релиз"];
+    var rowCounter = 0;
+    entries.forEach(function (item) {
+      rowCounter++;
       var li = document.createElement("li");
-      li.textContent = v;
+      li.className = "m-chg-row";
+      var verBadge = document.createElement("span");
+      verBadge.className = "m-chg-ver";
+      var verMatch = item.match(/^v?([0-9][0-9a-z.\-]*)/i);
+      var verText = verMatch ? verMatch[0] : (rowCounter === 1 ? "v" + ver : "—");
+      verBadge.textContent = verText;
+      var body = document.createElement("span");
+      body.className = "m-chg-body";
+      var text = item.replace(/^v?([0-9][0-9a-z.\-]*)\s*—?\s*/i, "").trim();
+      body.textContent = text || "Обновление";
+      li.appendChild(verBadge);
+      li.appendChild(body);
       ul.appendChild(li);
     });
-    if (!changelog) {
-      var li = document.createElement("li");
-      li.textContent = "Первоначальный релиз";
-      ul.appendChild(li);
-    }
     var dl = document.getElementById("mDownload");
     if (href) { dl.href = href.getAttribute("href"); dl.style.display = ""; }
     else dl.style.display = "none";
@@ -3813,13 +3861,52 @@
   function markInstalled(href) {
     var hist = getHistory();
     var now = new Date().toISOString();
+    // Версия из карточки (родительский .card)
+    var card = null;
+    try {
+      var link = document.querySelector('a[download][href="' + href.replace(/"/g, '\\"') + '"]');
+      if (link) card = link.closest(".card");
+    } catch (e) {}
+    var ver = card ? (card.getAttribute("data-version") || "") : "";
     var idx = hist.findIndex(function (h) { return h.href === href; });
-    if (idx !== -1) { hist[idx].date = now; }
+    if (idx !== -1) { hist[idx].date = now; if (ver) hist[idx].version = ver; }
     else {
-      hist.push({ href: href, date: now });
+      var rec = { href: href, date: now };
+      if (ver) rec.version = ver;
+      hist.push(rec);
       if (hist.length > 50) hist = hist.slice(-50);
     }
     saveHistory(hist);
+  }
+  function versionCmp(a, b) {
+    if (!a || !b) return 0;
+    var pa = String(a).replace(/^v/i, "").split(".").map(function (x) { return parseInt(x, 10) || 0; });
+    var pb = String(b).replace(/^v/i, "").split(".").map(function (x) { return parseInt(x, 10) || 0; });
+    for (var i = 0; i < Math.max(pa.length, pb.length); i++) {
+      var da = pa[i] || 0, db = pb[i] || 0;
+      if (da > db) return 1;
+      if (da < db) return -1;
+    }
+    return 0;
+  }
+  function applyUpdateBadges() {
+    var hist = getHistory();
+    document.querySelectorAll(".card").forEach(function (c) {
+      if (c.querySelector(".update-badge")) c.querySelector(".update-badge").remove();
+      var dl = c.querySelector("a[download]");
+      if (!dl) return;
+      var href = dl.getAttribute("href");
+      var siteVer = c.getAttribute("data-version") || "";
+      var rec = hist.filter(function (h) { return h.href === href; })[0];
+      if (!rec || !rec.version || !siteVer) return;
+      if (versionCmp(siteVer, rec.version) > 0) {
+        var badge = document.createElement("span");
+        badge.className = "update-badge";
+        badge.textContent = "Доступно обновление";
+        badge.title = "Установлено: v" + rec.version + " · На сайте: v" + siteVer;
+        c.appendChild(badge);
+      }
+    });
   }
   function applyHistory() {
     var hist = getHistory();
@@ -3830,10 +3917,11 @@
         c.classList.add("has-installed");
       }
     });
+    applyUpdateBadges();
   }
   document.addEventListener("click", function (e) {
     var dl = e.target && e.target.closest ? e.target.closest("a[download]") : null;
-    if (dl) markInstalled(dl.getAttribute("href"));
+    if (dl) { markInstalled(dl.getAttribute("href")); applyUpdateBadges(); }
   });
   applyHistory();
 
