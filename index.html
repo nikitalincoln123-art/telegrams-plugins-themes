@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lincoln-Plugin — плагины и темы для Telegram</title>
 <meta name="description" content="Lincoln-Plugin — коллекция красивых тем и полезных плагинов для Telegram. Установка в один клик, локальная кастомизация профиля.">
+<meta property="og:title" content="Lincoln-Plugin — плагины и темы для Telegram">
+<meta property="og:description" content="Красивые темы и полезные плагины для Telegram. Установка в один клик, ручная проверка каждого файла.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://nikitalincoln123-art.github.io/telegrams-plugins-themes/">
+<meta property="og:image" content="https://nikitalincoln123-art.github.io/telegrams-plugins-themes/icon-512.png">
+<meta property="og:site_name" content="Lincoln-Plugin">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Lincoln-Plugin — плагины и темы для Telegram">
+<meta name="twitter:description" content="Красивые темы и полезные плагины для Telegram. Установка в один клик, ручная проверка каждого файла.">
+<meta name="twitter:image" content="https://nikitalincoln123-art.github.io/telegrams-plugins-themes/icon-512.png">
+<link rel="preconnect" href="https://nikitalincoln123-art.github.io" crossorigin>
 <meta name="theme-color" content="#070604">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1040,6 +1051,35 @@
   }
   .sort-select:hover { border-color: rgba(237, 201, 160, 0.5); }
 
+  .cat-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: -14px 0 24px;
+    justify-content: center;
+  }
+  .cat-chips .chip {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text-dim);
+    font-family: var(--font);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  .cat-chips .chip:hover {
+    border-color: rgba(237, 201, 160, 0.4);
+    color: var(--creme);
+  }
+  .cat-chips .chip.active {
+    background: rgba(237, 201, 160, 0.14);
+    border-color: rgba(237, 201, 160, 0.45);
+    color: var(--gold);
+  }
+
   /* ---------- Модальное окно ---------- */
   .modal-overlay {
     position: fixed;
@@ -1209,6 +1249,51 @@
     color: #4fae6a;
     border-color: rgba(79, 174, 106, 0.5);
     background: rgba(79, 174, 106, 0.08);
+  }
+  .modal .m-code-box {
+    margin: 6px 0 18px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    background: #0c0b08;
+  }
+  .modal .m-code-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: rgba(255, 245, 230, 0.04);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .modal .m-code-copy {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid rgba(224, 177, 120, 0.3);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font);
+    transition: all 0.3s;
+  }
+  .modal .m-code-copy:hover { border-color: rgba(224, 177, 120, 0.6); }
+  .modal .m-code {
+    margin: 0;
+    padding: 14px;
+    max-height: 280px;
+    overflow: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.55;
+    color: #d8d2c4;
+    white-space: pre-wrap;
+    word-break: break-word;
   }
 
   /* ---------- Галерея превью в модалке ---------- */
@@ -1855,6 +1940,73 @@
     .hist-date { grid-column: 2; margin-top: -14px; }
   }
 
+  /* ---------- Как установить тему ---------- */
+  .theme-howto {
+    max-width: 720px;
+    margin: 30px auto 0;
+    padding: 24px 28px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--panel-hover), var(--panel));
+  }
+  .th-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .th-icon {
+    flex: none;
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    color: var(--gold);
+    background: rgba(224, 177, 120, 0.12);
+    border: 1px solid rgba(224, 177, 120, 0.3);
+  }
+  .th-icon svg { width: 22px; height: 22px; }
+  .th-head h3 { font-size: 17px; font-weight: 700; color: var(--creme); margin-bottom: 2px; }
+  .th-head p { font-size: 13.5px; color: var(--text-dim); }
+  .th-steps {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: th;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .th-steps li {
+    position: relative;
+    counter-increment: th;
+    padding: 12px 16px 12px 52px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .th-steps li::before {
+    content: counter(th);
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--gold);
+    background: rgba(224, 177, 120, 0.1);
+    border: 1px solid rgba(224, 177, 120, 0.3);
+  }
+
   /* ---------- Categories ---------- */
   .cats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
   .cat-chip {
@@ -1908,6 +2060,54 @@
   details.faq-item[open] summary svg { transform: rotate(45deg); color: var(--gold); }
   details.faq-item .answer { padding: 0 22px 20px; color: var(--text-dim); font-size: 14.5px; }
   details.faq-item[open] .answer { animation: fadeIn 0.35s var(--ease); }
+
+  /* ---------- Форма «Предложить плагин» ---------- */
+  .suggest-form {
+    max-width: 640px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 28px 30px;
+    border: 1px solid var(--border);
+    border-radius: 22px;
+    background: linear-gradient(135deg, var(--panel-hover), var(--panel));
+  }
+  .sf-field { display: flex; flex-direction: column; gap: 8px; }
+  .sf-field.sf-wide { grid-column: 1 / -1; }
+  .sf-field span { font-size: 13px; font-weight: 600; color: var(--text-dim); }
+  .sf-field span em { font-style: normal; color: var(--text-faint); font-weight: 400; }
+  .sf-field input,
+  .sf-field select,
+  .sf-field textarea {
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--btn-bg);
+    color: var(--text);
+    font-family: var(--font);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.3s;
+    resize: vertical;
+  }
+  .sf-field input:focus,
+  .sf-field select:focus,
+  .sf-field textarea:focus { border-color: rgba(237, 201, 160, 0.55); }
+  .sf-field input::placeholder,
+  .sf-field textarea::placeholder { color: var(--text-faint); }
+  .sf-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .sf-note { font-size: 12.5px; color: var(--text-faint); line-height: 1.45; }
+
+  @media (max-width: 560px) {
+    .suggest-form { grid-template-columns: 1fr; padding: 22px 18px; }
+  }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 
   /* ---------- CTA ---------- */
@@ -1975,6 +2175,41 @@
   .share-btn.share-tg:hover { color: #2ea6ff; border-color: rgba(46, 166, 255, 0.45); }
   .share-btn.share-vk:hover { color: #4c75a3; border-color: rgba(76, 117, 163, 0.45); }
   .share-btn.share-copy:hover { color: var(--peach); border-color: rgba(237, 201, 160, 0.45); }
+  .install-pwa-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(237, 201, 160, 0.35);
+    background: rgba(237, 201, 160, 0.08);
+    color: var(--gold);
+    font-family: var(--font);
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+  }
+  .install-pwa-btn:hover {
+    background: rgba(237, 201, 160, 0.16);
+    border-color: rgba(237, 201, 160, 0.6);
+    color: var(--peach);
+  }
+  .install-pwa-btn svg { width: 15px; height: 15px; flex: none; }
+  .foot-reset {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text-faint);
+    font-family: var(--font);
+    font-size: 13px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.25s;
+  }
+  .foot-reset:hover { color: var(--peach); }
   @media (max-width: 860px) {
     .foot-share { width: 100%; justify-content: center; margin-top: 10px; }
     .foot .links { flex-wrap: wrap; }
@@ -2276,6 +2511,13 @@
           <option value="date" data-i18n="sort_date">Сначала новые</option>
         </select>
       </div>
+    </div>
+
+    <div class="cat-chips" id="catChips" role="group" aria-label="Фильтр по категориям">
+      <button type="button" class="chip active" data-pcat="all" data-i18n="cat_all">Все</button>
+      <button type="button" class="chip" data-pcat="useful" data-i18n="cat_useful">Полезные</button>
+      <button type="button" class="chip" data-pcat="fun" data-i18n="cat_fun">Развлечения</button>
+      <button type="button" class="chip" data-pcat="other" data-i18n="cat_other">Другие</button>
     </div>
 
     <div class="bento" id="pluginGrid">
@@ -2740,6 +2982,24 @@
         </div>
       </article>
     </div>
+
+    <div class="theme-howto reveal">
+      <div class="th-head">
+        <span class="th-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v14m0 0 4.5-4.5M12 17l-4.5-4.5M5 20h14"/></svg>
+        </span>
+        <div>
+          <h3 data-i18n="th_title">Как установить тему</h3>
+          <p data-i18n="th_sub">Скачанный файл .attheme применяется за пару секунд.</p>
+        </div>
+      </div>
+      <ol class="th-steps">
+        <li data-i18n="th_s1">Нажмите «Скачать .attheme» на карточке темы — файл сохранится на устройство.</li>
+        <li data-i18n="th_s2">В Telegram или exteraGram откройте: Настройки → Оформление / Темы.</li>
+        <li data-i18n="th_s3">Нажмите «…» (меню) → «Импорт темы» и выберите скачанный файл.</li>
+        <li data-i18n="th_s4">Тема применится сразу — при желании включите её автоматическое обновление.</li>
+      </ol>
+    </div>
   </section>
 
   <!-- GIVEAWAYS -->
@@ -2859,6 +3119,43 @@
     </div>
   </section>
 
+  <!-- ПРЕДЛОЖИТЬ ПЛАГИН -->
+  <section class="block wrap" id="suggest">
+    <div class="section-head reveal" style="justify-content:center; text-align:center;">
+      <div style="margin:0 auto;">
+        <div class="eyebrow" data-i18n="sug_eyebrow">Сотрудничество</div>
+        <h2 data-i18n="sug_title">Предложить плагин</h2>
+        <p data-i18n="sug_sub">Сделали свой плагин или идею для Lincoln? Заполните форму — сообщение уйдёт автору каталога в Telegram.</p>
+      </div>
+    </div>
+    <form class="suggest-form reveal" id="suggestForm" novalidate>
+      <label class="sf-field">
+        <span data-i18n="sug_name">Ваш ник в Telegram</span>
+        <input type="text" id="sfName" name="name" placeholder="@username" maxlength="64" required>
+      </label>
+      <label class="sf-field">
+        <span data-i18n="sug_type">Тип заявки</span>
+        <select id="sfType" name="type">
+          <option value="plugin" data-i18n="sug_type_plugin">Свой плагин</option>
+          <option value="idea" data-i18n="sug_type_idea">Идея / фича</option>
+          <option value="bug" data-i18n="sug_type_bug">Ошибка / проблема</option>
+        </select>
+      </label>
+      <label class="sf-field sf-wide">
+        <span data-i18n="sug_desc">Описание</span>
+        <textarea id="sfDesc" name="desc" rows="4" maxlength="2000" required placeholder="Что делает плагин / что хотите предложить?" data-i18n-ph="sug_desc_ph"></textarea>
+      </label>
+      <label class="sf-field sf-wide">
+        <span data-i18n="sug_link">Ссылка на файл или репозиторий <em>(необязательно)</em></span>
+        <input type="url" id="sfLink" name="link" placeholder="https://..." maxlength="512">
+      </label>
+      <div class="sf-actions sf-wide">
+        <button type="submit" class="btn btn-warm" data-i18n="sug_send">Отправить в Telegram</button>
+        <span class="sf-note" data-i18n="sug_note">Откроется чат с @LincolnWasted — останется нажать «Отправить».</span>
+      </div>
+    </form>
+  </section>
+
   <!-- О ПРОЕКТЕ -->
   <section class="block wrap" id="about">
     <div class="section-head reveal" style="justify-content:center; text-align:center;">
@@ -2957,6 +3254,10 @@
       <a href="#" class="share-btn share-tg" data-share="tg" title="Поделиться в Telegram" aria-label="Поделиться в Telegram">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M21.9 4.3 18.8 19c-.2 1-.8 1.3-1.7.8l-4.8-3.5-2.3 2.2c-.3.3-.5.5-1 .5l.4-4.8L18.3 6c.4-.3-.1-.5-.6-.2L7 12.4l-4.6-1.4c-1-.3-1-1 .2-1.5L20.5 3c.8-.3 1.6.2 1.4 1.3z"/></svg>
       </a>
+      <button type="button" class="install-pwa-btn" id="installPwa" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M12 3v11m0 0 4-4m-4 4-4-4M5 19h14"/></svg>
+        <span>Установить приложение</span>
+      </button>
       <a href="#" class="share-btn share-vk" data-share="vk" title="Поделиться ВКонтакте" aria-label="Поделиться ВКонтакте">
         <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12.8 18.5c-6 0-9.5-4.1-9.6-11h3c.1 5 2.3 7.1 4 7.5V7.5h2.9v4.3c1.7-.2 3.5-2.1 4.1-4.3h2.9c-.5 2.7-2.4 4.6-3.8 5.4 1.4.7 3.6 2.4 4.4 5.6h-3.2c-.7-2-2.3-3.6-4.4-3.8v3.8h-.3z"/></svg>
       </a>
@@ -2972,6 +3273,7 @@
       <a href="#install" data-i18n="foot_help">Помощь</a>
       <a href="https://www.donationalerts.com/r/lincoln" target="_blank" rel="noopener" data-i18n="donate_btn_foot">Поддержать</a>
       <a href="#top" data-i18n="foot_top">Наверх</a>
+      <button type="button" class="foot-reset" id="resetHistory" title="Сбросить историю установок" data-i18n="foot_reset">Сбросить историю установок</button>
     </div>
   </div>
 </footer>
@@ -2994,8 +3296,16 @@
     <div class="m-shots" id="mShots"></div>
     <h4>Что нового</h4>
     <ul class="m-changelog" id="mChangelog"></ul>
+    <div class="m-code-box" id="mCodeBox" hidden>
+      <div class="m-code-head">
+        <span>Код плагина</span>
+        <button type="button" class="m-code-copy" id="mCodeCopy">Копировать</button>
+      </div>
+      <pre class="m-code" id="mCode"></pre>
+    </div>
     <div class="modal-actions">
       <a class="btn btn-warm" href="#" id="mDownload" download>Скачать плагин</a>
+      <button type="button" class="btn btn-info" id="mShowCode">Показать код</button>
       <button type="button" class="m-copy" id="mCopy">Копировать ссылку</button>
     </div>
   </div>
@@ -3551,22 +3861,26 @@
   function applyCatalog() {
     var q = (searchInput && searchInput.value || "").trim().toLowerCase();
     var sort = sortSelect ? sortSelect.value : "default";
+    var activeChip = document.querySelector("#catChips .chip.active");
+    var cat = activeChip ? activeChip.getAttribute("data-pcat") : "all";
     var visible = 0;
     var cards = [].slice.call(grid.querySelectorAll(".card"));
     cards.forEach(function (c) {
       var name = (c.getAttribute("data-name") || "").toLowerCase();
       var long = (c.getAttribute("data-long") || "").toLowerCase();
-      var match = !q || name.indexOf(q) !== -1 || long.indexOf(q) !== -1;
+      var matchQ = !q || name.indexOf(q) !== -1 || long.indexOf(q) !== -1;
+      var matchCat = cat === "all" || (c.getAttribute("data-pcat") || "other") === cat;
+      var match = matchQ && matchCat;
       c.classList.toggle("hidden", !match);
       if (match) visible++;
     });
-    if (countEl && q) countEl.textContent = visible;
+    if (countEl && (q || cat !== "all")) countEl.textContent = visible;
     var shownEl = document.getElementById("pluginShown");
     if (shownEl) {
       var total = cards.length;
       var dict = I18N[curLang] || I18N.ru;
       var word = dict.cat_of_label || "из";
-      shownEl.textContent = q ? (visible + " " + word + " " + total) : "";
+      shownEl.textContent = (q || cat !== "all") ? (visible + " " + word + " " + total) : "";
     }
     if (sort !== "default") {
       var order = [].slice.call(grid.querySelectorAll(".card")).filter(function (c) { return !c.classList.contains("hidden"); });
@@ -3581,6 +3895,14 @@
   }
   if (searchInput) searchInput.addEventListener("input", applyCatalog);
   if (sortSelect) sortSelect.addEventListener("change", applyCatalog);
+  var catChips = document.querySelectorAll("#catChips .chip");
+  catChips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      catChips.forEach(function (c) { c.classList.remove("active"); });
+      chip.classList.add("active");
+      applyCatalog();
+    });
+  });
 
   /* Модальное окно */
   var modal = document.getElementById("pluginModal");
@@ -3596,6 +3918,10 @@
     var href = card.querySelector("a[download]");
 
     document.getElementById("mTitle").textContent = name;
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", name + " · Lincoln-Plugin");
+    var ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc && long) ogDesc.setAttribute("content", long);
     document.getElementById("mDesc").textContent = long;
     document.getElementById("mVersion").textContent = ver;
     document.getElementById("mDate").textContent = date;
@@ -3609,6 +3935,14 @@
     shotsBox.innerHTML = "";
     if (shots.length) {
       shotsLabel.style.display = "";
+      var preloaded = {};
+      shots.forEach(function (src) {
+        if (!preloaded[src]) {
+          preloaded[src] = true;
+          var p = new Image();
+          p.src = src;
+        }
+      });
       shots.forEach(function (src) {
         var wrap = document.createElement("a");
         wrap.className = "m-shot";
@@ -3657,6 +3991,14 @@
     var dl = document.getElementById("mDownload");
     if (href) { dl.href = href.getAttribute("href"); dl.style.display = ""; }
     else dl.style.display = "none";
+    if (mCodeBox) mCodeBox.hidden = true;
+    if (mShowCode) { mShowCode.textContent = "Показать код"; mShowCode.style.display = href ? "" : "none"; }
+    currentCodeSrc = href ? href.getAttribute("href") : "";
+    var slug = slugify(name);
+    var route = "#/plugin/" + slug;
+    if (slug && location.hash !== route) {
+      try { history.pushState(null, "", route); } catch (e) { location.hash = route; }
+    }
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -3666,7 +4008,92 @@
     modal.classList.remove("open");
     modal.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
+    resetOg();
+    if (location.hash.indexOf("#/plugin/") === 0) {
+      try { history.pushState(null, "", location.pathname + location.search); } catch (e) { location.hash = ""; }
+    }
   }
+  function resetOg() {
+    var ogTitle = document.querySelector('meta[property="og:title"]');
+    if (ogTitle) ogTitle.setAttribute("content", "Lincoln-Plugin — плагины и темы для Telegram");
+    var ogDesc = document.querySelector('meta[property="og:description"]');
+    if (ogDesc) ogDesc.setAttribute("content", "Красивые темы и полезные плагины для Telegram. Установка в один клик, ручная проверка каждого файла.");
+  }
+  function slugify(s) {
+    return (s || "").toLowerCase().replace(/[^a-z0-9\u0400-\u04ff]+/g, "-").replace(/^-+|-+$/g, "");
+  }
+  function findCardBySlug(slug) {
+    if (!slug) return null;
+    var found = null;
+    document.querySelectorAll("#pluginGrid .card").forEach(function (c) {
+      if (!found && slugify(c.getAttribute("data-name")) === slug) found = c;
+    });
+    return found;
+  }
+  function routePlugin() {
+    if (!modal) return;
+    var m = (location.hash || "").match(/^#\/plugin\/([\w\-\u0400-\u04ff]+)/);
+    if (!m) {
+      if (modal.classList.contains("open")) closeModal();
+      return;
+    }
+    var card = findCardBySlug(decodeURIComponent(m[1]));
+    if (card) {
+      if (!modal.classList.contains("open")) openModal(card);
+    } else if (modal.classList.contains("open")) {
+      closeModal();
+    }
+  }
+  window.addEventListener("hashchange", routePlugin);
+  window.addEventListener("popstate", routePlugin);
+  routePlugin();
+
+  /* ================= Просмотр кода плагина ================= */
+  var mShowCode = document.getElementById("mShowCode");
+  var mCodeBox = document.getElementById("mCodeBox");
+  var mCode = document.getElementById("mCode");
+  var mCodeCopy = document.getElementById("mCodeCopy");
+  var currentCodeSrc = "";
+  function showCode(src) {
+    if (!mCodeBox || !mShowCode) return;
+    currentCodeSrc = src || "";
+    if (!src) { mCodeBox.hidden = true; return; }
+    mCodeBox.hidden = false;
+    mCode.textContent = "Загрузка кода…";
+    fetch(src).then(function (r) {
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      return r.text();
+    }).then(function (t) {
+      mCode.textContent = t;
+    }).catch(function () {
+      mCode.textContent = "Не удалось загрузить код. Может помочь повторное открытие.";
+    });
+  }
+  if (mShowCode) mShowCode.addEventListener("click", function () {
+    var open = !mCodeBox.hidden;
+    if (open) {
+      mCodeBox.hidden = true;
+      mShowCode.textContent = "Показать код";
+    } else {
+      showCode(currentCodeSrc);
+      mShowCode.textContent = "Скрыть код";
+    }
+  });
+  if (mCodeCopy) mCodeCopy.addEventListener("click", function () {
+    var text = mCode && mCode.textContent ? mCode.textContent : "";
+    if (!text || text.indexOf("Загрузка") === 0) return;
+    function done(ok) {
+      if (ok) {
+        mCodeCopy.textContent = "Скопировано";
+        setTimeout(function () { mCodeCopy.textContent = "Копировать"; }, 1600);
+      }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(text)); });
+    } else {
+      done(fallbackCopy(text));
+    }
+  });
   grid.addEventListener("click", function (e) {
     var btn = e.target.closest("[data-detail]");
     if (btn) {
@@ -3821,6 +4248,28 @@
       }
     }
   });
+
+  /* ================= Форма «Предложить плагин» ================= */
+  var suggestForm = document.getElementById("suggestForm");
+  if (suggestForm) {
+    suggestForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var name = (document.getElementById("sfName") || {}).value || "";
+      var type = (document.getElementById("sfType") || {}).value || "plugin";
+      var desc = (document.getElementById("sfDesc") || {}).value || "";
+      var link = (document.getElementById("sfLink") || {}).value || "";
+      if (!desc.trim()) {
+        showToast("Пожалуйста, заполните описание");
+        return;
+      }
+      var dict = I18N[curLang] || I18N.ru;
+      var typeLabel = type === "idea" ? (dict.sug_type_idea || "Идея") : type === "bug" ? (dict.sug_type_bug || "Ошибка") : (dict.sug_type_plugin || "Плагин");
+      var text = "Заявка с lincoln-plugin\n\nТип: " + typeLabel + "\nНик: " + (name || "—") + "\n\nОписание:\n" + desc + (link ? "\n\nСсылка: " + link : "");
+      var url = "https://t.me/LincolnWasted?text=" + encodeURIComponent(text);
+      window.open(url, "_blank", "noopener");
+      showToast("Чат с @LincolnWasted открыт — отправьте сообщение");
+    });
+  }
 
   /* ================= Динамический заголовок вкладки ================= */
   var defaultTitle = document.title;
@@ -4012,6 +4461,7 @@
       cat_eyebrow: "Каталог", cat_sub: "Делает работу комфортной, плавной. И не только...)", cat_counter: "плагинов",
       cat_of_label: "из",
       cat_search: "Поиск по каталогу...", sort_default: "По умолчанию", sort_name: "По алфавиту", sort_date: "Сначала новые",
+      cat_all: "Все", cat_useful: "Полезные", cat_fun: "Развлечения", cat_other: "Другие",
       themes_functions: "Темы/Функции",
       dl: "Скачать",
       news_release: "Свежий релиз", news_title: "теперь с ghost-режимом", news_sub: "Скрытие «в сети», «печатает» и «прочитано» на уровне запросов. Обновите плагин — новые функции уже ждут.",
@@ -4024,6 +4474,11 @@
       themes_dark: "Черные", themes_light: "Светлые",
       hist_eyebrow: "История", hist_title: "Что добавили на этой неделе", hist_sub: "Лента обновлений каталога — от новых плагинов до свежих версий и тем.",
       hist_week: "Неделя", hist_all: "Всё",
+      th_title: "Как установить тему", th_sub: "Скачанный файл .attheme применяется за пару секунд.",
+      th_s1: "Нажмите «Скачать .attheme» на карточке темы — файл сохранится на устройство.",
+      th_s2: "В Telegram или exteraGram откройте: Настройки → Оформление / Темы.",
+      th_s3: "Нажмите «…» (меню) → «Импорт темы» и выберите скачанный файл.",
+      th_s4: "Тема применится сразу — при желании включите её автоматическое обновление.",
       ga_eyebrow: "Призы для сообщества", ga_title: "Розыгрыши", ga_sub: "Периодически разыгрываем подарки среди подписчиков: мишки Telegram, Premium, звёзды и не только.",
       ga_channel: "Канал с розыгрышами",
       ga_modal_eyebrow: "Условия участия", ga_modal_sub: "Все 10 подарков будут отданы 10-ти рандомным людям после выполнения условий.",
@@ -4046,9 +4501,14 @@
       faq_q4: "Можно ли предложить свой плагин?", faq_a4: "Конечно. Напишите нам — после обязательной проверки ваш плагин появится в каталоге с пометкой автора.",
       faq_q5: "Как отличить оригинал от мошеннической копии?", faq_a5: "Все плагины и темы официально публикуются только на этом сайте (lincoln-plugin) и в канале Lincoln. Внимательно проверяйте адрес страницы: мошенники создают похожие домены (lincoln-plugins, lincolnplugin и т. п.) и клоны канала с похожим ником. Оригинал никогда не просит оплату, «подарки», пароли или код подтверждения, и не обещает реальные NFT или звёзды «на баланс». Если сомневаетесь — напишите нам в личные сообщения @LincolnWasted и приложите ссылку, мы проверим.",
       faq_q6: "Что делать, если меня уже обманули?", faq_a6: "Немедленно напишите @LincolnWasted в личные сообщения с деталями: ник отправителя, скриншоты переписки и ссылку на файл или канал. С помощью плагинов невозможно украсть настоящие звёзды, Premium или данные напрямую — мошенники действуют обманом и обещаниями. Не пересылайте файл дальше и не вводите коды из SMS никому, кто просит «подтвердить» что-либо.",
+      sug_eyebrow: "Сотрудничество", sug_title: "Предложить плагин", sug_sub: "Сделали свой плагин или идею для Lincoln? Заполните форму — сообщение уйдёт автору каталога в Telegram.",
+      sug_name: "Ваш ник в Telegram", sug_type: "Тип заявки", sug_type_plugin: "Свой плагин", sug_type_idea: "Идея / фича", sug_type_bug: "Ошибка / проблема",
+      sug_desc: "Описание", sug_desc_ph: "Что делает плагин / что хотите предложить?",
+      sug_link: "Ссылка на файл или репозиторий <em>(необязательно)</em>",
+      sug_send: "Отправить в Telegram", sug_note: "Откроется чат с @LincolnWasted — останется нажать «Отправить».",
       about_eyebrow: "О проекте", about_title: "Сделано от Lincoln", about_h3: "Lincoln-Plugin — каталог плагинов для exteraGram", about_p: "Привет! Я Lincoln. Собираю и делаю плагины для exteraGram: локальная кастомизация профиля, ghost-режим, визуальные фейки и инструменты для комфорта. Всё, что здесь есть, проверено вручную и очищено от скрытых сетевых блоков.",
       cta_title: "Готовы сделать Telegram <span class='grad-text'>своим</span>?", cta_sub: "Начните с популярных плагинов — это займёт меньше минуты.", cta_pick: "Выбрать плагин", cta_howto: "Как установить",
-      foot_help: "Помощь", foot_top: "Наверх",
+      foot_help: "Помощь", foot_top: "Наверх", foot_reset: "Сбросить историю установок",
       donate_btn: "Поддержать автора", donate_btn_foot: "Поддержать",
       dl: "Скачать", copy: "Копировать", details: "Подробнее", mcopy: "Копировать ссылку"
     },
@@ -4061,6 +4521,7 @@
       cat_eyebrow: "Catalog", cat_sub: "Makes your experience comfortable and smooth. And more...)", cat_counter: "plugins",
       cat_of_label: "of",
       cat_search: "Search catalog...", sort_default: "Default", sort_name: "By name", sort_date: "Newest first",
+      cat_all: "All", cat_useful: "Useful", cat_fun: "Fun", cat_other: "Other",
       themes_functions: "Themes/Features",
       dl: "Download",
       news_release: "Fresh release", news_title: "now with ghost mode", news_sub: "Hide «online», «typing» and «read» at request level. Update the plugin — new features are waiting.",
@@ -4073,6 +4534,11 @@
       themes_dark: "Dark", themes_light: "Light",
       hist_eyebrow: "History", hist_title: "What's new this week", hist_sub: "Catalog update feed — from new plugins to fresh versions and themes.",
       hist_week: "Week", hist_all: "All",
+      th_title: "How to install a theme", th_sub: "The downloaded .attheme file applies in seconds.",
+      th_s1: "Press «Download .attheme» on the theme card — the file is saved to your device.",
+      th_s2: "In Telegram or exteraGram open: Settings → Appearance / Themes.",
+      th_s3: "Press «…» (menu) → «Import theme» and choose the downloaded file.",
+      th_s4: "The theme applies instantly — you can also enable its auto-update.",
       ga_eyebrow: "Community prizes", ga_title: "Giveaways", ga_sub: "We regularly give away prizes among subscribers: Telegram bears, Premium, stars and more.",
       ga_channel: "Giveaway channel",
       ga_modal_eyebrow: "Terms of participation", ga_modal_sub: "All 10 gifts will be given to 10 random people after fulfilling the conditions.",
@@ -4095,9 +4561,14 @@
       faq_q4: "Can I suggest my own plugin?", faq_a4: "Sure. Write to us — after mandatory review your plugin appears in the catalog with the author's name.",
       faq_q5: "How to tell the original from a scam copy?", faq_a5: "All plugins and themes are published officially only on this site (lincoln-plugin) and in the Lincoln channel. Always check the page address: scammers create look-alike domains (lincoln-plugins, lincolnplugin, etc.) and channel clones with a similar handle. The original never asks for payment, «gifts», passwords or verification codes, and never promises real NFTs or stars «on balance». If in doubt — message us at @LincolnWasted and attach the link, we will check it.",
       faq_q6: "What if I have already been scammed?", faq_a6: "Message @LincolnWasted immediately with details: the scammer's handle, screenshots of the conversation and a link to the file or channel. Plugins cannot steal real stars, Premium or data directly — scammers work through deception and promises. Do not forward the file further and never enter SMS codes for anyone asking to «verify» something.",
+      sug_eyebrow: "Collaboration", sug_title: "Suggest a plugin", sug_sub: "Made your own plugin or have an idea for Lincoln? Fill the form — the message goes to the catalog author in Telegram.",
+      sug_name: "Your Telegram handle", sug_type: "Request type", sug_type_plugin: "My plugin", sug_type_idea: "Idea / feature", sug_type_bug: "Bug / issue",
+      sug_desc: "Description", sug_desc_ph: "What the plugin does / what do you want to suggest?",
+      sug_link: "Link to file or repository <em>(optional)</em>",
+      sug_send: "Send via Telegram", sug_note: "The chat with @LincolnWasted opens — just press «Send».",
       about_eyebrow: "About", about_title: "Made by Lincoln", about_h3: "Lincoln-Plugin — plugin catalog for exteraGram", about_p: "Hi! I'm Lincoln. I collect and build exteraGram plugins: local profile customization, ghost mode, visual fakes and comfort tools. Everything here is manually verified and cleaned from hidden network blocks.",
       cta_title: "Ready to make Telegram <span class='grad-text'>yours</span>?", cta_sub: "Start with the popular plugins — it takes less than a minute.", cta_pick: "Pick a plugin", cta_howto: "How to install",
-      foot_help: "Help", foot_top: "Top",
+      foot_help: "Help", foot_top: "Top", foot_reset: "Reset install history",
       donate_btn: "Support the author", donate_btn_foot: "Support",
       dl: "Download", copy: "Copy", details: "Details", mcopy: "Copy link"
     }
@@ -4220,6 +4691,20 @@
     if (dl) { markInstalled(dl.getAttribute("href")); applyUpdateBadges(); }
   });
   applyHistory();
+
+  /* ================= Сброс истории установок ================= */
+  var resetBtn = document.getElementById("resetHistory");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function () {
+      try { localStorage.removeItem("lincoln-installs"); } catch (e) {}
+      document.querySelectorAll(".card").forEach(function (c) {
+        c.classList.remove("has-installed");
+        if (c.querySelector(".update-badge")) c.querySelector(".update-badge").remove();
+      });
+      applyUpdateBadges();
+      if (typeof showToast === "function") showToast("История установок очищена");
+    });
+  }
 
   /* ================= Розыгрыш: счётчик участников ================= */
   function getGiveawayBase() {
@@ -4410,6 +4895,34 @@ if ("serviceWorker" in navigator && window.location.protocol === "https:") {
     });
   });
 }
+
+/* ================= PWA: кнопка «Установить приложение» ================= */
+(function () {
+  var installBtn = document.getElementById("installPwa");
+  if (!installBtn) return;
+  var deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", function (e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.hidden = false;
+    installBtn.classList.add("visible");
+  });
+  installBtn.addEventListener("click", function () {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function (choice) {
+      if (choice && choice.outcome === "dismissed") deferredPrompt = null;
+    });
+  });
+  window.addEventListener("appinstalled", function () {
+    deferredPrompt = null;
+    installBtn.hidden = true;
+    installBtn.classList.remove("visible");
+    var toast = document.getElementById("toast");
+    if (toast) toast.textContent = "Lincoln-Plugin установлен";
+    setTimeout(function () { if (toast) toast.textContent = ""; }, 3000);
+  });
+})();
 </script>
 </body>
 </html>
