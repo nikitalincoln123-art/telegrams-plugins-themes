@@ -1946,8 +1946,11 @@
   .hist-item.hidden { display: none; }
 
   @media (max-width: 560px) {
-    .hist-item { grid-template-columns: 18px 1fr; }
-    .hist-date { grid-column: 2; margin-top: -14px; }
+    .hist-item { grid-template-columns: 18px 1fr; gap: 8px 12px; }
+    .hist-dot { grid-column: 1; }
+    .hist-date { grid-column: 2; margin-top: 0; white-space: normal; }
+    .hist-body { grid-column: 2; min-width: 0; }
+    .hist-body p { max-width: none; word-break: normal; overflow-wrap: break-word; }
   }
 
   /* ---------- Как установить тему ---------- */
