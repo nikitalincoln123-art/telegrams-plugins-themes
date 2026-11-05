@@ -1,5 +1,5 @@
 __id__ = "lincoln_funpack"
-__name__ = "Fun-Pack"
+__name__ = "Lincoln-Fun"
 __description__ = "Развлекательный набор: пранк-набор текста (показывает собеседнику «печатает…», «записывает голосовое» или «записывает видео» при входящих сообщениях) и генератор ников — команда /nick открывает панель со стильными вариантами, тап копирует в буфер."
 __author__ = "Lincoln"
 __version__ = "1.0"
@@ -397,7 +397,7 @@ class LincolnFunPackPlugin(BasePlugin):
 
     def create_settings(self) -> List[Any]:
         return [
-            Header(text="Fun-Pack"),
+            Header(text="Lincoln-Fun"),
             Header(text="Пранк-набор текста"),
             Switch(key="prank_enabled", text="Включить пранк-набор", default=True, icon="msg_switcher_on"),
             Divider(),
