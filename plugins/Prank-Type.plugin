@@ -1,0 +1,229 @@
+__id__ = "lincoln_pranktype"
+__name__ = "Prank-Type"
+__description__ = "Пранк-набор текста: когда вам пишут, клиент показывает собеседнику «печатает…», «записывает голосовое» или «записывает видео» — будто вы уже отвечаете. Работает в выбранных чатах, длительность настраивается."
+__author__ = "Lincoln"
+__version__ = "1.0"
+__icon__ = "msg_timer"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+__category__ = ["tools"]
+
+import threading
+import time
+from typing import Any, Dict, List
+
+from base_plugin import BasePlugin, HookResult
+from ui.settings import Header, Switch, Input, Divider, Text
+from android_utils import log
+from client_utils import run_on_queue
+
+ACTIONS = {
+    "typing": "TL_sendMessageTypingAction",
+    "voice": "TL_sendMessageRecordAudioAction",
+    "video": "TL_sendMessageRecordVideoAction",
+}
+
+
+class LincolnPrankTypePlugin(BasePlugin):
+
+    def on_plugin_load(self):
+        self.add_hook("TL_updateNewMessage")
+        self.add_hook("TL_updateNewChannelMessage")
+        self._sessions: Dict[int, float] = {}
+        self._timers: Dict[int, threading.Timer] = {}
+
+    # --------------------------------------------------------------- helpers
+
+    def _peer_id(self, message):
+        peer = getattr(message, "peer_id", None)
+        val = getattr(peer, "chat_id", None) or getattr(peer, "user_id", None) or \
+            getattr(peer, "channel_id", None)
+        if val is None and peer is not None:
+            try:
+                val = int(peer)
+            except Exception:
+                val = None
+        return val
+
+    def _is_target(self, peer_id: int) -> bool:
+        mode = str(self.get_setting("mode", "all") or "all").strip().lower()
+        raw = str(self.get_setting("chats", "") or "")
+        chats = []
+        for part in raw.replace(" ", "").replace("\n", ",").replace(";", ",").split(","):
+            part = part.strip()
+            if part:
+                try:
+                    chats.append(int(part))
+                except Exception:
+                    pass
+        if mode == "only":
+            return peer_id in chats
+        if mode == "except":
+            return peer_id not in chats
+        return True
+
+    def _send_action(self, account: int, peer_id: int, action_name: str):
+        try:
+            from org.telegram.messenger import AccountInstance
+            from org.telegram.tgnet import TLRPC
+
+            inst = AccountInstance.getInstance(account)
+            if inst is None:
+                return
+            controller = inst.getMessagesController()
+            peer_input = controller.getInputPeer(int(peer_id))
+            if peer_input is None:
+                return
+            action_cls = getattr(TLRPC, action_name, None)
+            if action_cls is None:
+                return
+            req = TLRPC.TL_messages_setTyping()
+            req.peer = peer_input
+            req.action = action_cls()
+            inst.getConnectionsManager().sendRequest(req, lambda res, err: None)
+        except Exception as e:
+            log("[pranktype] send error: %s" % e)
+
+    def _send_cancel(self, account: int, peer_id: int):
+        try:
+            from org.telegram.messenger import AccountInstance
+            from org.telegram.tgnet import TLRPC
+
+            inst = AccountInstance.getInstance(account)
+            if inst is None:
+                return
+            controller = inst.getMessagesController()
+            peer_input = controller.getInputPeer(int(peer_id))
+            if peer_input is None:
+                return
+            req = TLRPC.TL_messages_setTyping()
+            req.peer = peer_input
+            req.action = TLRPC.TL_sendMessageCancelAction()
+            inst.getConnectionsManager().sendRequest(req, lambda res, err: None)
+        except Exception:
+            pass
+
+    # ------------------------------------------------------------- sessions
+
+    def _start_session(self, account: int, peer_id: int):
+        now = time.time()
+        prev = self._sessions.get(peer_id, 0)
+        if now - prev < 3:
+            return
+        self._sessions[peer_id] = now
+
+        try:
+            duration = float(str(self.get_setting("duration", "8") or "8").strip())
+        except Exception:
+            duration = 8.0
+        if duration <= 0:
+            duration = 8.0
+
+        chosen = None
+        for key, clsname in ACTIONS.items():
+            if self.get_setting(key, False):
+                chosen = clsname
+                break
+        if chosen is None:
+            chosen = ACTIONS["typing"]
+
+        stop_at = now + duration
+        interval = 4.0
+
+        def _tick():
+            try:
+                if time.time() > stop_at:
+                    self._send_cancel(account, peer_id)
+                    self._timers.pop(peer_id, None)
+                    return
+                self._send_action(account, peer_id, chosen)
+                t = threading.Timer(interval, _tick)
+                t.daemon = True
+                self._timers[peer_id] = t
+                t.start()
+            except Exception:
+                self._timers.pop(peer_id, None)
+
+        t = threading.Timer(0.3, _tick)
+        t.daemon = True
+        self._timers[peer_id] = t
+        t.start()
+
+    # ----------------------------------------------------------------- hooks
+
+    def on_update_hook(self, update_name: str, account: int, update: Any) -> HookResult:
+        try:
+            if not self.get_setting("enabled", True):
+                return HookResult()
+            if update_name not in ("TL_updateNewMessage", "TL_updateNewChannelMessage"):
+                return HookResult()
+            message = getattr(update, "message", None)
+            if message is None:
+                return HookResult()
+            if bool(getattr(message, "out", False)):
+                return HookResult()
+            text = getattr(message, "message", "") or ""
+            if not text and getattr(message, "media", None) is None:
+                return HookResult()
+            peer_id = self._peer_id(message)
+            if peer_id is None:
+                return HookResult()
+            if peer_id > 0 and not self.get_setting("private", True):
+                return HookResult()
+            if not self._is_target(peer_id):
+                return HookResult()
+            self._start_session(account, peer_id)
+        except Exception as e:
+            log("[pranktype] hook error: %s" % e)
+        return HookResult()
+
+    # -------------------------------------------------------------- settings
+
+    def create_settings(self) -> List[Any]:
+        return [
+            Header(text="Prank-Type"),
+            Switch(key="enabled", text="Включить", default=True, icon="msg_switcher_on"),
+            Divider(),
+            Header(text="Что показывать"),
+            Switch(key="typing", text="«Печатает…»", default=True, icon="msg_edit"),
+            Switch(key="voice", text="«Записывает голосовое…»", default=False, icon="msg_mic"),
+            Switch(key="video", text="«Записывает видео…»", default=False, icon="msg_camera"),
+            Input(
+                key="duration",
+                text="Длительность (сек)",
+                default="8",
+                subtext="Сколько секунд собеседник видит «печатает»",
+                icon="msg_timer",
+            ),
+            Divider(),
+            Header(text="Чаты"),
+            Switch(key="private", text="Только личные чаты", default=True, icon="msg_user"),
+            Input(
+                key="mode",
+                text="Режим чатов",
+                default="all",
+                subtext="all — все, only — только из списка, except — все, кроме списка",
+                icon="msg_filter",
+            ),
+            Input(
+                key="chats",
+                text="ID чатов",
+                default="",
+                subtext="Через запятую, например: 123456789, -1001234567890",
+                icon="msg_group",
+            ),
+            Divider(),
+            Text(
+                text="Как работает",
+                subtext="При входящем сообщении в выбранный чат плагин отправляет «печатает» по протоколу Telegram и сам отменяет его по таймеру. Дедупликация: одна сессия на чат раз в 3 секунды.",
+                icon="msg_info",
+            ),
+        ]
+
+
+def create_plugin():
+    return LincolnPrankTypePlugin()
+
+
+def get_plugin():
+    return LincolnPrankTypePlugin()
