@@ -934,7 +934,7 @@
   }
   .card > * { transform: translateZ(22px); }
 
-  .card .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
   .card .icon {
     width: 48px; height: 48px;
     border-radius: 14px;
@@ -986,11 +986,17 @@
   .btn-info { background: transparent; color: var(--text-dim); }
   .btn-info:hover { color: var(--creme); border-color: rgba(255, 245, 230, 0.3); background: var(--panel-hover); }
 
+  .top-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    min-width: 0;
+  }
+
   /* Метка «уже ставил(а)» */
   .installed-tag {
-    position: absolute;
-    top: 14px;
-    right: 14px;
     display: inline-flex;
     align-items: center;
     gap: 5px;
@@ -1007,9 +1013,12 @@
     transform: translateY(-4px);
     transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
     pointer-events: none;
-    z-index: 5;
   }
   .card.has-installed .installed-tag { opacity: 1; transform: none; }
+  .installed-tag::before {
+    content: "";
+    width: 0; height: 0;
+  }
 
   /* Бейдж NEW для свежих плагинов */
   .new-badge {
@@ -1082,9 +1091,7 @@
 
   /* Кнопка избранного на карточке */
   .fav-btn {
-    position: absolute;
-    top: 14px;
-    right: 14px;
+    position: static;
     width: 34px;
     height: 34px;
     display: grid;
@@ -1095,7 +1102,6 @@
     color: rgba(255, 250, 240, 0.6);
     cursor: pointer;
     transition: background 0.25s, color 0.25s, transform 0.2s, border-color 0.25s;
-    z-index: 6;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
   }
@@ -1103,7 +1109,6 @@
   .fav-btn.on { color: #f2c47e; border-color: rgba(237, 201, 160, 0.6); background: rgba(46, 34, 16, 0.7); }
   .fav-btn.on:hover { color: #ffdfa8; }
   .fav-btn svg { width: 18px; height: 18px; display: block; pointer-events: none; }
-  .card.has-installed .fav-btn { top: 50px; }
   .card .fav-btn { margin: 0; }
 
   /* Чип «Избранное» в фильтрах */
@@ -3595,11 +3600,13 @@
       return '<article class="card reveal" style="--ic:' + p.color + '" data-pcat="' + (p.cat || "other") + '" data-name="' + p.name + '" data-version="' + p.version + '" data-date="' + p.date + '"' +
         ' data-date-iso="' + p.date + '" data-changelog="' + p.changelog + '" data-shots="' + p.shots + '" data-long="' + p.long + '"' +
         ' data-file="' + p.file + '">' +
-        '<span class="installed-tag" aria-hidden="true">\u2713 уже ставил(а)</span>' +
-        '<button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное">' + favSvg + '</button>' +
         '<div class="top">' +
         '<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + p.icon + '"/>' + extra + '</svg></span>' +
-        '<span class="tag ' + (p.tagClass || "") + '">' + p.tag + '</span></div>' +
+        '<span class="top-right">' +
+        '<span class="installed-tag" aria-hidden="true">\u2713 уже ставил(а)</span>' +
+        '<span class="tag ' + (p.tagClass || "") + '">' + p.tag + '</span>' +
+        '<button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное">' + favSvg + '</button>' +
+        '</span></div>' +
         '<h3>' + p.name + '</h3>' +
         '<p class="desc">' + p.desc + '</p>' +
         '<div class="card-actions">' +
