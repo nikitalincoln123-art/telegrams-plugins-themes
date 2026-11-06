@@ -4849,20 +4849,25 @@
     }
   }
   function applyNewBadges() {
-    var now = Date.now();
-    var WEEK = 7 * 86400000;
-    document.querySelectorAll(".card[data-date-iso]").forEach(function (c) {
-      if (c.querySelector(".new-badge")) return;
+    var cards = document.querySelectorAll(".card[data-date-iso]");
+    var best = null, bestT = -Infinity;
+    cards.forEach(function (c) {
+      if (c.querySelector(".update-badge")) return;
       var iso = c.getAttribute("data-date-iso") || "";
       var d = new Date(iso);
       if (isNaN(d.getTime())) return;
-      if (now - d.getTime() <= WEEK) {
-        var badge = document.createElement("span");
-        badge.className = "new-badge";
-        badge.textContent = "NEW";
-        c.appendChild(badge);
-      }
+      if (d.getTime() > bestT) { bestT = d.getTime(); best = c; }
     });
+    cards.forEach(function (c) {
+      var b = c.querySelector(".new-badge");
+      if (b) b.remove();
+    });
+    if (best && !best.querySelector(".update-badge")) {
+      var badge = document.createElement("span");
+      badge.className = "new-badge";
+      badge.textContent = "NEW";
+      best.appendChild(badge);
+    }
   }
 
   /* ================= Живой набор текста во 2-м терме ================= */
