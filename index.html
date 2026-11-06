@@ -118,6 +118,19 @@
 
   html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 
+  /* Полоса прогресса чтения */
+  .scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    width: 0;
+    background: linear-gradient(90deg, #e0b178, #f2d9a8);
+    box-shadow: 0 0 12px rgba(224, 177, 120, 0.55);
+    z-index: 2000;
+    pointer-events: none;
+    transition: width 0.08s linear;
+  }
+
   /* Тёмный скроллбар в тон сайта */
   * {
     scrollbar-width: thin;
@@ -913,20 +926,30 @@
     left: 14px;
     display: inline-flex;
     align-items: center;
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    padding: 4px 10px;
+    gap: 5px;
+    font-size: 10.5px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    padding: 5px 12px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #f8f2e6, #e3cba8);
-    color: #0b0a08;
-    box-shadow: 0 4px 18px rgba(224, 177, 120, 0.4);
+    background: linear-gradient(135deg, #ffd98a, #f2b14e 55%, #e8982e);
+    color: #1a1206;
+    box-shadow: 0 4px 20px rgba(242, 177, 78, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.6);
     z-index: 5;
-    animation: newBadgePulse 2.6s ease-in-out infinite;
+    animation: newBadgePulse 2.2s ease-in-out infinite;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .new-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #b4561a;
+    box-shadow: 0 0 0 2px rgba(180, 86, 26, 0.35);
   }
   @keyframes newBadgePulse {
-    0%, 100% { box-shadow: 0 4px 14px rgba(224, 177, 120, 0.35); }
-    50% { box-shadow: 0 4px 26px rgba(224, 177, 120, 0.65); }
+    0%, 100% { box-shadow: 0 4px 14px rgba(242, 177, 78, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6); transform: scale(1); }
+    50% { box-shadow: 0 4px 30px rgba(242, 177, 78, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.6); transform: scale(1.03); }
   }
   .card .new-badge { margin: 0; }
 
@@ -937,20 +960,73 @@
     left: 14px;
     display: inline-flex;
     align-items: center;
+    gap: 5px;
     font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-weight: 900;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 999px;
-    background: rgba(214, 148, 66, 0.16);
-    color: #e8a35c;
-    border: 1px solid rgba(214, 148, 66, 0.5);
-    box-shadow: 0 4px 18px rgba(214, 148, 66, 0.25);
+    background: linear-gradient(135deg, #ff9f43, #e85f2e);
+    color: #fff;
+    border: 1px solid rgba(255, 170, 100, 0.7);
+    box-shadow: 0 4px 20px rgba(232, 95, 46, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     z-index: 5;
     white-space: nowrap;
+    animation: updBadgePulse 2.4s ease-in-out infinite;
+  }
+  .update-badge::before {
+    content: "↑";
+    font-size: 11px;
+    font-weight: 900;
+    color: #fff;
+  }
+  @keyframes updBadgePulse {
+    0%, 100% { box-shadow: 0 4px 14px rgba(232, 95, 46, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+    50% { box-shadow: 0 4px 26px rgba(232, 95, 46, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
   }
   .card .update-badge { margin: 0; }
+
+  /* Кнопка избранного на карточке */
+  .fav-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: rgba(10, 9, 8, 0.55);
+    border: 1px solid rgba(255, 245, 230, 0.18);
+    color: rgba(255, 250, 240, 0.6);
+    cursor: pointer;
+    transition: background 0.25s, color 0.25s, transform 0.2s, border-color 0.25s;
+    z-index: 6;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .fav-btn:hover { color: #f2d9a8; border-color: rgba(237, 201, 160, 0.5); transform: scale(1.08); }
+  .fav-btn.on { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.55); background: rgba(60, 12, 12, 0.6); }
+  .fav-btn.on:hover { color: #ff8f8f; }
+  .fav-btn svg { width: 18px; height: 18px; display: block; pointer-events: none; }
+  .card.has-installed .fav-btn { top: 50px; }
+  .card .fav-btn { margin: 0; }
+
+  /* Чип «Избранное» в фильтрах */
+  .chip.fav-chip { display: inline-flex; align-items: center; gap: 6px; }
+  .chip.fav-chip .fav-count {
+    font-size: 10px;
+    font-weight: 800;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 5px;
+    border-radius: 999px;
+    display: inline-grid;
+    place-items: center;
+    background: rgba(255, 107, 107, 0.25);
+    color: #ff8f8f;
+  }
 
   /* ---------- Плашка-предупреждение владельца ---------- */
   .owner-warning {
@@ -2487,6 +2563,7 @@
 </head>
 <body>
 
+<div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 <canvas id="space" aria-hidden="true"></canvas>
 <div class="float3d" id="float3d" aria-hidden="true">
   <div class="float3d-word" data-depth="1.0">
@@ -2657,6 +2734,7 @@
 
     <div class="cat-chips" id="catChips" role="group" aria-label="Фильтр по категориям">
       <button type="button" class="chip active" data-pcat="all" data-i18n="cat_all">Все</button>
+      <button type="button" class="chip" data-pcat="fav" data-i18n="cat_fav"><span aria-hidden="true">♥</span> Избранное <span class="fav-count" id="favCount" hidden>0</span></button>
       <button type="button" class="chip" data-pcat="useful" data-i18n="cat_useful">Полезные</button>
       <button type="button" class="chip" data-pcat="fun" data-i18n="cat_fun">Фан</button>
       <button type="button" class="chip" data-pcat="other" data-i18n="cat_other">Другие</button>
@@ -2668,6 +2746,7 @@
           data-shots="shots/lincoln-plugin.svg"
           data-long="NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник с красивой карточкой, визуальная вставка collectible NFT-подарков в чат, анимации отправки подарков и звёзд. Полностью локально, на сервер ничего не отправляется.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/></svg></span>
           <span class="tag">Плагин</span>
@@ -2686,6 +2765,7 @@
           data-shots="shots/fake-editor.svg"
           data-long="Визуальный редактор сообщений: локальные правки текста, фейковые сообщения, генератор NFT-аватарок и многое другое. Все эффекты применяются только в вашем клиенте.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16M4 9h16M4 13h10M4 17h7"/><circle cx="18" cy="16" r="2.6"/><circle cx="18" cy="16" r="1" fill="currentColor"/></svg></span>
           <span class="tag amber">Редактор</span>
@@ -2704,6 +2784,7 @@
           data-shots="shots/voice-changer.svg"
           data-long="Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых сообщений. Включает нативный аудио-движок, вшитый в плагин.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a7 7 0 0 0-4.3 12.5c.6.5.9 1.2.9 2V21h6.8v-3.5c0-.8.3-1.5.9-2A7 7 0 0 0 12 3z"/><path d="M10 21v-2h4v2"/></svg></span>
           <span class="tag amber">Аудио</span>
@@ -2722,6 +2803,7 @@
           data-shots="shots/lincoln-tools.svg"
           data-long="Локальная визуальная подмена баланса звёзд и TON в профиле. Полностью локально: ничего не отправляется и не изменяется на сервере.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5L12 17.4l-5.8 3.1 1.1-6.5L2.6 9.4l6.5-.9L12 3z"/></svg></span>
           <span class="tag">Свой</span>
@@ -2740,6 +2822,7 @@
           data-shots="shots/lincoln-ghost.svg"
           data-long="Скрывает статус «в сети», «печатает» и «прочитано». Работает на уровне сетевых запросов (TL_account_updateStatus, TL_messages_readHistory), поэтому не зависит от версии клиента.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.8 10.5a6 6 0 1 0-11.6 2 6 6 0 0 0 9.7 2.4M14 12v4M12 13l1.5 2M14 19.5h4M14 21.5h2"/></svg></span>
           <span class="tag amber">Ghost</span>
@@ -2758,6 +2841,7 @@
           data-shots="shots/lincoln-holl.svg"
           data-long="Всё в одном: телефон, несколько юзернеймов, звёзды, TON, премиум, скрытие «в сети»/«печатает»/«прочитано», своё «был(а)…», мут командой .mut, визуальные подарки. Локальная кастомизация профиля.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2.5a9.5 9.5 0 0 1 9.5 9.5c0 5.2-4.3 9.5-9.5 9.5S2.5 17.2 2.5 12 6.8 2.5 12 2.5z"/><path d="M8.5 9.5 12 13l3.5-3.5"/></svg></span>
           <span class="tag">Warm</span>
@@ -2776,6 +2860,7 @@
           data-shots="shots/lincoln-stats.svg"
           data-long="Статистика аккаунта: ID, возраст аккаунта, локаль/страна, сервер (DC) и контактные данные. Всё читается локально с устройства и никуда не отправляется.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/><path d="M4 11v3m5-7v7m5-9v9m5-5v5"/></svg></span>
           <span class="tag">Свой</span>
@@ -2794,6 +2879,7 @@
           data-shots="shots/lincoln-cleaner.svg"
           data-long="Массовая очистка чатов: удаляет диалоги из списка одним нажатием — все или по типам (личные, группы, каналы), с защитой «Избранного». Работает локально через MessagesController.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V5h6v2m-8 0 1 12h8l1-12M10 11v5m4-5v5"/></svg></span>
           <span class="tag amber">Очистка</span>
@@ -2812,6 +2898,7 @@
           data-shots="shots/lincoln-notify.svg"
           data-long="Уведомления о важных чатах: следит за новыми сообщениями по выбранным диалогам или ключевым словам и шлёт системное уведомление, даже если для чата отключены звуки.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 1 6 6v3l2 3H4l2-3V9a6 6 0 0 1 6-6zM10 20a2 2 0 0 0 4 0"/></svg></span>
           <span class="tag amber">Уведомления</span>
@@ -2830,6 +2917,7 @@
           data-shots="shots/auto-replier.svg"
           data-long="Автоответы по триггерам: когда в личном чате или группе приходит сообщение с ключевым словом, плагин автоматически отправляет заданный ответ (цитатой на сообщение). С анти-спамом и правилами.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H4l2.5-2.5A8 8 0 1 1 21 12z"/><path d="M9 10h6m-6 3h3"/></svg></span>
           <span class="tag">Авто</span>
@@ -2848,6 +2936,7 @@
           data-shots="shots/unlimited-pins.svg"
           data-long="Снятие лимита закреплённых чатов: убирает клиентское ограничение на количество пинов в диалогах, папках и фильтрах. Оригинальная реализация от Lincoln, возвращает лимиты при выключении.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17 5 10l3-3 4 4 4-6 3 3-7 9z"/><path d="M5 20h14"/></svg></span>
           <span class="tag amber">Pins</span>
@@ -2866,6 +2955,7 @@
           data-shots="shots/lincoln-ios.svg"
           data-long="Профиль и чаты: номер, юзернейм, био, эмодзи-статус, звёзды/TON, премиум, буст, ghost (скрыть в сети/печатает/прочитано), своё «был(а)…», скрытие просмотров в каналах, умный статус по расписанию, режим самолёт, эффект «печатает», NFT-плашка. Всё локально.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/><circle cx="12" cy="8" r="1.6" fill="currentColor"/></svg></span>
           <span class="tag">iOS</span>
@@ -2884,6 +2974,7 @@
           data-shots="shots/lincoln-fun.svg"
           data-long="Развлекательный набор в одном плагине: пранк-набор текста — при входящих сообщениях показывает собеседнику «печатает…», «записывает голосовое» или «записывает видео» (длительность и чаты настраиваются); генератор ников — команда /nick открывает панель со стильными вариантами, тап копирует в буфер.">
         <span class="installed-tag" aria-hidden="true">✓ уже ставил(а)</span>
+        <button type="button" class="fav-btn" data-fav aria-label="В избранное" title="В избранное"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20.5l-7.2-7A5 5 0 0 1 12 6.3a5 5 0 0 1 7.2 7.2z"/></svg></button>
         <div class="top">
           <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13m0 0 4.5-4.5M12 16l-4.5-4.5M5 20h14"/><circle cx="12" cy="8" r="1.6" fill="currentColor"/></svg></span>
           <span class="tag amber">Фан</span>
@@ -4115,13 +4206,21 @@
     var sort = sortSelect ? sortSelect.value : "default";
     var activeChip = document.querySelector("#catChips .chip.active");
     var cat = activeChip ? activeChip.getAttribute("data-pcat") : "all";
+    var favs = cat === "fav" ? getFavs() : null;
     var visible = 0;
     var cards = [].slice.call(grid.querySelectorAll(".card"));
     cards.forEach(function (c) {
       var name = (c.getAttribute("data-name") || "").toLowerCase();
       var long = (c.getAttribute("data-long") || "").toLowerCase();
       var matchQ = !q || name.indexOf(q) !== -1 || long.indexOf(q) !== -1;
-      var matchCat = cat === "all" || (c.getAttribute("data-pcat") || "other") === cat;
+      var matchCat = true;
+      if (cat === "fav") {
+        var dl = c.querySelector("a[download]");
+        var href = dl ? dl.getAttribute("href") : "";
+        matchCat = favs.indexOf(href) !== -1;
+      } else {
+        matchCat = cat === "all" || (c.getAttribute("data-pcat") || "other") === cat;
+      }
       var match = matchQ && matchCat;
       c.classList.toggle("hidden", !match);
       if (match) visible++;
@@ -4844,7 +4943,7 @@
       cat_eyebrow: "Каталог", cat_sub: "Делает работу комфортной, плавной. И не только...)", cat_counter: "плагинов",
       cat_of_label: "из",
       cat_search: "Поиск по каталогу...", sort_default: "По умолчанию", sort_name: "По алфавиту", sort_date: "Сначала новые",
-      cat_all: "Все", cat_useful: "Полезные", cat_fun: "Фан", cat_other: "Другие",
+      cat_all: "Все", cat_useful: "Полезные", cat_fun: "Фан", cat_other: "Другие", cat_fav: "Избранное",
       themes_functions: "Темы/Функции",
       dl: "Скачать",
       news_release: "Свежий релиз", news_title: "пранк-набор и генератор ников", news_sub: "Развлекательный набор в одном плагине: «печатает…» при входящих сообщениях и стильные ники по команде /nick — тап копирует в буфер.",
@@ -4904,7 +5003,7 @@
       cat_eyebrow: "Catalog", cat_sub: "Makes your experience comfortable and smooth. And more...)", cat_counter: "plugins",
       cat_of_label: "of",
       cat_search: "Search catalog...", sort_default: "Default", sort_name: "By name", sort_date: "Newest first",
-      cat_all: "All", cat_useful: "Useful", cat_fun: "Fun", cat_other: "Other",
+      cat_all: "All", cat_useful: "Useful", cat_fun: "Fun", cat_other: "Other", cat_fav: "Favorites",
       themes_functions: "Themes/Features",
       dl: "Download",
       news_release: "Fresh release", news_title: "prank typing and nickname generator", news_sub: "A fun pack in one plugin: «typing…» on incoming messages and stylish nicknames via /nick — tap to copy.",
@@ -4999,6 +5098,63 @@
   applyHumanDates(curLang);
   applyNewBadges();
   applyCatalog();
+
+  /* ================= Избранные плагины ================= */
+  function getFavs() {
+    try { return JSON.parse(localStorage.getItem("lincoln-favs") || "[]"); }
+    catch (e) { return []; }
+  }
+  function saveFavs(arr) {
+    try { localStorage.setItem("lincoln-favs", JSON.stringify(arr)); } catch (e) {}
+  }
+  function refreshFavs() {
+    var favs = getFavs();
+    var countEl = document.getElementById("favCount");
+    if (countEl) {
+      countEl.textContent = favs.length;
+      countEl.hidden = !(favs.length > 0);
+    }
+    document.querySelectorAll("#pluginGrid .card").forEach(function (c) {
+      var dl = c.querySelector("a[download]");
+      var href = dl ? dl.getAttribute("href") : "";
+      var btn = c.querySelector(".fav-btn");
+      if (btn) btn.classList.toggle("on", favs.indexOf(href) !== -1);
+    });
+  }
+  function isFavChipActive() {
+    var act = document.querySelector("#catChips .chip.active");
+    return act ? act.getAttribute("data-pcat") === "fav" : false;
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target && e.target.closest ? e.target.closest(".fav-btn") : null;
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    var card = btn.closest(".card");
+    if (!card) return;
+    var dl = card.querySelector("a[download]");
+    var href = dl ? dl.getAttribute("href") : "";
+    if (!href) return;
+    var favs = getFavs();
+    var idx = favs.indexOf(href);
+    if (idx === -1) favs.push(href); else favs.splice(idx, 1);
+    saveFavs(favs);
+    btn.classList.toggle("on", idx === -1);
+    refreshFavs();
+    if (isFavChipActive()) applyCatalog();
+    if (typeof showToast === "function") {
+      showToast(idx === -1 ? "Добавлено в избранное ♥" : "Убрано из избранного");
+    }
+  });
+  var catChipsFav = document.querySelectorAll("#catChips .chip");
+  catChipsFav.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      if (chip.getAttribute("data-pcat") === "fav" && !getFavs().length) {
+        if (typeof showToast === "function") showToast("Пока нет избранных — нажмите ♥ на плагине");
+      }
+    });
+  });
+  refreshFavs();
 
   /* ================= История установок ================= */
   function getHistory() {
@@ -5100,6 +5256,30 @@
       try { window.scrollTo({ top: 0, behavior: "smooth" }); }
       catch (e) { window.scrollTo(0, 0); }
     });
+  })();
+
+  /* ================= Полоса прогресса чтения ================= */
+  (function () {
+    var bar = document.getElementById("scrollProgress");
+    if (!bar) return;
+    var ticking = false;
+    function update() {
+      ticking = false;
+      var doc = document.documentElement;
+      var max = (doc.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+      if (max <= 0) { bar.style.width = "0%"; return; }
+      var p = Math.min(100, Math.max(0, (window.scrollY || doc.scrollTop) / max * 100));
+      bar.style.width = p + "%";
+    }
+    function request() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
+    }
+    window.addEventListener("scroll", request, { passive: true });
+    window.addEventListener("resize", request, { passive: true });
+    update();
   })();
 
   /* ================= Сброс истории установок ================= */
