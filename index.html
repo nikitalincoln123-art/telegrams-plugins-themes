@@ -1676,6 +1676,24 @@
     width: 100%;
     height: 100%;
   }
+  .theme-ph {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    background:
+      radial-gradient(120% 120% at 15% 15%, rgba(224, 177, 120, 0.16), transparent 55%),
+      radial-gradient(120% 120% at 85% 85%, rgba(237, 201, 160, 0.1), transparent 60%),
+      linear-gradient(150deg, rgba(255, 250, 240, 0.05), rgba(255, 250, 240, 0.015));
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  .theme-ph::after {
+    content: "Скоро";
+  }
 
   /* ---------- Баннер новинок ---------- */
   .news-banner {
@@ -3078,132 +3096,47 @@
     </div>
 
     <div class="bento" id="themeGrid">
-      <article class="card reveal" data-tcat="dark" data-name="Lincoln Dark">
-        <div class="theme-preview" role="img" aria-label="Lincoln Dark — тёмная тема">
-          <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <rect width="300" height="150" fill="#0b0a08"/>
-            <rect x="0" y="0" width="300" height="30" fill="#0d0c09"/>
-            <circle cx="22" cy="15" r="8" fill="#1c1812" stroke="#e0b178" stroke-width="1.2"/>
-            <rect x="38" y="8" width="70" height="6" rx="3" fill="#f8f2e6" opacity="0.85"/>
-            <rect x="38" y="18" width="40" height="4" rx="2" fill="#6f6655"/>
-            <circle cx="286" cy="12" r="3.5" fill="#e0b178"/>
-            <rect x="270" y="9" width="10" height="6" rx="3" fill="#2c261a" opacity="0"/>
-            <text x="158" y="21" font-family="monospace" font-size="10" fill="#6f6655">12:41</text>
-            <path d="M14 38h62a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6H42l-12 10 1-10H14a6 6 0 0 1-6-6V44a6 6 0 0 1 6-6z" fill="#1c1812"/>
-            <rect x="20" y="52" width="50" height="4" rx="2" fill="#ede4d2" opacity="0.9"/>
-            <rect x="20" y="61" width="34" height="4" rx="2" fill="#8f8777"/>
-            <path d="M228 70h58a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6h-34l-12 10 1-10h-13a6 6 0 0 1-6-6V76a6 6 0 0 1 6-6z" fill="#2b2417"/>
-            <rect x="234" y="84" width="46" height="4" rx="2" fill="#f5eddc" opacity="0.9"/>
-            <rect x="234" y="93" width="26" height="4" rx="2" fill="#c2a877"/>
-            <rect x="14" y="112" width="66" height="5" rx="2.5" fill="#1d1912"/>
-            <rect x="14" y="121" width="88" height="5" rx="2.5" fill="#1d1912"/>
-            <rect x="14" y="130" width="40" height="5" rx="2.5" fill="#1d1912"/>
-            <rect x="206" y="112" width="80" height="26" rx="13" fill="#17130d" stroke="#2c261a"/>
-            <text x="222" y="129" font-family="sans-serif" font-size="11" fill="#6f6655">Сообщение…</text>
-            <circle cx="274" cy="125" r="9" fill="#b4863f"/>
-            <path d="M270 125l3 3 5-6" stroke="#0b0a08" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <article class="card reveal" data-tcat="dark" data-name="Тема 1">
+        <div class="theme-preview" role="img" aria-label="Тема скоро появится">
+          <div class="theme-ph"></div>
         </div>
-        <h3>Lincoln Dark</h3>
-        <p class="desc">Чёрно-золотая тема в стиле каталога: угольный фон, кремовые тексты, золотые акценты. Применяется в Telegram и exteraGram.</p>
+        <h3>Тема 1</h3>
+        <p class="desc">Скоро в каталоге — тёмная тема в фирменном стиле Lincoln. Следите за обновлениями.</p>
         <div class="card-actions">
-          <a class="btn card-download" href="themes/Lincoln-Dark.attheme" download>Скачать .attheme</a>
+          <button type="button" class="btn btn-info" disabled>Скоро</button>
         </div>
       </article>
 
-      <article class="card reveal" data-tcat="dark" data-name="Lincoln Midnight">
-        <div class="theme-preview" role="img" aria-label="Lincoln Midnight — глубокая тёмная тема">
-          <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <rect width="300" height="150" fill="#050607"/>
-            <rect x="0" y="0" width="300" height="30" fill="#07090d"/>
-            <circle cx="22" cy="15" r="8" fill="#12161f" stroke="#8fa3c8" stroke-width="1.2"/>
-            <rect x="38" y="8" width="70" height="6" rx="3" fill="#eef2f8" opacity="0.85"/>
-            <rect x="38" y="18" width="40" height="4" rx="2" fill="#5c6b85"/>
-            <circle cx="286" cy="12" r="3.5" fill="#8fa3c8"/>
-            <text x="158" y="21" font-family="monospace" font-size="10" fill="#5c6b85">12:41</text>
-            <path d="M14 38h62a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6H42l-12 10 1-10H14a6 6 0 0 1-6-6V44a6 6 0 0 1 6-6z" fill="#12161f"/>
-            <rect x="20" y="52" width="50" height="4" rx="2" fill="#e2e8f2" opacity="0.9"/>
-            <rect x="20" y="61" width="34" height="4" rx="2" fill="#7d8aa0"/>
-            <path d="M228 70h58a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6h-34l-12 10 1-10h-13a6 6 0 0 1-6-6V76a6 6 0 0 1 6-6z" fill="#1c2434"/>
-            <rect x="234" y="84" width="46" height="4" rx="2" fill="#eef2f8" opacity="0.9"/>
-            <rect x="234" y="93" width="26" height="4" rx="2" fill="#93a5c4"/>
-            <rect x="14" y="112" width="66" height="5" rx="2.5" fill="#0f1319"/>
-            <rect x="14" y="121" width="88" height="5" rx="2.5" fill="#0f1319"/>
-            <rect x="14" y="130" width="40" height="5" rx="2.5" fill="#0f1319"/>
-            <rect x="206" y="112" width="80" height="26" rx="13" fill="#0c1016" stroke="#1a2230"/>
-            <text x="222" y="129" font-family="sans-serif" font-size="11" fill="#5c6b85">Сообщение…</text>
-            <circle cx="274" cy="125" r="9" fill="#6b82a8"/>
-            <path d="M270 125l3 3 5-6" stroke="#07090d" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <article class="card reveal" data-tcat="dark" data-name="Тема 2">
+        <div class="theme-preview" role="img" aria-label="Тема скоро появится">
+          <div class="theme-ph"></div>
         </div>
-        <h3>Lincoln Midnight</h3>
-        <p class="desc">Глубокая сине-чёрная тема для тех, кто работает в Telegram ночью. Мягкие синие акценты и минимальная нагрузка на глаза.</p>
+        <h3>Тема 2</h3>
+        <p class="desc">Скоро в каталоге — глубокий тёмный стиль для ночного использования. Следите за обновлениями.</p>
         <div class="card-actions">
-          <a class="btn card-download" href="themes/Lincoln-Midnight.attheme" download>Скачать .attheme</a>
+          <button type="button" class="btn btn-info" disabled>Скоро</button>
         </div>
       </article>
 
-      <article class="card reveal" data-tcat="light" data-name="Lincoln Cream">
-        <div class="theme-preview" role="img" aria-label="Lincoln Cream — светлая тема">
-          <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <rect width="300" height="150" fill="#f6f1e7"/>
-            <rect x="0" y="0" width="300" height="30" fill="#fbf7ee"/>
-            <circle cx="22" cy="15" r="8" fill="#ffffff" stroke="#c89a5e" stroke-width="1.2"/>
-            <rect x="38" y="8" width="70" height="6" rx="3" fill="#2b2318" opacity="0.85"/>
-            <rect x="38" y="18" width="40" height="4" rx="2" fill="#b8ac99"/>
-            <circle cx="286" cy="12" r="3.5" fill="#c89a5e"/>
-            <text x="158" y="21" font-family="monospace" font-size="10" fill="#b8ac99">12:41</text>
-            <path d="M14 38h62a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6H42l-12 10 1-10H14a6 6 0 0 1-6-6V44a6 6 0 0 1 6-6z" fill="#ffffff"/>
-            <rect x="20" y="52" width="50" height="4" rx="2" fill="#2b2318" opacity="0.9"/>
-            <rect x="20" y="61" width="34" height="4" rx="2" fill="#9a8d79"/>
-            <path d="M228 70h58a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6h-34l-12 10 1-10h-13a6 6 0 0 1-6-6V76a6 6 0 0 1 6-6z" fill="#ffe9c9"/>
-            <rect x="234" y="84" width="46" height="4" rx="2" fill="#2b2318" opacity="0.9"/>
-            <rect x="234" y="93" width="26" height="4" rx="2" fill="#a97b3f"/>
-            <rect x="14" y="112" width="66" height="5" rx="2.5" fill="#eee3cc"/>
-            <rect x="14" y="121" width="88" height="5" rx="2.5" fill="#eee3cc"/>
-            <rect x="14" y="130" width="40" height="5" rx="2.5" fill="#eee3cc"/>
-            <rect x="206" y="112" width="80" height="26" rx="13" fill="#ffffff" stroke="#e6dcc8"/>
-            <text x="222" y="129" font-family="sans-serif" font-size="11" fill="#b8ac99">Сообщение…</text>
-            <circle cx="274" cy="125" r="9" fill="#e2c48f"/>
-            <path d="M270 125l3 3 5-6" stroke="#3a2c1a" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <article class="card reveal" data-tcat="light" data-name="Тема 3">
+        <div class="theme-preview" role="img" aria-label="Тема скоро появится">
+          <div class="theme-ph"></div>
         </div>
-        <h3>Lincoln Cream</h3>
-        <p class="desc">Тёплая кремовая тема в стиле каталога: светлый фон, золотые кнопки, тёмные читаемые тексты. Не утомляет днём.</p>
+        <h3>Тема 3</h3>
+        <p class="desc">Скоро в каталоге — светлая тёплая тема в стиле каталога. Следите за обновлениями.</p>
         <div class="card-actions">
-          <a class="btn card-download" href="themes/Lincoln-Cream.attheme" download>Скачать .attheme</a>
+          <button type="button" class="btn btn-info" disabled>Скоро</button>
         </div>
       </article>
 
-      <article class="card reveal" data-tcat="light" data-name="Lincoln Pearl">
-        <div class="theme-preview" role="img" aria-label="Lincoln Pearl — светлая жемчужная тема">
-          <svg viewBox="0 0 300 150" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <rect width="300" height="150" fill="#f4f6f7"/>
-            <rect x="0" y="0" width="300" height="30" fill="#fafcfb"/>
-            <circle cx="22" cy="15" r="8" fill="#ffffff" stroke="#5d8a4a" stroke-width="1.2"/>
-            <rect x="38" y="8" width="70" height="6" rx="3" fill="#23282a" opacity="0.85"/>
-            <rect x="38" y="18" width="40" height="4" rx="2" fill="#94a098"/>
-            <circle cx="286" cy="12" r="3.5" fill="#5d8a4a"/>
-            <text x="158" y="21" font-family="monospace" font-size="10" fill="#a9b2ac">12:41</text>
-            <path d="M14 38h62a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6H42l-12 10 1-10H14a6 6 0 0 1-6-6V44a6 6 0 0 1 6-6z" fill="#ffffff"/>
-            <rect x="20" y="52" width="50" height="4" rx="2" fill="#23282a" opacity="0.9"/>
-            <rect x="20" y="61" width="34" height="4" rx="2" fill="#94a098"/>
-            <path d="M228 70h58a6 6 0 0 1 6 6v26a6 6 0 0 1-6 6h-34l-12 10 1-10h-13a6 6 0 0 1-6-6V76a6 6 0 0 1 6-6z" fill="#e3efe0"/>
-            <rect x="234" y="84" width="46" height="4" rx="2" fill="#23282a" opacity="0.9"/>
-            <rect x="234" y="93" width="26" height="4" rx="2" fill="#4a7a58"/>
-            <rect x="14" y="112" width="66" height="5" rx="2.5" fill="#eef2f0"/>
-            <rect x="14" y="121" width="88" height="5" rx="2.5" fill="#eef2f0"/>
-            <rect x="14" y="130" width="40" height="5" rx="2.5" fill="#eef2f0"/>
-            <rect x="206" y="112" width="80" height="26" rx="13" fill="#ffffff" stroke="#dde4df"/>
-            <text x="222" y="129" font-family="sans-serif" font-size="11" fill="#94a098">Сообщение…</text>
-            <circle cx="274" cy="125" r="9" fill="#5d8a4a"/>
-            <path d="M270 125l3 3 5-6" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+      <article class="card reveal" data-tcat="light" data-name="Тема 4">
+        <div class="theme-preview" role="img" aria-label="Тема скоро появится">
+          <div class="theme-ph"></div>
         </div>
-        <h3>Lincoln Pearl</h3>
-        <p class="desc">Светлая жемчужная тема с мягкими зелёными акцентами. Чистый фон, высокая контрастность, светлые пузыри сообщений.</p>
+        <h3>Тема 4</h3>
+        <p class="desc">Скоро в каталоге — светлая жемчужная тема с мягкими акцентами. Следите за обновлениями.</p>
         <div class="card-actions">
-          <a class="btn card-download" href="themes/Lincoln-Pearl.attheme" download>Скачать .attheme</a>
+          <button type="button" class="btn btn-info" disabled>Скоро</button>
         </div>
       </article>
     </div>
