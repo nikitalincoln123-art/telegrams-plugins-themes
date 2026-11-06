@@ -934,7 +934,7 @@
   }
   .card > * { transform: translateZ(22px); }
 
-  .card .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .card .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .card .icon {
     width: 48px; height: 48px;
     border-radius: 14px;
@@ -942,6 +942,7 @@
     place-items: center;
     font-size: 0;
     flex: none;
+    min-width: 0;
     background: var(--ic, linear-gradient(145deg, rgba(255, 250, 240, 0.08), rgba(255, 250, 240, 0.02)));
     border: 1px solid rgba(255, 255, 255, 0.16);
     color: #fff;
@@ -951,6 +952,7 @@
 
   .tag {
     display: inline-block;
+    flex: none;
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.09em;
@@ -991,13 +993,14 @@
     align-items: center;
     gap: 8px;
     justify-content: flex-end;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    flex: none;
     min-width: 0;
   }
 
   /* Метка «уже ставил(а)» */
   .installed-tag {
-    display: inline-flex;
+    display: none;
     align-items: center;
     gap: 5px;
     font-size: 10.5px;
@@ -1009,12 +1012,16 @@
     background: rgba(79, 174, 106, 0.12);
     color: #5ec27b;
     border: 1px solid rgba(79, 174, 106, 0.3);
-    opacity: 0;
-    transform: translateY(-4px);
-    transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
     pointer-events: none;
   }
-  .card.has-installed .installed-tag { opacity: 1; transform: none; }
+  .card.has-installed .installed-tag {
+    display: inline-flex;
+    animation: installedIn 0.4s var(--ease);
+  }
+  @keyframes installedIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+  }
   .installed-tag::before {
     content: "";
     width: 0; height: 0;
@@ -1104,6 +1111,7 @@
     transition: background 0.25s, color 0.25s, transform 0.2s, border-color 0.25s;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
+    flex: none;
   }
   .fav-btn:hover { color: #f2d9a8; border-color: rgba(237, 201, 160, 0.5); transform: scale(1.08); }
   .fav-btn.on { color: #f2c47e; border-color: rgba(237, 201, 160, 0.6); background: rgba(46, 34, 16, 0.7); }
