@@ -118,6 +118,21 @@
 
   html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 
+  /* Тёмный скроллбар в тон сайта */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(224, 177, 120, 0.45) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb {
+    background: rgba(224, 177, 120, 0.32);
+    border-radius: 8px;
+    border: 2px solid var(--bg, #0b0a08);
+  }
+  *::-webkit-scrollbar-thumb:hover { background: rgba(224, 177, 120, 0.55); }
+  *::-webkit-scrollbar-corner { background: transparent; }
+
   body {
     font-family: var(--font);
     background: var(--bg);
