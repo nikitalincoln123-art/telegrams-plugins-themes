@@ -822,12 +822,12 @@
     place-items: center;
     font-size: 0;
     flex: none;
-    background: linear-gradient(145deg, rgba(255, 250, 240, 0.08), rgba(255, 250, 240, 0.02));
-    border: 1px solid rgba(255, 245, 230, 0.12);
-    color: var(--creme);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    background: var(--ic, linear-gradient(145deg, rgba(255, 250, 240, 0.08), rgba(255, 250, 240, 0.02)));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    color: #fff;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 18px -10px currentColor;
   }
-  .card .icon svg { width: 23px; height: 23px; display: block; }
+  .card .icon svg { width: 24px; height: 24px; display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35)); }
 
   .tag {
     display: inline-block;
@@ -2604,7 +2604,7 @@
     </div>
 
     <div class="bento" id="pluginGrid">
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln-Plugin" data-version="2.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #d98a2b, #a05f1f)" data-pcat="useful" data-name="Lincoln-Plugin" data-version="2.0" data-date="2026-11-04"
           data-changelog="v2.0 — актуализация под SDK 1.4.4.3, удалён бэкдор"
           data-shots="shots/lincoln-plugin.svg"
           data-long="NFTSender: локальная подмена баланса звёзд, фейковый NFT-ник с красивой карточкой, визуальная вставка collectible NFT-подарков в чат, анимации отправки подарков и звёзд. Полностью локально, на сервер ничего не отправляется.">
@@ -2622,7 +2622,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Fake Editor" data-version="2.0" data-date="2026-11-03"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #4e8ecf, #2f5f9e)" data-pcat="useful" data-name="Fake Editor" data-version="2.0" data-date="2026-11-03"
           data-changelog="v2.0 — актуализация под SDK 1.4.4.3, очищен от бэкдора"
           data-shots="shots/fake-editor.svg"
           data-long="Визуальный редактор сообщений: локальные правки текста, фейковые сообщения, генератор NFT-аватарок и многое другое. Все эффекты применяются только в вашем клиенте.">
@@ -2640,7 +2640,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Voice Changer RT" data-version="2.0.0" data-date="2026-11-03"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #c96a5b, #8e3b2e)" data-pcat="useful" data-name="Voice Changer RT" data-version="2.0.0" data-date="2026-11-03"
           data-changelog="v2.0.0 — sdk 1.4.4.3, обновлены метаданные"
           data-shots="shots/voice-changer.svg"
           data-long="Изменение голоса в реальном времени для звонков, видеозвонков, кружков и голосовых сообщений. Включает нативный аудио-движок, вшитый в плагин.">
@@ -2658,7 +2658,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln Tools" data-version="2.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #d9a441, #9a6d1c)" data-pcat="useful" data-name="Lincoln Tools" data-version="2.0" data-date="2026-11-04"
           data-changelog="v2.0 — SDK 1.4.4.3, совместимость с 12.5.1+"
           data-shots="shots/lincoln-tools.svg"
           data-long="Локальная визуальная подмена баланса звёзд и TON в профиле. Полностью локально: ничего не отправляется и не изменяется на сервере.">
@@ -2676,7 +2676,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln Ghost" data-version="2.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #57a86b, #2f6e42)" data-pcat="useful" data-name="Lincoln Ghost" data-version="2.0" data-date="2026-11-04"
           data-changelog="v2.0 — ghost-режим переведён на перехват запросов"
           data-shots="shots/lincoln-ghost.svg"
           data-long="Скрывает статус «в сети», «печатает» и «прочитано». Работает на уровне сетевых запросов (TL_account_updateStatus, TL_messages_readHistory), поэтому не зависит от версии клиента.">
@@ -2694,7 +2694,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln Holl" data-version="2.1" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #d9a441, #9a6d1c)" data-pcat="useful" data-name="Lincoln Holl" data-version="2.1" data-date="2026-11-04"
           data-changelog="v2.1 — переименован из Lincoln Pro, добавлен перехват запросов"
           data-shots="shots/lincoln-holl.svg"
           data-long="Всё в одном: телефон, несколько юзернеймов, звёзды, TON, премиум, скрытие «в сети»/«печатает»/«прочитано», своё «был(а)…», мут командой .mut, визуальные подарки. Локальная кастомизация профиля.">
@@ -2712,7 +2712,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln Stats" data-version="1.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #4e8ecf, #2f5f9e)" data-pcat="useful" data-name="Lincoln Stats" data-version="1.0" data-date="2026-11-04"
           data-changelog="v1.0 — релиз"
           data-shots="shots/lincoln-stats.svg"
           data-long="Статистика аккаунта: ID, возраст аккаунта, локаль/страна, сервер (DC) и контактные данные. Всё читается локально с устройства и никуда не отправляется.">
@@ -2730,7 +2730,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln Cleaner" data-version="1.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #c96a5b, #8e3b2e)" data-pcat="useful" data-name="Lincoln Cleaner" data-version="1.0" data-date="2026-11-04"
           data-changelog="v1.0 — релиз"
           data-shots="shots/lincoln-cleaner.svg"
           data-long="Массовая очистка чатов: удаляет диалоги из списка одним нажатием — все или по типам (личные, группы, каналы), с защитой «Избранного». Работает локально через MessagesController.">
@@ -2748,7 +2748,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln Notify" data-version="1.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #57a86b, #2f6e42)" data-pcat="useful" data-name="Lincoln Notify" data-version="1.0" data-date="2026-11-04"
           data-changelog="v1.0 — релиз"
           data-shots="shots/lincoln-notify.svg"
           data-long="Уведомления о важных чатах: следит за новыми сообщениями по выбранным диалогам или ключевым словам и шлёт системное уведомление, даже если для чата отключены звуки.">
@@ -2766,7 +2766,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="fun" data-name="Auto-Replier" data-version="1.0" data-date="2026-11-04"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #4e8ecf, #2f5f9e)" data-pcat="fun" data-name="Auto-Replier" data-version="1.0" data-date="2026-11-04"
           data-changelog="v1.0 — релиз"
           data-shots="shots/auto-replier.svg"
           data-long="Автоответы по триггерам: когда в личном чате или группе приходит сообщение с ключевым словом, плагин автоматически отправляет заданный ответ (цитатой на сообщение). С анти-спамом и правилами.">
@@ -2784,7 +2784,7 @@
         </div>
       </article>
 
-<article class="card reveal" data-pcat="useful" data-name="Unlimited Pins" data-version="1.0" data-date="2026-11-04"
+<article class="card reveal" style="--ic: linear-gradient(135deg, #d9a441, #9a6d1c)" data-pcat="useful" data-name="Unlimited Pins" data-version="1.0" data-date="2026-11-04"
           data-changelog="v1.0 — релиз"
           data-shots="shots/unlimited-pins.svg"
           data-long="Снятие лимита закреплённых чатов: убирает клиентское ограничение на количество пинов в диалогах, папках и фильтрах. Оригинальная реализация от Lincoln, возвращает лимиты при выключении.">
@@ -2802,7 +2802,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="useful" data-name="Lincoln iOS" data-version="3.0" data-date="2026-11-05"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #4e8ecf, #2f5f9e)" data-pcat="useful" data-name="Lincoln iOS" data-version="3.0" data-date="2026-11-05"
           data-changelog="v3.0 — био, эмодзи-статус, скрытие просмотров, умный статус, самолёт, эффект печати; v2.0 — рабочий набор"
           data-shots="shots/lincoln-ios.svg"
           data-long="Профиль и чаты: номер, юзернейм, био, эмодзи-статус, звёзды/TON, премиум, буст, ghost (скрыть в сети/печатает/прочитано), своё «был(а)…», скрытие просмотров в каналах, умный статус по расписанию, режим самолёт, эффект «печатает», NFT-плашка. Всё локально.">
@@ -2820,7 +2820,7 @@
         </div>
       </article>
 
-      <article class="card reveal" data-pcat="fun" data-name="Lincoln-Fun" data-version="1.0" data-date="2026-11-06"
+      <article class="card reveal" style="--ic: linear-gradient(135deg, #d9a441, #9a6d1c)" data-pcat="fun" data-name="Lincoln-Fun" data-version="1.0" data-date="2026-11-06"
           data-changelog="v1.0 — релиз"
           data-shots="shots/lincoln-fun.svg"
           data-long="Развлекательный набор в одном плагине: пранк-набор текста — при входящих сообщениях показывает собеседнику «печатает…», «записывает голосовое» или «записывает видео» (длительность и чаты настраиваются); генератор ников — команда /nick открывает панель со стильными вариантами, тап копирует в буфер.">
