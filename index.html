@@ -234,6 +234,47 @@
       radial-gradient(700px 400px at 85% 110%, rgba(237, 201, 160, 0.05), transparent 60%);
   }
 
+  /* ---------- Зернистый шум поверх фона ---------- */
+  .bg-noise {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  }
+
+  /* ---------- Свечение по краям + дымка ---------- */
+  .bg-ambient {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(60% 45% at 8% 20%, rgba(224, 177, 120, 0.06), transparent 60%),
+      radial-gradient(55% 40% at 92% 35%, rgba(237, 201, 160, 0.05), transparent 60%),
+      radial-gradient(65% 50% at 50% 108%, rgba(224, 177, 120, 0.07), transparent 60%),
+      radial-gradient(45% 35% at 0% 80%, rgba(200, 150, 90, 0.045), transparent 60%),
+      radial-gradient(45% 35% at 100% 90%, rgba(200, 150, 90, 0.045), transparent 60%);
+  }
+
+  /* ---------- Сетка-созвездие: точки и тонкие линии ---------- */
+  .bg-constellation {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image:
+      radial-gradient(rgba(224, 177, 120, 0.16) 1px, transparent 1.5px),
+      linear-gradient(rgba(224, 177, 120, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(224, 177, 120, 0.05) 1px, transparent 1px);
+    background-size: 34px 34px, 170px 170px, 170px 170px;
+    -webkit-mask-image: radial-gradient(75% 65% at 50% 40%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(75% 65% at 50% 40%, #000 30%, transparent 100%);
+  }
+
   .vignette {
     position: fixed;
     inset: 0;
@@ -358,13 +399,13 @@
     color: var(--btn-text);
     font-family: var(--font);
     transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, background 0.3s;
-    box-shadow: 0 2px 18px rgba(0, 0, 0, 0.5), inset 0 1px 0 var(--btn-inset);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.32), inset 0 1px 0 var(--btn-inset);
     white-space: nowrap;
   }
   .btn:hover {
     transform: translateY(-2px);
     border-color: rgba(245, 239, 228, 0.3);
-    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.6), inset 0 1px 0 var(--btn-inset-hover);
+    box-shadow: 0 8px 26px rgba(0, 0, 0, 0.4), inset 0 1px 0 var(--btn-inset-hover);
     background: var(--btn-bg-hover);
   }
   .btn svg { flex: none; }
@@ -693,7 +734,7 @@
     border-radius: 18px;
     border: 1px solid rgba(255, 245, 230, 0.10);
     background: linear-gradient(180deg, var(--term-bg1), var(--term-bg2) 70%);
-    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7), 0 0 80px rgba(224, 177, 120, 0.06);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 80px rgba(224, 177, 120, 0.06);
     overflow: hidden;
     font-family: var(--mono);
     font-size: 13px;
@@ -737,6 +778,21 @@
 
   /* ---------- Sections ---------- */
   section.block { padding: 76px 0; }
+
+  /* Градиентный разделитель секций */
+  section.block + section.block::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(720px, 78%);
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(224, 177, 120, 0.28) 20%, rgba(237, 201, 160, 0.42) 50%, rgba(224, 177, 120, 0.28) 80%, transparent);
+    pointer-events: none;
+    z-index: 1;
+  }
+  section.block { position: relative; }
 
   /* Шторка-переход секций */
   .js section.block {
@@ -801,7 +857,7 @@
     flex-direction: column;
     gap: 14px;
     transform-style: preserve-3d;
-    transition: border-color 0.35s, box-shadow 0.5s var(--ease);
+    transition: border-color 0.35s, box-shadow 0.5s var(--ease), transform 0.35s var(--ease);
     will-change: transform;
     overflow: hidden;
   }
@@ -818,8 +874,9 @@
   }
   .card:hover::before { opacity: 1; }
   .card:hover {
-    border-color: rgba(255, 245, 230, 0.2);
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+    border-color: rgba(255, 245, 230, 0.22);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42), 0 4px 18px rgba(224, 177, 120, 0.08);
+    transform: translateY(-3px);
   }
   /* сверкающая рамка-градиент */
   .card::after {
@@ -967,23 +1024,24 @@
     text-transform: uppercase;
     padding: 5px 12px;
     border-radius: 999px;
-    background: linear-gradient(135deg, #ff9f43, #e85f2e);
-    color: #fff;
-    border: 1px solid rgba(255, 170, 100, 0.7);
-    box-shadow: 0 4px 20px rgba(232, 95, 46, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    background: linear-gradient(135deg, #f2c47e, #d99a4e);
+    color: #241505;
+    border: 1px solid rgba(255, 210, 140, 0.75);
+    box-shadow: 0 4px 20px rgba(217, 154, 78, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.55);
     z-index: 5;
     white-space: nowrap;
     animation: updBadgePulse 2.4s ease-in-out infinite;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
   }
   .update-badge::before {
     content: "↑";
     font-size: 11px;
     font-weight: 900;
-    color: #fff;
+    color: #7a4808;
   }
   @keyframes updBadgePulse {
-    0%, 100% { box-shadow: 0 4px 14px rgba(232, 95, 46, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
-    50% { box-shadow: 0 4px 26px rgba(232, 95, 46, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.3); }
+    0%, 100% { box-shadow: 0 4px 14px rgba(217, 154, 78, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.55); }
+    50% { box-shadow: 0 4px 26px rgba(217, 154, 78, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.55); }
   }
   .card .update-badge { margin: 0; }
 
@@ -1007,8 +1065,8 @@
     -webkit-backdrop-filter: blur(4px);
   }
   .fav-btn:hover { color: #f2d9a8; border-color: rgba(237, 201, 160, 0.5); transform: scale(1.08); }
-  .fav-btn.on { color: #ff6b6b; border-color: rgba(255, 107, 107, 0.55); background: rgba(60, 12, 12, 0.6); }
-  .fav-btn.on:hover { color: #ff8f8f; }
+  .fav-btn.on { color: #f2c47e; border-color: rgba(237, 201, 160, 0.6); background: rgba(46, 34, 16, 0.7); }
+  .fav-btn.on:hover { color: #ffdfa8; }
   .fav-btn svg { width: 18px; height: 18px; display: block; pointer-events: none; }
   .card.has-installed .fav-btn { top: 50px; }
   .card .fav-btn { margin: 0; }
@@ -1024,8 +1082,8 @@
     border-radius: 999px;
     display: inline-grid;
     place-items: center;
-    background: rgba(255, 107, 107, 0.25);
-    color: #ff8f8f;
+    background: rgba(237, 201, 160, 0.28);
+    color: #f2cf9a;
   }
 
   /* ---------- Плашка-предупреждение владельца ---------- */
@@ -1236,7 +1294,7 @@
     position: relative;
     transform: translateY(24px) scale(0.96);
     transition: transform 0.4s var(--ease);
-    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.7);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), 0 0 60px rgba(224, 177, 120, 0.05);
   }
   .modal-overlay.open .modal { transform: none; }
   .modal-close {
@@ -2469,19 +2527,31 @@
     width: 520px; height: 520px;
     left: -140px; top: 12%;
     background: radial-gradient(circle at 50% 50%, rgba(224, 177, 120, 0.28), transparent 70%);
-    animation: orbDrift1 26s ease-in-out infinite alternate;
+    animation: orbDrift1 26s ease-in-out infinite alternate, orbTint1 18s ease-in-out infinite alternate;
   }
   .orb-2 {
     width: 420px; height: 420px;
     right: -120px; top: 55%;
     background: radial-gradient(circle at 50% 50%, rgba(237, 201, 160, 0.2), transparent 70%);
-    animation: orbDrift2 32s ease-in-out infinite alternate;
+    animation: orbDrift2 32s ease-in-out infinite alternate, orbTint2 22s ease-in-out infinite alternate;
   }
   .orb-3 {
     width: 340px; height: 340px;
     left: 30%; bottom: -120px;
     background: radial-gradient(circle at 50% 50%, rgba(255, 245, 230, 0.14), transparent 70%);
-    animation: orbDrift3 24s ease-in-out infinite alternate;
+    animation: orbDrift3 24s ease-in-out infinite alternate, orbTint3 26s ease-in-out infinite alternate;
+  }
+  @keyframes orbTint1 {
+    0%, 100% { background: radial-gradient(circle at 50% 50%, rgba(224, 177, 120, 0.28), transparent 70%); }
+    50% { background: radial-gradient(circle at 50% 50%, rgba(212, 145, 82, 0.26), transparent 70%); }
+  }
+  @keyframes orbTint2 {
+    0%, 100% { background: radial-gradient(circle at 50% 50%, rgba(237, 201, 160, 0.2), transparent 70%); }
+    50% { background: radial-gradient(circle at 50% 50%, rgba(226, 156, 96, 0.2), transparent 70%); }
+  }
+  @keyframes orbTint3 {
+    0%, 100% { background: radial-gradient(circle at 50% 50%, rgba(255, 245, 230, 0.14), transparent 70%); }
+    50% { background: radial-gradient(circle at 50% 50%, rgba(230, 178, 110, 0.16), transparent 70%); }
   }
   @keyframes orbDrift1 {
     from { transform: translate(0, 0) scale(1); }
@@ -2564,6 +2634,9 @@
 <body>
 
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
+<div class="bg-constellation" aria-hidden="true"></div>
+<div class="bg-ambient" aria-hidden="true"></div>
+<div class="bg-noise" aria-hidden="true"></div>
 <canvas id="space" aria-hidden="true"></canvas>
 <div class="float3d" id="float3d" aria-hidden="true">
   <div class="float3d-word" data-depth="1.0">
