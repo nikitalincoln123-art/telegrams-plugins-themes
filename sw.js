@@ -1,5 +1,5 @@
 ﻿/* Lincoln-Plugin вЂ” service worker (РєСЌС€ РґР»СЏ РѕС„Р»Р°Р№РЅ-СЂРµР¶РёРјР°) */
-var CACHE = "lincoln-plugin-v13";
+var CACHE = "lincoln-plugin-v14";
 var CORE = [
   "./",
   "./index.html",
@@ -53,15 +53,17 @@ self.addEventListener("fetch", function (e) {
   }
 
   if (url.pathname.indexOf("/plugins/") !== -1 || url.pathname.indexOf("/themes/") !== -1) {
+    // network-first: скачиваемые файлы должны быть всегда свежими
     e.respondWith(
-      caches.match(req).then(function (hit) {
-        if (hit) return hit;
-        return fetch(req).then(function (res) {
+      fetch(req).then(function (res) {
+        if (res && res.ok) {
           var copy = res.clone();
           caches.open(CACHE).then(function (c) { c.put(req, copy); });
-          return res;
-        });
-      }).catch(function () { return hit; })
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(req).then(function (hit) { return hit || caches.match("./index.html"); });
+      })
     );
     return;
   }
