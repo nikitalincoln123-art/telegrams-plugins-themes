@@ -4690,6 +4690,20 @@
     if (e.key === "Escape") closeModal();
   });
 
+  /* Автооткрытие модалки первого плагина при заходе */
+  (function () {
+    try {
+      if (location.hash && location.hash.indexOf("#/plugin/") === 0) return;
+      if (localStorage.getItem("lincoln-first-open-done")) return;
+      var firstCard = document.querySelector('#pluginGrid .card[data-name]');
+      if (!firstCard) return;
+      setTimeout(function () {
+        openModal(firstCard);
+        try { localStorage.setItem("lincoln-first-open-done", "1"); } catch (e) {}
+      }, 700);
+    } catch (e) {}
+  })();
+
   /* Лайтбокс просмотра скриншота */
   var lightbox = document.getElementById("shotLightbox");
   var lightboxImg = document.getElementById("lightboxImg");
