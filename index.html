@@ -289,25 +289,35 @@
     mask-image: radial-gradient(75% 65% at 50% 40%, #000 30%, transparent 100%);
   }
 
-  /* ---------- Живые градиентные волны ---------- */
+  /* ---------- Аврора: живые градиентные пятна ---------- */
   .bg-waves {
     position: fixed;
-    inset: 0;
+    inset: -20%;
     z-index: 0;
     pointer-events: none;
-    opacity: 0.28;
+    opacity: 0.5;
     background:
-      radial-gradient(42% 30% at 22% 26%, rgba(224, 177, 120, 0.14), transparent 70%),
-      radial-gradient(38% 28% at 80% 42%, rgba(208, 150, 90, 0.11), transparent 70%),
-      radial-gradient(44% 32% at 48% 78%, rgba(240, 210, 165, 0.09), transparent 70%);
-    background-size: 100% 100%, 100% 100%, 100% 100%;
-    filter: blur(10px);
-    animation: wavesDrift 26s ease-in-out infinite alternate;
+      radial-gradient(34% 28% at 18% 22%, rgba(224, 177, 120, 0.22), transparent 70%),
+      radial-gradient(30% 26% at 82% 34%, rgba(208, 130, 90, 0.16), transparent 70%),
+      radial-gradient(36% 30% at 50% 80%, rgba(240, 210, 165, 0.14), transparent 70%),
+      radial-gradient(26% 22% at 70% 60%, rgba(150, 190, 255, 0.08), transparent 70%);
+    filter: blur(46px) saturate(1.25);
+    animation: auroraDrift 38s ease-in-out infinite alternate, auroraHue 22s linear infinite;
+    will-change: transform, filter;
   }
-  @keyframes wavesDrift {
-    0% { transform: translate3d(-2.5%, -1.5%, 0) scale(1); }
-    50% { transform: translate3d(2%, 1.2%, 0) scale(1.06); }
-    100% { transform: translate3d(-1.5%, 2%, 0) scale(1.02); }
+  @keyframes auroraDrift {
+    0% { transform: translate3d(-3%, -2%, 0) scale(1) rotate(0deg); }
+    30% { transform: translate3d(2%, 1.5%, 0) scale(1.07) rotate(1.5deg); }
+    60% { transform: translate3d(-1%, 3%, 0) scale(1.12) rotate(-1deg); }
+    100% { transform: translate3d(3%, -1%, 0) scale(1.05) rotate(2deg); }
+  }
+  @keyframes auroraHue {
+    0% { filter: blur(46px) saturate(1.2) hue-rotate(0deg); }
+    50% { filter: blur(46px) saturate(1.35) hue-rotate(14deg); }
+    100% { filter: blur(46px) saturate(1.2) hue-rotate(0deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .bg-waves { animation: none; }
   }
 
   .vignette {
@@ -833,14 +843,17 @@
   .js section.block {
     opacity: 0;
     transform: translateY(36px) scale(0.985);
+    filter: blur(10px);
     transition:
       opacity 1s var(--ease),
-      transform 1s var(--ease);
+      transform 1s var(--ease),
+      filter 1s var(--ease);
     clip-path: inset(0 0 100% 0);
   }
   .js section.block.in {
     opacity: 1;
     transform: none;
+    filter: blur(0);
     clip-path: inset(0 0 0% 0);
   }
   .js .hero { transition: opacity 0.6s var(--ease); }
@@ -949,6 +962,21 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 8px 18px -10px currentColor;
   }
   .card .icon svg { width: 24px; height: 24px; display: block; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35)); }
+
+  /* «Дыхание» карточек: плавное покачивание */
+  .card.reveal.in .icon {
+    animation: cardBreath 6s ease-in-out infinite;
+  }
+  .card.reveal.in .icon:nth-child(odd) { animation-delay: -1.4s; }
+  .card.reveal.in:nth-child(3n) .icon { animation-duration: 5.4s; animation-delay: -2.6s; }
+  .card.reveal.in:nth-child(4n) .icon { animation-duration: 6.8s; animation-delay: -3.8s; }
+  @keyframes cardBreath {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-4px) rotate(-1.2deg); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .card.reveal.in .icon { animation: none; }
+  }
 
   .tag {
     display: inline-block;
@@ -2579,21 +2607,24 @@
     .m-cta { display: none; }
   }
 
-  /* ---------- Reveal: раскрытие (шторка) — только при работающем JS ---------- */
+  /* ---------- Reveal: раскрытие (шторка + blur) — только при работающем JS ---------- */
   /* По умолчанию контент ВИДЕН (безопасно). Класс .js на <html> включает
      анимацию; если JS упал — страница остаётся полностью доступной. */
   .js .reveal {
     opacity: 0;
     transform: translateY(40px);
+    filter: blur(8px);
     transition:
       opacity 0.9s var(--ease),
       transform 0.9s var(--ease),
+      filter 0.9s var(--ease),
       clip-path 0.9s var(--ease);
     clip-path: inset(0% 0% 100% 0%);
   }
   .js .reveal.in {
     opacity: 1;
     transform: none;
+    filter: blur(0);
     clip-path: inset(0% 0% 0% 0%);
   }
 
@@ -3763,117 +3794,116 @@
     }
   });
 
-  /* ================= Warm star-web background ================= */
-  var canvas = document.getElementById("space");
-  if (canvas) {
-  var ctx = canvas.getContext("2d");
-  var W = window.innerWidth, H = window.innerHeight;
-  var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var _webActive = true;
-  var _webReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    || !window.matchMedia("(pointer: fine)").matches;
+  /* ================= 3D star-field (тёплое звёздное поле) ================= */
+  var starCanvas = document.getElementById("space");
+  if (starCanvas) {
+    var sctx = starCanvas.getContext("2d");
+    var sW = window.innerWidth, sH = window.innerHeight;
+    var sdpr = Math.min(window.devicePixelRatio || 1, 2);
+    var stars = [];
+    var sMouse = { x: 0, y: 0 };
+    var sTarget = { x: 0, y: 0 };
+    var sReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      || !window.matchMedia("(pointer: fine)").matches;
 
-  function resize() {
-    W = window.innerWidth; H = window.innerHeight;
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    canvas.style.width = W + "px";
-    canvas.style.height = H + "px";
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  }
-  resize();
-  window.addEventListener("resize", resize);
-
-  function rand(min, max) { return min + Math.random() * (max - min); }
-
-  var COUNT = 64;
-  var LINK_DIST = 150;
-  var nodes = [];
-
-  function makeNodes() {
-    nodes = [];
-    for (var i = 0; i < COUNT; i++) {
-      var vx = rand(-1, 1), vy = rand(-1, 1);
-      var len = Math.hypot(vx, vy) || 1;
-      var speed = rand(2, 6);
-      nodes.push({
-        x: rand(0, W), y: rand(0, H),
-        vx: (vx / len) * speed, vy: (vy / len) * speed,
-        r: rand(0.7, 2),
-        twPh: rand(0, Math.PI * 2),
-        twSp: rand(0.3, 1)
-      });
+    function sResize() {
+      sW = window.innerWidth; sH = window.innerHeight;
+      starCanvas.width = Math.round(sW * sdpr);
+      starCanvas.height = Math.round(sH * sdpr);
+      starCanvas.style.width = sW + "px";
+      starCanvas.style.height = sH + "px";
+      sctx.setTransform(sdpr, 0, 0, sdpr, 0, 0);
+      makeStars();
     }
-  }
-  makeNodes();
-  window.addEventListener("resize", makeNodes);
-
-  function drawWeb(t, dt) {
-    ctx.clearRect(0, 0, W, H);
-    for (var i = 0; i < nodes.length; i++) {
-      var n = nodes[i];
-      n.x += n.vx * dt; n.y += n.vy * dt;
-      if (n.x < -20) n.x = W + 20; else if (n.x > W + 20) n.x = -20;
-      if (n.y < -20) n.y = H + 20; else if (n.y > H + 20) n.y = -20;
-    }
-    ctx.lineWidth = 1;
-    for (i = 0; i < nodes.length; i++) {
-      var a = nodes[i];
-      for (var j = i + 1; j < nodes.length; j++) {
-        var b = nodes[j];
-        var dx = a.x - b.x, dy = a.y - b.y;
-        var d2 = dx * dx + dy * dy;
-        if (d2 < LINK_DIST * LINK_DIST) {
-          var alpha = (1 - Math.sqrt(d2) / LINK_DIST) * 0.10;
-          ctx.strokeStyle = "rgba(235, 215, 185, " + alpha.toFixed(3) + ")";
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.stroke();
-        }
+    function makeStars() {
+      stars = [];
+      var count = Math.min(Math.round(sW * sH / 14000), 220);
+      for (var i = 0; i < count; i++) {
+        var r = 280 + Math.random() * 820;
+        var th = Math.random() * Math.PI * 2;
+        var ph = Math.acos(2 * Math.random() - 1);
+        stars.push({
+          x: r * Math.sin(ph) * Math.cos(th),
+          y: r * Math.sin(ph) * Math.sin(th),
+          z: r * Math.cos(ph),
+          twPh: Math.random() * Math.PI * 2,
+          twSp: 0.4 + Math.random() * 1.2
+        });
       }
     }
-    for (i = 0; i < nodes.length; i++) {
-      var s = nodes[i];
-      var tw = 0.55 + 0.45 * Math.sin(t * s.twSp + s.twPh);
-      ctx.fillStyle = "rgba(240, 226, 205, " + (tw * 0.7).toFixed(3) + ")";
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-      ctx.fill();
+    sResize();
+    window.addEventListener("resize", sResize);
+
+    if (!sReduced) {
+      window.addEventListener("pointermove", function (e) {
+        sTarget.x = (e.clientX / sW - 0.5) * 2;
+        sTarget.y = (e.clientY / sH - 0.5) * 2;
+      }, { passive: true });
     }
-  }
 
-  var T0 = performance.now();
-  var last = 0;
-  var raf = null;
-  function frame(now) {
-    var t = (now - T0) / 1000;
-    var dt = Math.min((now - last) / 1000, 0.05);
-    last = now;
-    drawWeb(t, dt);
-    raf = requestAnimationFrame(frame);
-  }
-  if (_webReduced) {
-    drawWeb(0, 0);
-  } else {
-    last = performance.now();
-    raf = requestAnimationFrame(frame);
-  }
+    var sT0 = performance.now();
+    var sLast = 0;
+    var sRaf = null;
+    function sFrame(now) {
+      var t = (now - sT0) / 1000;
+      var dt = Math.min((now - sLast) / 1000, 0.05);
+      sLast = now;
+      sMouse.x += (sTarget.x - sMouse.x) * 0.05;
+      sMouse.y += (sTarget.y - sMouse.y) * 0.05;
 
-  /* Пауза сети когда вкладка/страница не видна (экономия батареи) */
-  if (!_webReduced) {
+      var rotX = t * 0.06 + sMouse.y * 0.25;
+      var rotY = t * 0.045 + sMouse.x * 0.35;
+
+      var cx = sW / 2, cy = sH / 2;
+      var focal = Math.min(sW, sH) * 0.85;
+
+      sctx.clearRect(0, 0, sW, sH);
+      var cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+      var cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+
+      for (var i = 0; i < stars.length; i++) {
+        var st = stars[i];
+        var x1 = st.x;
+        var y1 = st.y * cosX - st.z * sinX;
+        var z1 = st.y * sinX + st.z * cosX;
+        var x2 = x1 * cosY + z1 * sinY;
+        var z2 = -x1 * sinY + z1 * cosY;
+        var y2 = y1;
+
+        if (z2 <= 40) continue;
+        var scale = focal / z2;
+        var px = cx + x2 * scale;
+        var py = cy + y2 * scale;
+        if (px < -40 || px > sW + 40 || py < -40 || py > sH + 40) continue;
+
+        var depth = Math.max(0, Math.min(1, (z2 - 60) / 1000));
+        var tw = 0.55 + 0.45 * Math.sin(t * st.twSp + st.twPh);
+        var size = (0.8 + (1 - depth) * 2.1) * tw;
+        var alpha = (0.25 + 0.75 * (1 - depth)) * (0.55 + 0.45 * tw);
+        sctx.fillStyle = "rgba(240, 226, 205, " + alpha.toFixed(3) + ")";
+        sctx.beginPath();
+        sctx.arc(px, py, size, 0, Math.PI * 2);
+        sctx.fill();
+      }
+      sRaf = requestAnimationFrame(sFrame);
+    }
+    if (sReduced) {
+      sFrame(1 / 60);
+      cancelAnimationFrame(sRaf);
+    } else {
+      sLast = performance.now();
+      sRaf = requestAnimationFrame(sFrame);
+    }
+
     document.addEventListener("visibilitychange", function () {
-      if (document.hidden && raf) {
-        cancelAnimationFrame(raf);
-        raf = null;
-        _webActive = false;
-      } else if (!document.hidden && !raf) {
-        _webActive = true;
-        last = performance.now();
-        raf = requestAnimationFrame(frame);
+      if (document.hidden && sRaf && !sReduced) {
+        cancelAnimationFrame(sRaf);
+        sRaf = null;
+      } else if (!document.hidden && !sRaf && !sReduced) {
+        sLast = performance.now();
+        sRaf = requestAnimationFrame(sFrame);
       }
     });
-  }
   }
 
   /* ================= Custom cursor warm glow ================= */
@@ -3930,6 +3960,40 @@
     });
   }
   initCardsTilt();
+
+  /* ================= Магнитные кнопки ================= */
+  (function () {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var btns = document.querySelectorAll(".btn");
+    function move(e) {
+      var b = e.currentTarget;
+      var r = b.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2);
+      var dy = e.clientY - (r.top + r.height / 2);
+      var max = Math.min(8, r.width * 0.1);
+      var dist = Math.hypot(dx, dy);
+      if (dist > 140) { leave(b); return; }
+      var pull = Math.min(1, (140 - dist) / 140);
+      b.style.transform = "translate(" + (dx * 0.16 * pull).toFixed(1) + "px, " + (dy * 0.16 * pull).toFixed(1) + "px)";
+    }
+    function leave(b) {
+      if (b.dataset.magReset) return;
+      b.dataset.magReset = "1";
+      b.style.transition = "transform 0.35s var(--ease)";
+      b.style.transform = "translate(0,0)";
+      setTimeout(function () {
+        b.style.transition = "";
+        delete b.dataset.magReset;
+      }, 360);
+    }
+    btns.forEach(function (b) {
+      if (b.disabled) return;
+      b.style.willChange = "transform";
+      b.addEventListener("pointermove", move);
+      b.addEventListener("pointerleave", function () { leave(b); });
+    });
+  })();
 
   /* ================= Mobile menu ================= */
   var burger = document.getElementById("burger");
@@ -5246,6 +5310,7 @@
     var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
     var parts = [];
     var lines = [];
+    var sparks = [];
     var mouse = { x: -9999, y: -9999 };
     var ok = window.matchMedia("(pointer: fine)").matches;
 
@@ -5277,6 +5342,30 @@
         }
       }
     }
+    function burst(x, y) {
+      var n = ok ? 26 : 14;
+      for (var i = 0; i < n; i++) {
+        var a = Math.random() * Math.PI * 2;
+        var sp = 1.5 + Math.random() * 4.5;
+        sparks.push({
+          x: x, y: y,
+          vx: Math.cos(a) * sp,
+          vy: Math.sin(a) * sp - 1.2,
+          r: 0.8 + Math.random() * 2.2,
+          life: 1,
+          decay: 0.012 + Math.random() * 0.02,
+          hue: 32 + Math.random() * 18
+        });
+      }
+    }
+    window.addEventListener("pointerdown", function (e) {
+      burst(e.clientX, e.clientY);
+    }, { passive: true });
+    document.addEventListener("pointermove", function (e) {
+      if (!ok) return;
+      if (Math.random() < 0.12) burst(e.clientX, e.clientY);
+    }, { passive: true });
+
     function frame(t) {
       ctx.clearRect(0, 0, W, H);
       for (var i = 0; i < parts.length; i++) {
@@ -5288,6 +5377,19 @@
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(232, 190, 130, " + (p.a * twinkle).toFixed(3) + ")";
+        ctx.fill();
+      }
+      for (var s = sparks.length - 1; s >= 0; s--) {
+        var sp2 = sparks[s];
+        sp2.x += sp2.vx;
+        sp2.y += sp2.vy;
+        sp2.vy += 0.06;
+        sp2.vx *= 0.985;
+        sp2.life -= sp2.decay;
+        if (sp2.life <= 0) { sparks.splice(s, 1); continue; }
+        ctx.beginPath();
+        ctx.arc(sp2.x, sp2.y, sp2.r * sp2.life, 0, Math.PI * 2);
+        ctx.fillStyle = "hsla(" + sp2.hue + ", 90%, 70%, " + (0.9 * sp2.life).toFixed(3) + ")";
         ctx.fill();
       }
       if (ok) {
