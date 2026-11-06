@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://nikitalincoln123-art.github.io/telegrams-plugins-themes/sitemap.xml

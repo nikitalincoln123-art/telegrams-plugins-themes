@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Lincoln · Плагины и темы для Telegram/exteraGram</title>
+    <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/</link>
+    <description>Каталог плагинов и тем для Telegram/exteraGram: свежие релизы, обновления и анонсы.</description>
+    <language>ru</language>
+    <lastBuildDate>Fri, 06 Nov 2026 10:00:00 +0300</lastBuildDate>
+    <atom:link href="https://nikitalincoln123-art.github.io/telegrams-plugins-themes/feed.xml" rel="self" type="application/rss+xml"/>
+
+    <item>
+      <title>Lincoln-Fun 1.0 — пранк-набор и генератор ников</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-fun</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-fun</guid>
+      <pubDate>Fri, 06 Nov 2026 09:00:00 +0300</pubDate>
+      <description>Развлекательный набор: «печатает…» при входящих сообщениях и стильные ники по команде /nick с копированием в один тап.</description>
+    </item>
+
+    <item>
+      <title>Lincoln iOS 3.0 — био, эмодзи-статус, скрытие просмотров</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-ios</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-ios</guid>
+      <pubDate>Thu, 05 Nov 2026 12:00:00 +0300</pubDate>
+      <description>Профиль и чаты: номер, юзернейм, био, эмодзи-статус, звёзды/TON, премиум, ghost-режим, скрытие просмотров, умный статус и режим самолёт.</description>
+    </item>
+
+    <item>
+      <title>Темы в каталоге — Lincoln Dark, Cream, Midnight и Pearl</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#themes</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#themes</guid>
+      <pubDate>Thu, 05 Nov 2026 11:00:00 +0300</pubDate>
+      <description>Раздел «Темы» с настоящими .attheme-файлами — скачиваются и применяются в Telegram.</description>
+    </item>
+
+    <item>
+      <title>Lincoln Holl 2.1 — ghost-режим на уровне запросов</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-holl</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-holl</guid>
+      <pubDate>Wed, 04 Nov 2026 15:00:00 +0300</pubDate>
+      <description>Скрытие «в сети», «печатает» и «прочитано», своё «был(а)…», мут командой .mut, телефон, юзернеймы, звёзды и TON.</description>
+    </item>
+
+    <item>
+      <title>Lincoln Stats 1.0 — статистика аккаунта локально</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-stats</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-stats</guid>
+      <pubDate>Wed, 04 Nov 2026 12:00:00 +0300</pubDate>
+      <description>ID, возраст аккаунта, локаль/страна, сервер (DC). Всё читается локально и никуда не отправляется.</description>
+    </item>
+
+    <item>
+      <title>Fake Editor 2.0 и Voice Changer 2.0 — актуализация под SDK 1.4.4.3</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/fake-editor</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/fake-editor</guid>
+      <pubDate>Tue, 03 Nov 2026 12:00:00 +0300</pubDate>
+      <description>Плагины актуализированы под SDK 1.4.4.3 и очищены от скрытых сетевых блоков.</description>
+    </item>
+
+    <item>
+      <title>Lincoln-Plugin 2.0 — NFT-подарки и локальная подмена баланса</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-plugin</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#/plugin/lincoln-plugin</guid>
+      <pubDate>Mon, 02 Nov 2026 12:00:00 +0300</pubDate>
+      <description>Актуализация под SDK 1.4.4.3, удалён бэкдор, NFT-ник и визуальная вставка collectible-подарков.</description>
+    </item>
+
+    <item>
+      <title>Установка тем — подробная инструкция</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#theme-howto</guid>
+      <pubDate>Mon, 02 Nov 2026 10:00:00 +0300</pubDate>
+      <description>Как установить .attheme в Telegram и exteraGram за 30 секунд.</description>
+    </item>
+
+    <item>
+      <title>Плагины exteraGram: что это и как установить</title>
+      <link>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/</link>
+      <guid>https://nikitalincoln123-art.github.io/telegrams-plugins-themes/#faq</guid>
+      <pubDate>Mon, 02 Nov 2026 09:00:00 +0300</pubDate>
+      <description>FAQ: установка плагинов, отличия оригинала от клонов, безопасность.</description>
+    </item>
+  </channel>
+</rss>
