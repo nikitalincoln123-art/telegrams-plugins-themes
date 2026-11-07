@@ -5960,10 +5960,23 @@ window.__catalogReady = true;
 
 /* ================= PWA: регистрация service worker ================= */
 if ("serviceWorker" in navigator && window.location.protocol === "https:") {
-  window.addEventListener("load", function () {
-    navigator.serviceWorker.register("./sw.js").catch(function (e) {
-      console.warn("[pwa] SW registration failed", e);
-    });
+  navigator.serviceWorker.register("./sw.js").catch(function (e) {
+    console.warn("[pwa] SW registration failed", e);
+  });
+  /* Автообновление: если появился новый service worker — сразу перехватываем
+     управление и перезагружаем страницу, чтобы никто не сидел на старом кэше */
+  var refreshing = false;
+  navigator.serviceWorker.addEventListener("controllerchange", function () {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.addEventListener("message", function (e) {
+    if (e.data && e.data.type === "CACHE_UPDATED") {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    }
   });
 }
 
