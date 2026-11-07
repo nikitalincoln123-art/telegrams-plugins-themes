@@ -1,8 +1,8 @@
 __id__ = "lincoln_funpack"
 __name__ = "Lincoln-Fun"
-__description__ = "Развлекательный набор: пранк-набор текста (показывает собеседнику «печатает…», «записывает голосовое» или «записывает видео» при входящих сообщениях) и генератор ников — команда /nick открывает панель со стильными вариантами, тап копирует в буфер."
+__description__ = "Развлекательный и удобный набор: пранк-набор текста («печатает…», «записывает голосовое/видео»), массовая очистка чатов (все сразу или по поиску ника/юзернейма) и скриншоты там, где они запрещены."
 __author__ = "Lincoln"
-__version__ = "1.0"
+__version__ = "2.0"
 __icon__ = "msg_edit"
 __app_version__ = ">=12.5.1"
 __sdk_version__ = ">=1.4.4.3"
@@ -15,8 +15,10 @@ from typing import Any, Dict, List
 
 from base_plugin import BasePlugin, HookResult, HookStrategy
 from ui.settings import Header, Switch, Input, Divider, Text
-from android_utils import log, run_on_ui_thread, OnClickListener
-from client_utils import get_last_fragment
+from android_utils import log, run_on_ui_thread
+from client_utils import get_last_fragment, run_on_queue
+from org.telegram.messenger import AccountInstance
+from java.lang import Long, Integer, Boolean
 
 # ---------------------------------------------------------------- пранк-набор
 
@@ -26,157 +28,221 @@ PRANK_ACTIONS = {
     "video": "TL_sendMessageRecordVideoAction",
 }
 
-# ------------------------------------------------------------- генератор ников
-
-NICK_BARS = ["_", "--", "__", "_-_", "_._", "-", "..", "._.", "_"]
-NICK_DECOS = ["✦", "✧", "☆", "♛", "✪", "♪", "☾", "ツ", "🔥", "💎", "⭐", "🎧", "🖤", "☂", "✈", "ᴳ", "ᵀ"]
-NICK_SUFFIXES = ["007", "777", "228", "off", "666", "88", "01", "zz", "x"]
+# ------------------------------------------------------------- поиск/очистка
 
 
-def _gen_nicks(base: str) -> List[str]:
-    out = []
-    b = base.capitalize()
-    bars = random.sample(NICK_BARS, min(5, len(NICK_BARS)))
-    for bar in bars:
-        out.append(b + bar)
-        out.append(bar + b)
-        out.append(bar + b + bar)
-    for s in NICK_SUFFIXES:
-        out.append(b + "_" + s)
-        out.append(b + s)
-    decos = random.sample(NICK_DECOS, min(4, len(NICK_DECOS)))
-    for d in decos:
-        out.append(d + " " + b + " " + d)
-        out.append(b + " " + d)
-    return out
+class ChatCleaner:
 
+    def __init__(self, plugin):
+        self.plugin = plugin
+        self._running = False
 
-def _dialog_selector(normal, pressed):
-    try:
-        ColorDrawable = jclass("android.graphics.drawable.ColorDrawable")
-        StateListDrawable = jclass("android.graphics.drawable.StateListDrawable")
-        sel = StateListDrawable()
-        sel.addState([-16842910], ColorDrawable(normal))
-        sel.addState([16842919], ColorDrawable(pressed))
-        sel.addState([], ColorDrawable(normal))
-        return sel
-    except Exception:
+    @staticmethod
+    def _cached_method(cls, name, *types):
         try:
-            GradientDrawable = jclass("android.graphics.drawable.GradientDrawable")
-            gd = GradientDrawable()
-            gd.setColor(normal)
-            return gd
+            return cls.getDeclaredMethod(name, *types)
+        except Exception:
+            try:
+                return cls.getMethod(name, *types)
+            except Exception:
+                return None
+
+    def _collect_dialogs(self, controller):
+        dialogs = []
+        try:
+            field = controller.getClass().getDeclaredField("dialogs_dict")
+            field.setAccessible(True)
+            obj = field.get(controller)
+            if obj is not None:
+                it = obj.entrySet().iterator()
+                while it.hasNext():
+                    entry = it.next()
+                    dialogs.append((entry.getKey(), entry.getValue()))
+                return dialogs
+        except Exception as e:
+            log("[funpack] dialogs_dict error: %s" % e)
+        try:
+            for method in controller.getClass().getDeclaredMethods():
+                if method.getName() in ("getAllDialogs", "getDialogs") and method.getParameterTypes().length == 0:
+                    method.setAccessible(True)
+                    result = method.invoke(controller)
+                    if result is not None and hasattr(result, "entrySet"):
+                        it = result.entrySet().iterator()
+                        while it.hasNext():
+                            entry = it.next()
+                            dialogs.append((entry.getKey(), entry.getValue()))
+                        return dialogs
+        except Exception as e:
+            log("[funpack] fallback dialogs error: %s" % e)
+        return dialogs
+
+    def _dialog_title(self, dialog):
+        """Достаём имя чата/пользователя для поиска."""
+        try:
+            user = None
+            if hasattr(dialog, "getUser"):
+                try:
+                    user = dialog.getUser()
+                except Exception:
+                    user = None
+            if user is None:
+                try:
+                    from org.telegram.messenger import MessagesController
+                    mc = MessagesController.getInstance(0) if hasattr(MessagesController, "getInstance") else None
+                    user = mc.getUser(dialog.id) if mc else None
+                except Exception:
+                    pass
+            if user is not None:
+                first = user.first_name or ""
+                last = user.last_name or ""
+                username = user.username or ""
+                return (first + " " + last).strip(), username.lower()
+        except Exception:
+            pass
+        try:
+            chat = None
+            if hasattr(dialog, "getChat"):
+                try:
+                    chat = dialog.getChat()
+                except Exception:
+                    chat = None
+            if chat is None:
+                try:
+                    from org.telegram.messenger import MessagesController
+                    mc = MessagesController.getInstance(0) if hasattr(MessagesController, "getInstance") else None
+                    chat = mc.getChat(dialog.id) if mc else None
+                except Exception:
+                    pass
+            if chat is not None:
+                return chat.title or "", ""
+        except Exception:
+            pass
+        return "", ""
+
+    def _matches(self, dialog_id, dialog, only_private, only_groups, only_channels):
+        if dialog_id == 0:
+            if self.plugin.get_setting("keep_saved", True):
+                return False
+        is_private = dialog_id > 0
+        is_channel = dialog_id < -1000000000000
+        is_group = dialog_id < 0 and not is_channel
+        if only_private and is_private:
+            pass
+        elif only_groups and is_group:
+            pass
+        elif only_channels and is_channel:
+            pass
+        else:
+            return False
+        return True
+
+    def _matches_query(self, dialog, query):
+        if not query:
+            return True
+        title, username = self._dialog_title(dialog)
+        q = query.lower()
+        return q in title.lower() or q in username
+
+    def _find_delete_method(self, controller):
+        try:
+            for method in controller.getClass().getDeclaredMethods():
+                if method.getName() != "deleteDialog":
+                    continue
+                if method.getParameterTypes().length in (1, 2, 3):
+                    return method
+        except Exception:
+            pass
+        try:
+            return controller.getClass().getMethod("deleteDialog", Long.TYPE, Integer.TYPE, Boolean.TYPE)
         except Exception:
             return None
 
-
-class NickPanel:
-
-    def __init__(self, plugin, activity, variants):
-        self.plugin = plugin
-        self.activity = activity
-        self.variants = variants
-        self.sheet = None
-
-    def _build(self):
-        LinearLayout = jclass("android.widget.LinearLayout")
-        TextView = jclass("android.widget.TextView")
-        ScrollView = jclass("android.widget.ScrollView")
-        View = jclass("android.view.View")
-        Gravity = jclass("android.view.Gravity")
-        Typeface = jclass("android.graphics.Typeface")
-        Theme = find_class("org.telegram.ui.ActionBar.Theme")
-        LayoutHelper = find_class("org.telegram.ui.Components.LayoutHelper")
-
-        def color(key, fallback):
+    def _delete_dialog(self, account, dialog_id):
+        try:
+            instance = AccountInstance.getInstance(account)
+            controller = instance.getMessagesController()
+            method = self._find_delete_method(controller)
+            if method is None:
+                log("[funpack] deleteDialog method not found")
+                return
+            method.setAccessible(True)
             try:
-                return Theme.getColor(key)
+                method.invoke(controller, Long(dialog_id), Integer(0), Boolean(False))
             except Exception:
-                return fallback
-
-        bg = color(Theme.key_dialogBackground, 0xFF101318)
-        text = color(Theme.key_dialogTextBlack, 0xFFFFFFFF)
-        hint = color(Theme.key_dialogTextHint, 0xFF888888)
-        accent = color(Theme.key_featuredStickers_addButton, 0xFF3390EC)
-
-        root = LinearLayout(self.activity)
-        root.setOrientation(LinearLayout.VERTICAL)
-        root.setBackgroundColor(bg)
-
-        header = LinearLayout(self.activity)
-        header.setOrientation(LinearLayout.VERTICAL)
-        header.setPadding(22, 18, 22, 10)
-        title = TextView(self.activity)
-        title.setText("Ники · " + self.plugin._last_base)
-        title.setTextColor(text)
-        title.setTextSize(1, 16.0)
-        title.setTypeface(None, Typeface.BOLD)
-        header.addView(title, LayoutHelper.createLinear(-1, -2))
-        sub = TextView(self.activity)
-        sub.setText("Тап по варианту — копировать")
-        sub.setTextColor(hint)
-        sub.setTextSize(1, 12.0)
-        header.addView(sub, LayoutHelper.createLinear(-1, -2, 0.0, 2, 0, 0, 0))
-        root.addView(header, LayoutHelper.createLinear(-1, -2))
-
-        scroll = ScrollView(self.activity)
-        content = LinearLayout(self.activity)
-        content.setOrientation(LinearLayout.VERTICAL)
-
-        for nick in self.variants:
-            row = LinearLayout(self.activity)
-            row.setOrientation(LinearLayout.HORIZONTAL)
-            row.setGravity(Gravity.CENTER_VERTICAL)
-            row.setPadding(22, 12, 22, 12)
-            row.setBackground(_dialog_selector(0x00000000, 0x14FFFFFF))
-
-            name = TextView(self.activity)
-            name.setText(nick)
-            name.setTextColor(text)
-            name.setTextSize(1, 15.0)
-            name.setTypeface(None, Typeface.BOLD)
-            name.setSingleLine(True)
-            row.addView(name, LayoutHelper.createLinear(0, -2, 1.0))
-
-            copy = TextView(self.activity)
-            copy.setText("КОПИРОВАТЬ")
-            copy.setTextColor(accent)
-            copy.setTextSize(1, 11.0)
-            copy.setTypeface(None, Typeface.BOLD)
-            row.addView(copy, LayoutHelper.createLinear(-2, -2, 0.0, 0, 0, 0, 12))
-
-            row.setOnClickListener(OnClickListener(lambda v, n=nick: self.plugin._copy_nick(n)))
-            content.addView(row, LayoutHelper.createLinear(-1, -2))
-
-        scroll.addView(content, LayoutHelper.createFrame(-1, -2))
-        root.addView(scroll, LayoutHelper.createLinear(-1, -2, 1.0))
-        return root
-
-    def show(self):
-        try:
-            BottomSheet = find_class("org.telegram.ui.ActionBar.BottomSheet")
-            self.sheet = BottomSheet(self.activity, False)
-            self.sheet.setCustomView(self._build())
-            self.sheet.show()
+                try:
+                    method.invoke(controller, Long(dialog_id))
+                except Exception:
+                    try:
+                        method.invoke(controller, Long(dialog_id), Integer(0))
+                    except Exception as e:
+                        log("[funpack] deleteDialog invoke error: %s" % e)
         except Exception as e:
-            log("[funpack] sheet show error: %s" % e)
+            log("[funpack] delete error %s: %s" % (dialog_id, e))
 
-    def dismiss(self):
+    def run(self, account, query, only_private, only_groups, only_channels):
+        from android_utils import run_on_ui_thread
+        from ui.bulletin import BulletinHelper
         try:
-            if self.sheet is not None:
-                self.sheet.dismiss()
-        except Exception:
-            pass
-        self.sheet = None
+            if self._running:
+                run_on_ui_thread(lambda: BulletinHelper.show_info("Очистка уже выполняется…"))
+                return
+            self._running = True
+
+            def _work():
+                try:
+                    instance = AccountInstance.getInstance(account)
+                    controller = instance.getMessagesController()
+                    dialogs = self._collect_dialogs(controller)
+                    count = 0
+                    for dialog_id, dialog in dialogs:
+                        try:
+                            if not self._matches(dialog_id, dialog, only_private, only_groups, only_channels):
+                                continue
+                            if not self._matches_query(dialog, query):
+                                continue
+                            self._delete_dialog(account, dialog_id)
+                            count += 1
+                        except Exception:
+                            continue
+                    self._running = False
+                    msg = "Удалено чатов: %d" % count
+                    if query:
+                        msg += " (по запросу «%s»)" % query
+                    run_on_ui_thread(lambda: BulletinHelper.show_info(msg))
+                except Exception as e:
+                    self._running = False
+                    log("[funpack] clean work error: %s" % e)
+
+            run_on_queue(_work)
+        except Exception as e:
+            self._running = False
+            log("[funpack] clean run error: %s" % e)
+
+    def confirm(self, query, only_private, only_groups, only_channels):
+        from ui.alert import AlertDialogBuilder
+        fragment = get_last_fragment()
+        activity = fragment.getParentActivity() if fragment else None
+        if activity is None:
+            return
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("Lincoln-Fun · Очистка чатов")
+        if query:
+            builder.set_message("Удалить чаты, где найден «%s»? Действие нельзя отменить." % query)
+        else:
+            builder.set_message("Удалить ВСЕ чаты по выбранным правилам? Действие нельзя отменить.")
+        builder.set_positive_button("Удалить", lambda b, w: (b.dismiss(), self.run(0, query, only_private, only_groups, only_channels)))
+        builder.set_negative_button("Отмена", lambda b, w: b.dismiss())
+        builder.make_button_red(AlertDialogBuilder.BUTTON_POSITIVE)
+        builder.show()
 
 
 class LincolnFunPackPlugin(BasePlugin):
 
     def __init__(self):
         super().__init__()
-        self._last_base = "Nick"
         self._sessions: Dict[int, float] = {}
         self._timers: Dict[int, threading.Timer] = {}
+        self._cleaner = None
 
     def on_plugin_load(self):
         self.add_hook("TL_updateNewMessage")
@@ -185,6 +251,117 @@ class LincolnFunPackPlugin(BasePlugin):
             self.add_hook("TL_messages_sendMessage")
         except Exception:
             pass
+        if self.get_setting("allow_screenshots", True):
+            self._apply_secure(False)
+
+    # ===================================================== разрешение скриншотов
+
+    def _apply_secure(self, allow):
+        """allow=True — снять запрет скриншотов (FLAG_SECURE), allow=False — вернуть."""
+        try:
+            from android.view import WindowManager
+            from org.telegram.messenger import ApplicationLoader
+            from android.app import Activity
+            for activity in _activity_list():
+                try:
+                    win = activity.getWindow()
+                    if win is None:
+                        continue
+                    if allow:
+                        win.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                        log("[funpack] FLAG_SECURE cleared")
+                    else:
+                        win.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                except Exception as e:
+                    log("[funpack] secure apply error: %s" % e)
+            # Запасной вариант: текущая активность
+            try:
+                frag = get_last_fragment()
+                activity = frag.getParentActivity() if frag else None
+                if activity is not None:
+                    win = activity.getWindow()
+                    if allow:
+                        win.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    else:
+                        win.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+            except Exception:
+                pass
+        except Exception as e:
+            log("[funpack] secure error: %s" % e)
+
+    def _on_scr_on_click(self, *args):
+        self._apply_secure(True)
+        from ui.bulletin import BulletinHelper
+        from android_utils import run_on_ui_thread
+        run_on_ui_thread(lambda: BulletinHelper.show_info("Запрет скриншотов снят. Можно делать скрины."))
+
+    def _on_scr_off_click(self, *args):
+        self._apply_secure(False)
+        from ui.bulletin import BulletinHelper
+        from android_utils import run_on_ui_thread
+        run_on_ui_thread(lambda: BulletinHelper.show_info("Запрет скриншотов вернули."))
+
+    # ============================================================ запуск чистки
+
+    def _on_clean_all_click(self, *args):
+        if self._cleaner is None:
+            self._cleaner = ChatCleaner(self)
+        q = str(self.get_setting("clean_query", "") or "").strip()
+        self._cleaner.confirm(
+            q,
+            self.get_setting("only_private", True),
+            self.get_setting("only_groups", True),
+            self.get_setting("only_channels", True),
+        )
+
+    def _on_clean_search_click(self, *args):
+        """
+        Открывает окно ввода ника/юзернейма, после ввода спрашивает подтверждение
+        и удаляет подходящие диалоги.
+        """
+        from ui.alert import AlertDialogBuilder
+        from android.widget import EditText
+        from android.widget import LinearLayout
+        from android.widget import FrameLayout
+        from java.lang import Runnable
+        from android_utils import run_on_ui_thread
+
+        fragment = get_last_fragment()
+        activity = fragment.getParentActivity() if fragment else None
+        if activity is None:
+            return
+
+        field = EditText(activity)
+        field.setHint("Ник или @username")
+        field.setText(str(self.get_setting("clean_query", "") or ""))
+        field.setSingleLine(True)
+
+        wrap = LinearLayout(activity)
+        wrap.setOrientation(LinearLayout.VERTICAL)
+        wrap.setPadding(24, 24, 24, 0)
+        wrap.addView(field)
+
+        builder = AlertDialogBuilder(activity)
+        builder.set_title("Поиск чата")
+        builder.set_view(wrap)
+        builder.set_positive_button("Найти", lambda b, w: self._search_submit(field.getText().toString()))
+        builder.set_negative_button("Отмена", lambda b, w: b.dismiss())
+        builder.show()
+
+    def _search_submit(self, query):
+        query = (query or "").strip()
+        if not query:
+            from ui.bulletin import BulletinHelper
+            from android_utils import run_on_ui_thread
+            run_on_ui_thread(lambda: BulletinHelper.show_info("Введите ник или @username"))
+            return
+        self._cleaner = self._cleaner or ChatCleaner(self)
+        self._cleaner.confirm(
+            query,
+            self.get_setting("only_private", True),
+            self.get_setting("only_groups", True),
+            self.get_setting("only_channels", True),
+        )
 
     # ===================================================== пранк-набор (часть 1)
 
@@ -218,7 +395,6 @@ class LincolnFunPackPlugin(BasePlugin):
 
     def _send_prank_action(self, account: int, peer_id: int, action_name: str):
         try:
-            from org.telegram.messenger import AccountInstance
             from org.telegram.tgnet import TLRPC
 
             inst = AccountInstance.getInstance(account)
@@ -240,7 +416,6 @@ class LincolnFunPackPlugin(BasePlugin):
 
     def _send_prank_cancel(self, account: int, peer_id: int):
         try:
-            from org.telegram.messenger import AccountInstance
             from org.telegram.tgnet import TLRPC
 
             inst = AccountInstance.getInstance(account)
@@ -327,77 +502,52 @@ class LincolnFunPackPlugin(BasePlugin):
             log("[funpack] prank hook error: %s" % e)
         return HookResult()
 
-    # ===================================================== /nick (часть 2)
-
-    def on_send_message_hook(self, account: int, params: Any) -> HookResult:
-        try:
-            if not self.get_setting("nick_enabled", True):
-                return HookResult()
-            text = getattr(params, "message", None)
-            if not isinstance(text, str):
-                return HookResult()
-            text = text.strip()
-            if not text.lower().startswith("/nick"):
-                return HookResult()
-            parts = text.split(None, 1)
-            base = parts[1].strip() if len(parts) > 1 else ""
-            if not base:
-                base = "Nick"
-            if len(base) > 24:
-                base = base[:24]
-            self._last_base = base
-            variants = self._gen_variants(base)
-            run_on_ui_thread(lambda: self._show_panel(variants))
-            return HookResult(strategy=HookStrategy.CANCEL)
-        except Exception as e:
-            log("[funpack] nick hook error: %s" % e)
-        return HookResult()
-
-    def _gen_variants(self, base: str) -> List[str]:
-        seen = []
-        for v in _gen_nicks(base):
-            if v not in seen:
-                seen.append(v)
-        return seen[:16]
-
-    def _show_panel(self, variants):
-        try:
-            fragment = get_last_fragment()
-            if fragment is None:
-                return
-            activity = fragment.getParentActivity()
-            if activity is None:
-                return
-            sheet = NickPanel(self, activity, variants)
-            sheet.show()
-        except Exception as e:
-            log("[funpack] nick panel error: %s" % e)
-
-    def _copy_nick(self, nick):
-        try:
-            from android.content import ClipboardManager, Context
-            from android.widget import Toast
-            from org.telegram.messenger import ApplicationLoader
-
-            ctx = ApplicationLoader.applicationContext
-            if ctx is None:
-                return
-            cm = ctx.getSystemService(Context.CLIPBOARD_SERVICE)
-            if cm is not None:
-                cm.setText(nick)
-            try:
-                Toast.makeText(ctx, "Скопировано: " + nick, Toast.LENGTH_SHORT).show()
-            except Exception:
-                pass
-            log("[funpack] copied: %s" % nick[:40])
-        except Exception:
-            pass
-
     # ============================================================== настройки
 
     def create_settings(self) -> List[Any]:
         return [
             Header(text="Lincoln-Fun"),
+            Header(text="Скриншоты"),
+            Text(
+                text="Разрешить скриншоты",
+                subtext="Снимает FLAG_SECURE — можно делать скрины там, где запрещено (секретные чаты и т.п.)",
+                on_click=self._on_scr_on_click,
+                icon="msg_camera",
+            ),
+            Text(
+                text="Вернуть запрет скриншотов",
+                subtext="Возвращает защиту экрана от скриншотов",
+                on_click=self._on_scr_off_click,
+                icon="msg_lock",
+            ),
+            Divider(),
+            Header(text="Очистка чатов"),
+            Text(
+                text="Удалить все чаты",
+                subtext="Одним нажатием удаляет ВСЕ диалоги по правилам ниже",
+                on_click=self._on_clean_all_click,
+                icon="msg_delete",
+            ),
+            Text(
+                text="Удалить по поиску",
+                subtext="Вводите ник или @username — удалит все чаты с таким именем",
+                on_click=self._on_clean_search_click,
+                icon="msg_search",
+            ),
+            Input(
+                key="clean_query",
+                text="Запрос по умолчанию",
+                default="",
+                subtext="Ник или юзернейм для поиска (можно оставить пустым)",
+                icon="msg_search",
+            ),
+            Divider(),
+            Header(text="Правила очистки"),
+            Switch(key="only_private", text="Личные чаты", default=True, icon="msg_user"),
+            Switch(key="only_groups", text="Группы", default=True, icon="msg_chat"),
+            Switch(key="only_channels", text="Каналы", default=True, icon="msg_broadcast"),
+            Switch(key="keep_saved", text="Сохранить «Избранное»", default=True, icon="msg_bookmark"),
+            Divider(),
             Header(text="Пранк-набор текста"),
             Switch(key="prank_enabled", text="Включить пранк-набор", default=True, icon="msg_switcher_on"),
             Divider(),
@@ -430,25 +580,29 @@ class LincolnFunPackPlugin(BasePlugin):
                 icon="msg_group",
             ),
             Divider(),
-            Header(text="Генератор ников"),
-            Switch(key="nick_enabled", text="Включить /nick", default=True, icon="msg_switcher_on"),
-            Text(
-                text="Команда",
-                subtext="Напишите /nick слово в любом чате — откроется панель с вариантами.",
-                icon="msg_edit",
-            ),
-            Text(
-                text="Копирование",
-                subtext="Тап по варианту копирует его в буфер обмена — вставьте в «Изменить профиль».",
-                icon="msg_copy",
-            ),
-            Divider(),
             Text(
                 text="Как работает",
-                subtext="Пранк-набор шлёт «печатает» по протоколу Telegram и сам отменяет по таймеру (дедуп: одна сессия на чат раз в 3 сек). Ники генерируются локально, на сервер ничего не отправляется.",
+                subtext="Пранк-набор шлёт «печатает» по протоколу Telegram и сам отменяет по таймеру. Очистка удаляет диалоги локально через MessagesController. Скриншоты снимаются снятием FLAG_SECURE у окон приложения.",
                 icon="msg_info",
             ),
         ]
+
+
+def _activity_list():
+    """Возвращает список активных Activity текущего процесса (best effort)."""
+    out = []
+    try:
+        from org.telegram.messenger import ApplicationLoader
+        from android.app import Activity
+        from android.os import Build
+        ctx = ApplicationLoader.applicationContext
+        if ctx is None:
+            return out
+        if hasattr(ctx, "getActivity") and ctx.getActivity() is not None:
+            out.append(ctx.getActivity())
+    except Exception:
+        pass
+    return out
 
 
 def create_plugin():
