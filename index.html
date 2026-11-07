@@ -669,41 +669,78 @@
     100% { transform: translateX(350%); }
   }
   .hero {
+    position: relative;
     padding: 90px 0 44px;
     display: grid;
     grid-template-columns: 1.1fr 0.9fr;
     gap: 56px;
     align-items: center;
+    isolation: isolate;
+  }
+  /* Мягкое свечение позади текста hero */
+  .hero::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 4%;
+    left: -4%;
+    width: 560px;
+    height: 420px;
+    background:
+      radial-gradient(closest-side, rgba(224, 177, 120, 0.16), transparent 72%),
+      radial-gradient(closest-side, rgba(237, 201, 160, 0.07), transparent 60%);
+    filter: blur(30px);
+    pointer-events: none;
+    animation: heroHalo 9s ease-in-out infinite alternate;
+  }
+  @keyframes heroHalo {
+    from { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
+    to { transform: translate3d(24px, -14px, 0) scale(1.08); opacity: 1; }
+  }
+  @media (pointer: coarse), (hover: none), (prefers-reduced-motion: reduce) {
+    .hero::before { animation: none; }
   }
 
   .badge {
     display: inline-flex;
     align-items: center;
-    gap: 9px;
-    padding: 7px 15px;
+    gap: 10px;
+    padding: 9px 18px;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text-dim);
-    font-size: 13.5px;
-    margin-bottom: 26px;
-    backdrop-filter: blur(8px);
+    border: 1px solid rgba(237, 201, 160, 0.28);
+    background: linear-gradient(135deg, rgba(255, 250, 240, 0.08), rgba(255, 250, 240, 0.02));
+    color: var(--creme);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 28px;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.08),
+      0 10px 30px -12px rgba(0, 0, 0, 0.5);
   }
   .badge .dot {
-    width: 8px; height: 8px;
+    width: 9px; height: 9px;
     border-radius: 50%;
-    background: var(--peach);
-    box-shadow: 0 0 12px var(--peach);
-    animation: pulse 2.4s ease-in-out infinite;
+    background: #8fe0a5;
+    box-shadow: 0 0 0 0 rgba(143, 224, 165, 0.7);
+    animation: badgePing 2.2s ease-out infinite;
   }
-  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  @keyframes badgePing {
+    0% { box-shadow: 0 0 0 0 rgba(143, 224, 165, 0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(143, 224, 165, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(143, 224, 165, 0); }
+  }
 
   .hero h1 {
-    font-size: clamp(38px, 5.8vw, 66px);
-    line-height: 1.05;
+    font-size: clamp(40px, 5.8vw, 68px);
+    line-height: 1.04;
     letter-spacing: -0.035em;
     font-weight: 800;
-    margin-bottom: 22px;
+    margin-bottom: 24px;
+    color: var(--creme);
+    text-shadow: 0 4px 30px rgba(0, 0, 0, 0.35);
   }
 
   .grad-text {
@@ -721,12 +758,19 @@
 
   .hero p.sub {
     max-width: 540px;
-    margin-bottom: 34px;
+    margin-bottom: 36px;
     color: var(--text-dim);
     font-size: clamp(15.5px, 2vw, 18px);
+    line-height: 1.7;
   }
 
   .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+  .hero-btn { display: inline-flex; align-items: center; gap: 9px; }
+  .hero-btn svg { flex: none; opacity: 0.85; transition: opacity 0.3s, transform 0.3s var(--ease); }
+  .hero-btn:hover svg { opacity: 1; transform: translateY(1px); }
+  .dl-ico { transition: transform 0.35s var(--ease); }
+  .btn-warm:hover .dl-ico { transform: translateY(3px); }
 
   @keyframes btnFloat {
     0%, 100% { transform: translateY(0); }
@@ -3026,10 +3070,10 @@
       <p class="sub" data-i18n="hero_sub">Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.</p>
       <div class="hero-actions">
         <a href="https://exteragram.app/" target="_blank" rel="noopener" class="btn btn-warm float-btn"><span data-i18n="hero_extera">Скачать ExtraGram</span>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="dl-ico" width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5M5 20h14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </a>
-        <a href="#plugins" class="btn float-btn" data-i18n="hero_pick">Выбрать плагин</a>
-        <a href="#install" class="btn float-btn" data-i18n="hero_howto">Как установить</a>
+        <a href="#plugins" class="btn float-btn hero-btn ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="hero_pick">Выбрать плагин</span></a>
+        <a href="#install" class="btn float-btn hero-btn ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5m0 0 2.5-2.5M12 13l-2.5-2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="hero_howto">Как установить</span></a>
       </div>
     </div>
 
