@@ -1978,6 +1978,8 @@
   .g-status.active { background: rgba(127, 211, 150, 0.14); color: #7fd396; border: 1px solid rgba(127, 211, 150, 0.35); }
   .g-status.soon { background: rgba(237, 201, 160, 0.12); color: var(--creme); border: 1px solid rgba(237, 201, 160, 0.3); }
   .g-status.done { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border: 1px solid var(--border); }
+  .g-status.inactive { background: rgba(179, 168, 151, 0.08); color: var(--text-dim); border: 1px solid rgba(179, 168, 151, 0.25); }
+  .g-status.inactive .g-dot { animation: none; box-shadow: none; }
 
   .giveaway-rules {
     margin-top: 26px;
@@ -3351,7 +3353,7 @@
             </svg>
           </span>
           <div class="g-head">
-            <div class="g-status active"><span class="g-dot"></span>В процессе</div>
+            <div class="g-status inactive"><span class="g-dot"></span>Неактивно</div>
             <h3>10 мишек Telegram</h3>
           </div>
         </div>
