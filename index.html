@@ -769,49 +769,84 @@
   }
 
   /* ---------- Terminal ---------- */
-  .term-wrap { position: relative; display: flex; justify-content: center; }
+  .term-wrap { position: relative; display: flex; justify-content: center; perspective: 1400px; }
 
   .term-stack { display: flex; flex-direction: column; gap: 22px; width: 100%; max-width: 460px; }
 
   .term {
+    position: relative;
     width: 100%;
     max-width: 460px;
     border-radius: 18px;
-    border: 1px solid rgba(255, 245, 230, 0.10);
+    border: 1px solid rgba(255, 245, 230, 0.12);
     background: linear-gradient(180deg, var(--term-bg1), var(--term-bg2) 70%);
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), 0 0 80px rgba(224, 177, 120, 0.06);
+    box-shadow:
+      0 30px 80px rgba(0, 0, 0, 0.5),
+      0 0 80px rgba(224, 177, 120, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
     overflow: hidden;
     font-family: var(--mono);
     font-size: 13px;
     line-height: 1.75;
     transform: perspective(1200px) rotateY(-3deg) rotateX(1deg);
-    transition: transform 0.6s var(--ease);
+    transition: transform 0.6s var(--ease), box-shadow 0.6s var(--ease);
+    transform-style: preserve-3d;
+    will-change: transform;
   }
+  .term::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(120% 60% at var(--tmx, 30%) var(--tmy, 0%), rgba(237, 201, 160, 0.10), transparent 60%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .term:hover::after { opacity: 1; }
   .term-wrap:hover .term { transform: perspective(1200px) rotateY(0deg) rotateX(0deg); }
+
+  /* Лёгкая плавучесть терминалов */
+  .term:nth-child(1) { animation: termFloat 7s ease-in-out infinite; animation-delay: -1s; }
+  .term:nth-child(2) { animation: termFloat 8s ease-in-out infinite; animation-delay: -3.5s; }
+  @keyframes termFloat {
+    0%, 100% { margin-top: 0; }
+    50% { margin-top: -7px; }
+  }
+  @media (pointer: coarse), (hover: none) {
+    .term:nth-child(1), .term:nth-child(2) { animation: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .term:nth-child(1), .term:nth-child(2) { animation: none; }
+  }
 
   .term-head {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 11px 15px;
-    background: rgba(255, 255, 255, 0.03);
+    padding: 12px 15px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02));
     border-bottom: 1px solid var(--border-soft);
   }
   .term-head .dot-r, .term-head .dot-y, .term-head .dot-g {
-    width: 10px; height: 10px; border-radius: 50%;
+    width: 11px; height: 11px; border-radius: 50%;
+    box-shadow: inset 0 -1px 2px rgba(0, 0, 0, 0.25);
   }
-  .term-head .dot-r { background: #ff6d60; opacity: 0.8; }
-  .term-head .dot-y { background: #f2c469; opacity: 0.8; }
-  .term-head .dot-g { background: #6fcf97; opacity: 0.8; }
-  .term-head .term-title { margin-left: 8px; font-size: 11.5px; color: var(--text-faint); letter-spacing: 0.02em; }
+  .term-head .dot-r { background: linear-gradient(135deg, #ff8d7f, #e05043); }
+  .term-head .dot-y { background: linear-gradient(135deg, #ffd98a, #d9a13e); }
+  .term-head .dot-g { background: linear-gradient(135deg, #7fe0a5, #3f9e62); }
+  .term-head .term-title { margin-left: 8px; font-size: 11.5px; color: var(--text-faint); letter-spacing: 0.04em; }
+  .term-head .term-title b { color: var(--peach); font-weight: 700; }
 
-  .term-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; position: relative; min-height: 180px; }
+  .term-body { padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 4px; position: relative; min-height: 180px; z-index: 1; }
   .term-dark .term-body { min-height: 170px; }
   .term-dark .t-caret { position: absolute; bottom: 14px; left: 18px; }
   .t-line { display: flex; gap: 10px; color: var(--text-dim); white-space: nowrap; }
   .t-prompt { color: var(--peach); font-weight: 700; }
+  .t-cmd { color: #f2e9d8; }
   .t-out { color: var(--text-faint); }
-  .t-line.ok { color: #d8e8c8; }
+  .t-line.ok { color: #9fd9a8; }
+  .t-line.ok .t-out { color: #6fcf97; }
   .t-caret { color: var(--peach); animation: caretBlink 1.1s steps(1) infinite; font-size: 14px; }
   @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
@@ -2983,13 +3018,13 @@
         <div class="term">
           <div class="term-head">
             <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
-            <span class="term-title">lincoln-plugin — install</span>
+            <span class="term-title"><b>lincoln-plugin</b> — install</span>
           </div>
           <div class="term-body">
-            <div class="t-line"><span class="t-prompt">$</span> curl -sS https://lincoln-plugin.ru/install</div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> curl -sS https://lincoln-plugin.ru/install</span></div>
             <div class="t-line"><span class="t-out">→</span> получение пакета: lincoln-holl-v2.1</div>
             <div class="t-line ok"><span class="t-out">✓</span> проверка подписи: OK</div>
-            <div class="t-line"><span class="t-prompt">$</span> lincoln install lincoln-holl</div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> lincoln install lincoln-holl</span></div>
             <div class="t-line ok"><span class="t-out">✓</span> Lincoln Holl установлен</div>
             <div class="t-line"><span class="t-out">→</span> готово за 0.8 сек</div>
             <div class="t-caret">▌</div>
@@ -2998,14 +3033,14 @@
         <div class="term term-dark">
           <div class="term-head">
             <span class="dot-r"></span><span class="dot-y"></span><span class="dot-g"></span>
-            <span class="term-title">lincoln — ghost status</span>
+            <span class="term-title"><b>lincoln</b> — ghost status</span>
           </div>
           <div class="term-body">
-            <div class="t-line"><span class="t-prompt">$</span> lincoln ghost --on</div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> lincoln ghost --on</span></div>
             <div class="t-line ok"><span class="t-out">✓</span> скрыть «в сети»: включено</div>
             <div class="t-line ok"><span class="t-out">✓</span> скрыть «печатает»: включено</div>
             <div class="t-line ok"><span class="t-out">✓</span> скрыть «прочитано»: включено</div>
-            <div class="t-line"><span class="t-prompt">$</span> lincoln status</div>
+            <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> lincoln status</span></div>
             <div class="t-line"><span class="t-out">→</span> вы невидимы. 0.0s latency</div>
             <div class="t-caret">▌</div>
           </div>
@@ -4280,6 +4315,28 @@ window.__catalogReady = true;
       if (heroTerm) heroTerm.style.transform = "translate3d(" + (cx * 20) + "px, " + (cy * 14) + "px, 0)";
     });
   }
+
+  /* ================= 3D tilt терминалов за мышью ================= */
+  (function () {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var terms = document.querySelectorAll(".term");
+    terms.forEach(function (term) {
+      term.addEventListener("pointermove", function (e) {
+        var r = term.getBoundingClientRect();
+        var px = (e.clientX - r.left) / r.width;
+        var py = (e.clientY - r.top) / r.height;
+        var rx = (0.5 - py) * 9;
+        var ry = (px - 0.5) * 11;
+        term.style.transform = "perspective(1200px) rotateX(" + rx.toFixed(2) + "deg) rotateY(" + ry.toFixed(2) + "deg)";
+        term.style.setProperty("--tmx", (px * 100) + "%");
+        term.style.setProperty("--tmy", (py * 100) + "%");
+      });
+      term.addEventListener("pointerleave", function () {
+        term.style.transform = "perspective(1200px) rotateY(-3deg) rotateX(1deg)";
+      });
+    });
+  })();
 
   /* ================= Parallax orbs on scroll + mouse ================= */
   var orbWraps = document.querySelectorAll(".orb-wrap");
