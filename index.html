@@ -3651,6 +3651,30 @@ window.__catalogReady = true;
       window.__lastVisit = prev;
       try { localStorage.setItem("lincoln-last-visit", String(Date.now())); } catch (e) {}
     })();
+    function renderSilent(list) {
+      grid.innerHTML = list.map(cardHtml).join("");
+      PLUGIN_DATA = list;
+      window.__catalogReady = true;
+      if (typeof window.__catalogCbs === "function") window.__catalogCbs();
+    }
+    function poll() {
+      fetch("plugins.json", { cache: "no-store" })
+        .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+        .then(function (data) {
+          if (!Array.isArray(data) || data.length === 0) throw new Error("empty");
+          var changed = data.length !== PLUGIN_DATA.length ||
+            data.some(function (p, i) {
+              var cur = PLUGIN_DATA[i];
+              return !cur || cur.name !== p.name || cur.version !== p.version || cur.date !== p.date;
+            });
+          if (changed) {
+            renderSilent(data);
+            try { applyNewBadges(); } catch (e) {}
+            try { applyCatalog(); } catch (e) {}
+          }
+        })
+        .catch(function () {});
+    }
     poll();
     setInterval(poll, 5 * 60 * 1000);
     function fallback() {
