@@ -1086,6 +1086,37 @@
   }
   .card .new-badge { margin: 0; }
 
+  /* Бейдж «новое для вас» */
+  .for-you-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #a9e2c0, #6fcf97 55%, #4fae6a);
+    color: #08301a;
+    box-shadow: 0 4px 20px rgba(79, 174, 106, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    z-index: 5;
+    white-space: nowrap;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+  .for-you-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #1c5e3a;
+    box-shadow: 0 0 0 2px rgba(28, 94, 58, 0.3);
+  }
+  .card .for-you-badge { margin: 0; }
+
   /* Бейдж «Доступно обновление» */
   .update-badge {
     position: absolute;
@@ -3593,9 +3624,35 @@
           setTimeout(function () { el.classList.add("in"); }, Math.min(idx * 60, 400));
         })(els[i], i);
       }
-      window.__catalogReady = true;
+window.__catalogReady = true;
       if (typeof window.__catalogCbs === "function") window.__catalogCbs();
     }
+    function markNewForYou() {
+      var last = 0;
+      try { last = window.__lastVisit || 0; } catch (e) {}
+      if (!last) return;
+      grid.querySelectorAll(".card[data-date-iso]").forEach(function (c) {
+        if (c.querySelector(".for-you-badge")) return;
+        if (c.querySelector(".new-badge") || c.querySelector(".update-badge")) return;
+        var d = new Date(c.getAttribute("data-date-iso") || "");
+        if (isNaN(d.getTime())) return;
+        if (d.getTime() > last) {
+          var b = document.createElement("span");
+          b.className = "for-you-badge";
+          b.textContent = "новое для вас";
+          c.appendChild(b);
+        }
+      });
+    }
+    window.markNewForYou = markNewForYou;
+    (function () {
+      var prev = 0;
+      try { prev = parseInt(localStorage.getItem("lincoln-last-visit") || "0", 10) || 0; } catch (e) {}
+      window.__lastVisit = prev;
+      try { localStorage.setItem("lincoln-last-visit", String(Date.now())); } catch (e) {}
+    })();
+    poll();
+    setInterval(poll, 5 * 60 * 1000);
     function fallback() {
       try {
         var inline = document.getElementById("pluginGrid").getAttribute("data-inline");
@@ -5112,6 +5169,7 @@
     applyHistory();
     applyUpdateBadges();
     applyNewBadges();
+    if (typeof window.markNewForYou === "function") window.markNewForYou();
     applyLang(curLang);
     applyHumanDates(curLang);
     initCardsTilt();
