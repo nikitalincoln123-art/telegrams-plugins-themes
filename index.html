@@ -764,7 +764,7 @@
     line-height: 1.7;
   }
 
-  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
   .hero-btn { display: inline-flex; align-items: center; gap: 9px; }
   .hero-btn svg { flex: none; opacity: 0.85; transition: opacity 0.3s, transform 0.3s var(--ease); }
@@ -849,20 +849,6 @@
   }
   .term:hover::after { opacity: 1; }
   .term-wrap:hover .term { transform: perspective(1200px) rotateY(0deg) rotateX(0deg); }
-
-  /* Лёгкая плавучесть терминалов */
-  .term:nth-child(1) { animation: termFloat 7s ease-in-out infinite; animation-delay: -1s; }
-  .term:nth-child(2) { animation: termFloat 8s ease-in-out infinite; animation-delay: -3.5s; }
-  @keyframes termFloat {
-    0%, 100% { margin-top: 0; }
-    50% { margin-top: -7px; }
-  }
-  @media (pointer: coarse), (hover: none) {
-    .term:nth-child(1), .term:nth-child(2) { animation: none; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .term:nth-child(1), .term:nth-child(2) { animation: none; }
-  }
 
   .term-head {
     display: flex;
@@ -1050,20 +1036,7 @@
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
   }
 
-  /* «Дыхание» карточек: плавное покачивание */
-  .card.reveal.in .icon {
-    animation: cardBreath 6s ease-in-out infinite;
-  }
-  .card.reveal.in .icon:nth-child(odd) { animation-delay: -1.4s; }
-  .card.reveal.in:nth-child(3n) .icon { animation-duration: 5.4s; animation-delay: -2.6s; }
-  .card.reveal.in:nth-child(4n) .icon { animation-duration: 6.8s; animation-delay: -3.8s; }
-  @keyframes cardBreath {
-    0%, 100% { transform: translateY(0) rotate(0deg); }
-    50% { transform: translateY(-4px) rotate(-1.2deg); }
-  }
   @media (prefers-reduced-motion: reduce) {
-    .card.reveal.in .icon { animation: none; }
-  }
 
   .tag {
     display: inline-block;
