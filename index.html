@@ -1015,6 +1015,9 @@
   .card-actions .btn { padding: 9px 16px; font-size: 13px; border-radius: 999px; }
   .btn-info { background: transparent; color: var(--text-dim); }
   .btn-info:hover { color: var(--creme); border-color: rgba(255, 245, 230, 0.3); background: var(--panel-hover); }
+  @media (max-width: 480px) {
+    .card-actions .btn { flex: 1 1 auto; justify-content: center; }
+  }
 
   .top-right {
     display: inline-flex;
@@ -2762,6 +2765,14 @@
     /* Не показываем тяжёлые canvas-эффекты на мобильных, чтобы скролл был плавным */
     #space { display: none; }
     .vignette { opacity: 0.5; }
+    /* Аврора на мобильных: статичная, без blur и hue-анимации (дорого на GPU) */
+    .bg-waves {
+      animation: none;
+      filter: none;
+      opacity: 0.3;
+      inset: 0;
+    }
+    .bg-noise { display: none; }
     /* Без шторки секций на мобильных: контент виден сразу, без задержки */
     .js section.block,
     .js .reveal {
@@ -3654,6 +3665,10 @@ window.__catalogReady = true;
     function renderSilent(list) {
       grid.innerHTML = list.map(cardHtml).join("");
       PLUGIN_DATA = list;
+      var els = grid.querySelectorAll(".card.reveal");
+      for (var i = 0; i < els.length; i++) {
+        els[i].classList.add("in");
+      }
       window.__catalogReady = true;
       if (typeof window.__catalogCbs === "function") window.__catalogCbs();
     }
@@ -5387,6 +5402,8 @@ window.__catalogReady = true;
     var cv = document.getElementById("dust");
     if (!cv) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // На тач-устройствах канвас скрыт по opacity — не крутим rAF впустую
+    if (window.matchMedia("(pointer: coarse), (hover: none)").matches) return;
     var ctx = cv.getContext("2d");
     if (!ctx) return;
     var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
