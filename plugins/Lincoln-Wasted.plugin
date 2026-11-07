@@ -1,5 +1,5 @@
-__id__ = "lincoln_ios"
-__name__ = "Lincoln iOS"
+__id__ = "lincoln_wasted"
+__name__ = "Lincoln-Wasted"
 __description__ = "Профиль и чаты: свой номер, юзернейм, био, эмодзи-статус, звёзды и TON, премиум, буст, ghost-режим, своё «был(а)…», скрытие просмотров в каналах, «умный» статус по расписанию, режим самолёт, эффект «печатает», NFT-плашка. Всё локально."
 __author__ = "Lincoln"
 __version__ = "3.0"
@@ -329,9 +329,9 @@ class LincolnIOSPlugin(BasePlugin):
             except Exception:
                 pass
 
-            self.log("[lincoln_ios] loaded, hooks: user=%d others=%d balance=%d" % (self._hook_user, self._hook_others, self._hook_balance))
+            self.log("[lincoln_wasted] loaded, hooks: user=%d others=%d balance=%d" % (self._hook_user, self._hook_others, self._hook_balance))
         except Exception as e:
-            self.log("[lincoln_ios] load error: %s" % e)
+            self.log("[lincoln_wasted] load error: %s" % e)
 
     # -------------------- fake typing (эффект «печатает…») --------------------
 
@@ -452,7 +452,7 @@ class LincolnIOSPlugin(BasePlugin):
 
     def create_settings(self):
         return [
-            Header(text="Lincoln iOS"),
+            Header(text="Lincoln-Wasted"),
             Text(text="Локальные визуальные настройки профиля и чатов", subtext="Ничего не отправляется на сервер", icon="msg_info"),
             Divider(),
 

@@ -187,12 +187,15 @@ class LincolnProPlugin(BasePlugin):
                 return HookResult()
             parts = text.split(None, 1)
             arg = parts[1].strip() if len(parts) > 1 else ""
-            minutes = 10
+            try:
+                minutes = int(float(str(self.get_setting("mut_default", "10") or "10")))
+            except Exception:
+                minutes = 10
             if arg:
                 try:
                     minutes = int(arg.replace("м", "").replace("m", "").strip())
                 except Exception:
-                    minutes = 10
+                    pass
             peer = getattr(params, "peer", None)
             if peer is None:
                 return HookResult(strategy=HookStrategy.CANCEL)
@@ -203,7 +206,7 @@ class LincolnProPlugin(BasePlugin):
             if uid > 0:
                 self._muted[uid] = datetime.now().timestamp() + minutes * 60
                 from android_utils import log
-                log("[lincoln_pro] muted %s for %s min" % (uid, minutes))
+                log("[lincoln_holl] muted %s for %s min" % (uid, minutes))
             return HookResult(strategy=HookStrategy.CANCEL)
         except Exception:
             return HookResult()
@@ -216,7 +219,13 @@ class LincolnProPlugin(BasePlugin):
             if message is None or bool(getattr(message, "out", False)):
                 return HookResult()
             peer = getattr(message, "peer_id", None)
-            uid = int(getattr(getattr(peer, "user_id", None), "user_id", 0) or 0)
+            user_id = getattr(peer, "user_id", None)
+            if user_id is None:
+                user_id = getattr(peer, "chat_id", None) or getattr(peer, "channel_id", None) or getattr(peer, "peer_user_id", None)
+            try:
+                uid = int(user_id or 0)
+            except Exception:
+                uid = 0
             if uid and self._muted.get(uid) and datetime.now().timestamp() < self._muted[uid]:
                 mid = int(getattr(message, "id", 0) or 0)
                 if mid > 0:
@@ -266,8 +275,14 @@ class LincolnProPlugin(BasePlugin):
             Input(key="ton_balance", text="TON", default="1.5"),
             Divider(),
             Header(text="Мут и подарки"),
-            Text(text=".mut 30", subtext="Скрыть сообщения собеседника на 30 минут", icon="msg_mute"),
-            Text(text="Подарки / NFT / фон / уровень", subtext="Эти визуальные эффекты добавляются отдельными блоками клиента; в данной версии доступны звёзды, статус, ghost и мут.", icon="msg_info"),
+            Text(text="Команда .mut", subtext="Напишите в чат .mut 30 — скрыть сообщения собеседника на 30 минут (по умолчанию 10)", icon="msg_mute"),
+            Input(key="mut_default", text="Мут по умолчанию (мин)", default="10"),
+            Divider(),
+            Header(text="Управление разрешениями"),
+            Switch(key="ghost_online", text="Скрыть «в сети»", default=True),
+            Switch(key="dont_send_typing", text="Скрыть «печатает…»", default=True),
+            Switch(key="no_read", text="Не отправлять «прочитано»", default=True),
+            Switch(key="fake_lastseen", text="Своё «был(а)…»", default=True),
             Divider(),
             Text(
                 text="Статус хуков",

@@ -1,20 +1,19 @@
 __id__ = "lincoln_autoreply"
 __name__ = "Auto-Replier"
-__description__ = "Автоответы по триггерам: когда в личном чате или группе приходит сообщение с ключевым словом, плагин автоматически отправляет заданный ответ (цитатой на сообщение)."
+__description__ = "Автоответы по триггерам: когда в личном чате или группе приходит сообщение с ключевым словом, плагин автоматически отправляет заданный ответ (цитатой на сообщение). Без лимитов и с мгновенной отправкой."
 __author__ = "Lincoln"
-__version__ = "1.0"
+__version__ = "2.0"
 __icon__ = "msg_reply"
 __app_version__ = ">=12.5.1"
 __sdk_version__ = ">=1.4.4.3"
 __category__ = ["tools"]
 
-import time
 from typing import Any, Dict, List
 
 from base_plugin import BasePlugin, HookResult, HookStrategy
 from ui.settings import Header, Switch, Input, Divider, Text
 from android_utils import log
-from client_utils import send_text, run_on_queue
+from client_utils import send_text
 
 
 class LincolnAutoReplierPlugin(BasePlugin):
@@ -26,7 +25,7 @@ class LincolnAutoReplierPlugin(BasePlugin):
 
     def _parse_rules(self):
         rules = []
-        raw = self.get_setting("rules", "привет,добрый день\n" "как дела?,хорошо")
+        raw = self.get_setting("rules", "привет,добрый день\nкак дела?,хорошо")
         for line in raw.splitlines():
             line = line.strip()
             if not line or "," not in line:
@@ -38,11 +37,16 @@ class LincolnAutoReplierPlugin(BasePlugin):
                 rules.append((trigger, reply))
         return rules
 
-    def _dedup(self, chat_id, text) -> bool:
+    def _dedup(self, chat_id, text):
+        """Анти-спам. Если cooldown <= 0 или включён режим «без лимитов» —
+        отвечаем на каждое сообщение без блокировок."""
+        if int(self.get_setting("cooldown", 0)) <= 0 or self.get_setting("no_limits", True):
+            return True
         key = "%s|%s" % (chat_id, text[:60].lower())
+        import time
         now = time.time()
         prev = self._last_reply.get(key, 0)
-        if now - prev < int(self.get_setting("cooldown", 15)):
+        if now - prev < int(self.get_setting("cooldown", 0)):
             return False
         self._last_reply[key] = now
         if len(self._last_reply) > 200:
@@ -56,7 +60,7 @@ class LincolnAutoReplierPlugin(BasePlugin):
             message = getattr(update, "message", None)
             if message is None:
                 return HookResult()
-            # Ответ только чужим сообщениям
+            # Ответ только чужим сообщениям от пользователей
             try:
                 from_user = getattr(message, "from_id", None)
                 user_id = getattr(from_user, "user_id", None)
@@ -82,12 +86,13 @@ class LincolnAutoReplierPlugin(BasePlugin):
             peer = getattr(message, "peer_id", None)
             peer_val = getattr(peer, "chat_id", None) or getattr(peer, "user_id", None) or getattr(peer, "channel_id", None)
             if peer_val is None and peer is not None:
-                peer_val = int(peer)
+                try:
+                    peer_val = int(peer)
+                except Exception:
+                    peer_val = None
             if peer_val is None:
                 return HookResult()
 
-            # Проверяем входящие/исходящие: отвечаем, только если сообщение входящее
-            msg_id = getattr(message, "id", 0)
             out = getattr(message, "out", False)
             if out:
                 return HookResult()
@@ -99,6 +104,7 @@ class LincolnAutoReplierPlugin(BasePlugin):
             if not self._dedup(peer_val, text):
                 return HookResult()
 
+            msg_id = getattr(message, "id", 0)
             self.log("[lincoln_autoreply] trigger '%s' -> '%s' in %s" % (trigger, reply, peer_val))
             try:
                 send_text(peer_val, reply, replyToMsg=msg_id, notify=False)
@@ -113,6 +119,16 @@ class LincolnAutoReplierPlugin(BasePlugin):
             Header(text="Auto-Replier"),
             Switch(key="enabled", text="Включить", default=True, icon="msg_switcher_on"),
             Divider(),
+            Header(text="Скорость и лимиты"),
+            Switch(key="no_limits", text="Без лимитов (отвечать всегда)", default=True, icon="msg_rocket"),
+            Input(
+                key="cooldown",
+                text="Задержка между ответами (сек)",
+                default="0",
+                subtext="0 — отвечать мгновенно без пауз. Увеличьте, если нужен анти-спам",
+                icon="msg_timer",
+            ),
+            Divider(),
             Header(text="Правила"),
             Input(
                 key="rules",
@@ -124,17 +140,9 @@ class LincolnAutoReplierPlugin(BasePlugin):
             ),
             Divider(),
             Switch(key="only_private", text="Только личные чаты", default=False, icon="msg_user"),
-            Input(
-                key="cooldown",
-                text="Задержка между ответами (сек)",
-                default="15",
-                subtext="Анти-спам: не чаще раза в N секунд в одном чате",
-                icon="msg_timer",
-            ),
-            Divider(),
             Text(
                 text="Как работает",
-                subtext="Триггер ищется в тексте входящего сообщения. Ответ отправляется цитатой. Плагин работает локально, правила не покидают устройство.",
+                subtext="Триггер ищется в тексте входящего сообщения. Ответ отправляется цитатой мгновенно. Работает локально, правила не покидают устройство.",
                 icon="msg_info",
             ),
         ]

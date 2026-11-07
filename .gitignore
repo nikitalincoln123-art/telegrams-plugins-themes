@@ -1,3 +1,4 @@
 actions.json
 .office-verify/
 *.tmp
+__pycache__/

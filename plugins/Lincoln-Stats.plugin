@@ -1,8 +1,8 @@
 __id__ = "lincoln_stats"
 __name__ = "Lincoln Stats"
-__description__ = "Статистика аккаунта: ваш ID, возраст аккаунта, страна/локаль, где «сидит» аккаунт и служебная информация локально — без отправки данных куда-либо."
+__description__ = "Статистика аккаунта: ваш ID, возраст аккаунта, всего отправлено сообщений с регистрации, дата обновления аватарки, страна/локаль — локально, без отправки данных."
 __author__ = "Lincoln"
-__version__ = "1.0"
+__version__ = "2.0"
 __icon__ = "msg_profile"
 __app_version__ = ">=12.5.1"
 __sdk_version__ = ">=1.4.4.3"
@@ -38,6 +38,75 @@ class LincolnStatsPlugin(BasePlugin):
             return datetime.datetime.utcfromtimestamp(ts).strftime("%d.%m.%Y")
         except Exception:
             return "—"
+
+    def _total_messages(self):
+        """Подсчёт всех сообщений (входящих и исходящих) в локальном хранилище."""
+        try:
+            from org.telegram.messenger import MessagesController, UserConfig
+            from org.telegram.sqlite import SQLiteDatabase
+            mc = MessagesController.getInstance(0)
+            if mc is None:
+                return None
+            # Пробуем MessagesStorage
+            try:
+                storage = mc.getMessagesStorage()
+            except Exception:
+                storage = None
+            if storage is None:
+                try:
+                    storage = mc.getMessageStorage()
+                except Exception:
+                    storage = None
+            if storage is None:
+                return None
+            try:
+                db_field = storage.getClass().getDeclaredField("database")
+                db_field.setAccessible(True)
+                db = db_field.get(storage)
+            except Exception:
+                db = None
+            if db is None:
+                # Запасной вариант: игнорируем
+                return None
+            try:
+                cursor = db.queryFinalized("SELECT COUNT(*) FROM messages")
+                count = cursor.intValue(0)
+                cursor.dispose()
+                return count
+            except Exception:
+                try:
+                    cursor = db.queryFinalized("SELECT COUNT(*) FROM messages_to_send")
+                    count = cursor.intValue(0)
+                    cursor.dispose()
+                    return count
+                except Exception:
+                    return None
+        except Exception as e:
+            log("[lincoln_stats] total messages error: %s" % e)
+            return None
+
+    def _avatar_date(self, user):
+        """Дата последнего обновления аватарки.
+        Ищем date в photo (если это TLRPC.Photo) либо во вложенных структурах."""
+        try:
+            from org.telegram.tgnet import TLRPC
+            photo = getattr(user, "photo", None)
+            if photo is None:
+                return None
+            # У TLRPC.Photo есть поле date (unix). У UserProfilePhoto — нет.
+            d = getattr(photo, "date", None)
+            if d:
+                return d
+            # Вложенные пути: profile_photo / photo_small
+            for fname in ("profile_photo", "photo_big", "photo"):
+                f = getattr(photo, fname, None)
+                if f is not None:
+                    d = getattr(f, "date", None)
+                    if d:
+                        return d
+            return None
+        except Exception:
+            return None
 
     @run_on_ui_thread
     def _show_stats(self):
@@ -78,6 +147,27 @@ class LincolnStatsPlugin(BasePlugin):
         except Exception:
             pass
 
+        # Всего сообщений
+        total = self._total_messages()
+        total_text = "—"
+        if total is not None:
+            total_text = "{:,}".format(total).replace(",", " ")
+
+        # Дата обновления аватарки
+        avatar_text = "—"
+        try:
+            from org.telegram.tgnet import TLRPC
+            photo = getattr(user, "photo", None)
+            if photo is not None:
+                # UserProfilePhoto хранит dc_id и photo_id — но даты нет. 
+                # Поэтому берём время последнего изменения фото через фото в диалоге.
+                # Проще: пробуем поле date, если есть
+                d = getattr(photo, "date", None)
+                if d:
+                    avatar_text = self._human_date(d)
+        except Exception:
+            pass
+
         # Локаль / страна
         locale_text = "—"
         try:
@@ -93,6 +183,8 @@ class LincolnStatsPlugin(BasePlugin):
             "🏷 @%s" % username,
             "📱 +%s" % phone,
             "🎂 Возраст аккаунта: %s" % age_text,
+            "💬 Всего сообщений: %s" % total_text,
+            "🖼 Аватарка обновлена: %s" % avatar_text,
             "🌍 Локаль: %s" % locale_text,
             "🖥 DC (сервер): %s" % dc_id,
         ]
@@ -108,7 +200,7 @@ class LincolnStatsPlugin(BasePlugin):
             Header(text="Lincoln Stats"),
             Text(
                 text="Показать статистику",
-                subtext="ID, возраст аккаунта, локаль, сервер",
+                subtext="ID, возраст аккаунта, всего сообщений, аватарка, локаль, сервер",
                 on_click=self._show_stats,
                 icon="msg_profile",
             ),

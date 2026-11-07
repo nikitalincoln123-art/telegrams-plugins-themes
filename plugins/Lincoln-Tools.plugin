@@ -26,8 +26,10 @@ class ReplaceBalance(MethodReplacement):
 
     def replace_hooked_method(self, param):
         try:
-            is_ton = bool(getattr(param.thisObject, "ton", False))
-            value = Decimal(str(self.plugin._stars if not is_ton else self.plugin._ton))
+            this = param.thisObject
+            # Некоторые сигнатуры передают ид аккаунта в аргументе или в поле accountNum
+            is_ton = bool(getattr(this, "ton", False))
+            value = Decimal(str(self.plugin._tons if is_ton else self.plugin._stars))
             stars = find_class("org.telegram.tgnet.tl.TL_stars$StarsAmount")
             ton_amount = find_class("org.telegram.tgnet.tl.TL_stars$TL_starsTonAmount")
             if is_ton:
@@ -38,12 +40,14 @@ class ReplaceBalance(MethodReplacement):
                 return amount
             if stars is None:
                 return param.getResult()
-            # Безопасно создаём объект нужного типа через KnownClasses,
-            # используя заводской метод ofStars если доступен
             try:
                 amount = stars.ofStars(int(value))
             except Exception:
-                amount = stars(int(value))
+                try:
+                    amount = stars()
+                    amount.amount = int(value)
+                except Exception:
+                    amount = stars(int(value))
             frac = value - int(value)
             nanos = int((frac * Decimal("1000000000")).to_integral_value())
             try:
@@ -55,23 +59,74 @@ class ReplaceBalance(MethodReplacement):
             return param.getResult()
 
 
+class ReplaceUserStars(MethodReplacement):
+    """Подменяет поле баланса звёзд в объекте User (профиль)."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def after_hooked_method(self, param):
+        try:
+            user = param.getResult()
+            if user is None or not self.plugin.get_setting("enabled", True):
+                return
+            stars_value = int(self.plugin._stars)
+            import sys
+            # Пробуем разные поля в зависимости от версии клиента
+            for fname in ("starsBalance", "stars_balance", "starsAmount", "balance"):
+                try:
+                    setattr(user, fname, stars_value)
+                except Exception:
+                    continue
+            # Если у User есть объект stars — пробуем покопаться
+            for fname in ("stars", "stars_data", "starsInfo"):
+                obj = getattr(user, fname, None)
+                if obj is None:
+                    continue
+                try:
+                    setattr(obj, "amount", stars_value)
+                except Exception:
+                    pass
+                try:
+                    setattr(obj, "balance", stars_value)
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
 class LincolnToolsPlugin(BasePlugin):
 
     def on_plugin_load(self):
         self.add_hook("TL_updateNewMessage")
         self._stars = self.get_setting("stars", "9999")
-        self._ton = self.get_setting("ton", "1.5")
+        self._tons = self.get_setting("ton", "1.5")
         self._hook_ref = None
 
         controller = find_class("org.telegram.ui.Stars.StarsController")
-        if controller is None:
-            return
-        try:
-            refs = self.hook_all_methods(controller, "getBalance", ReplaceBalance(self), priority=100)
-            if refs:
-                self._hook_ref = refs[0]
-        except Exception:
-            pass
+        if controller is not None:
+            try:
+                refs = self.hook_all_methods(controller, "getBalance", ReplaceBalance(self), priority=100)
+                if refs:
+                    self._hook_ref = refs[0]
+            except Exception:
+                pass
+
+        # Подменяем баланс звёзд в объекте User — покрывает то, что
+        # StarsController.getBalance не видит (разные экраны профиля)
+        uc = find_class("org.telegram.messenger.UserConfig")
+        if uc is not None:
+            try:
+                self.hook_all_methods(uc, "getCurrentUser", ReplaceUserStars(self), priority=100)
+            except Exception:
+                pass
+        cc = find_class("org.telegram.messenger.ContactsController")
+        if cc is not None:
+            try:
+                self.hook_all_methods(cc, "getUser", ReplaceUserStars(self), priority=100)
+            except Exception:
+                pass
 
     def on_amount_change(self, value):
         try:
@@ -82,8 +137,8 @@ class LincolnToolsPlugin(BasePlugin):
 
     def on_ton_change(self, value):
         try:
-            self._ton = str(value).strip() or "0"
-            self.set_setting("ton", self._ton)
+            self._tons = str(value).strip() or "0"
+            self.set_setting("ton", self._tons)
         except Exception:
             pass
 
