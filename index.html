@@ -764,7 +764,7 @@
     line-height: 1.7;
   }
 
-.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+  .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
   .hero-btn { display: inline-flex; align-items: center; gap: 9px; }
   .hero-btn svg { flex: none; opacity: 0.85; transition: opacity 0.3s, transform 0.3s var(--ease); }
@@ -1022,14 +1022,12 @@
       inset 0 -5px 12px rgba(0, 0, 0, 0.18),
       0 6px 16px -8px rgba(224, 177, 120, 0.4);
   }
-  .card .icon svg {
+.card .icon svg {
     width: 24px; height: 24px;
     max-width: 24px; max-height: 24px;
     display: block;
     filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.35));
   }
-
-  @media (prefers-reduced-motion: reduce) {
 
   .tag {
     display: inline-block;
@@ -1077,10 +1075,9 @@
     align-items: center;
     gap: 8px;
     justify-content: flex-end;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex: none;
     min-width: 0;
-    max-width: 100%;
   }
 
   /* Метка «уже ставил(а)» — внизу карточки, под кнопками */
@@ -3040,7 +3037,7 @@
   <!-- HERO -->
   <section class="hero wrap">
     <div>
-      <span class="badge"><span class="dot"></span> <span data-i18n="hero_badge">Открытый каталог · Обновляется с новой версией. Полное обновление модов — каждый месяц</span></span>
+      <span class="badge"><span class="dot"></span> <span data-i18n="hero_badge">Открытый каталог · обновляется еженедельно</span></span>
       <h1 data-i18n="hero_h1">Сделано <span class="grad-text">от Lincoln</span></h1>
       <p class="sub" data-i18n="hero_sub">Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.</p>
       <div class="hero-actions">
@@ -5251,7 +5248,7 @@ window.__catalogReady = true;
   var I18N = {
     ru: {
       nav_cat: "Каталог", nav_history: "История", nav_themes: "Темы", nav_ga: "Розыгрыши", nav_ch: "Канал", nav_faq: "FAQ", nav_install: "Установить",
-      hero_badge: "Открытый каталог · Обновляется с новой версией. Полное обновление модов — каждый месяц",
+      hero_badge: "Открытый каталог · обновляется еженедельно",
       hero_h1: "Сделано <span class='grad-text'>от Lincoln</span>",
       hero_sub: "Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.",
       hero_extera: "Скачать ExtraGram", hero_pick: "Выбрать плагин", hero_howto: "Как установить",
@@ -5311,7 +5308,7 @@ window.__catalogReady = true;
     },
     en: {
       nav_cat: "Catalog", nav_history: "History", nav_themes: "Themes", nav_ga: "Giveaways", nav_ch: "Channel", nav_faq: "FAQ", nav_install: "Install",
-      hero_badge: "Open catalog · Updates with each new version. Full mod updates every month",
+      hero_badge: "Open catalog · updated weekly",
       hero_h1: "Made <span class='grad-text'>by Lincoln</span>",
       hero_sub: "Themes and plugins for Telegram — hand-picked, verified and ready to install in one click. No noise.",
       hero_extera: "Get ExtraGram", hero_pick: "Pick a plugin", hero_howto: "How to install",
@@ -5961,16 +5958,13 @@ window.__catalogReady = true;
   setInterval(tickGiveaway, 30000);
 })();
 
-/* ================= PWA: отключаем service worker, чтобы никогда не было
-   закэшированной старой версии. Сайт всегда берётся свежим с сервера. ================= */
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.getRegistrations().then(function (regs) {
-    regs.forEach(function (r) { r.unregister(); });
+/* ================= PWA: регистрация service worker ================= */
+if ("serviceWorker" in navigator && window.location.protocol === "https:") {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function (e) {
+      console.warn("[pwa] SW registration failed", e);
+    });
   });
-  navigator.serviceWorker.getRegistration && navigator.serviceWorker.getRegistration().then(function (r) {
-    if (r) r.unregister();
-  });
-  try { window.caches && window.caches.keys().then(function (keys) { keys.forEach(function (k) { window.caches.delete(k); }); }); } catch (e) {}
 }
 
 /* ================= Скачивание приложения (APK) ================= */

@@ -1,5 +1,5 @@
 ﻿/* Lincoln-Plugin вЂ” service worker (РєСЌС€ РґР»СЏ РѕС„Р»Р°Р№РЅ-СЂРµР¶РёРјР°) */
-var CACHE = "lincoln-plugin-v47";
+var CACHE = "lincoln-plugin-v48";
 var CORE = [
   "./",
   "./index.html",
@@ -28,11 +28,6 @@ self.addEventListener("activate", function (e) {
       );
     }).then(function () {
       return self.clients.claim();
-    }).then(function () {
-      // Сообщаем всем открытым вкладкам, что вышел новый кэш — пусть обновятся
-      return self.clients.matchAll({ type: "window" }).then(function (list) {
-        list.forEach(function (c) { c.postMessage({ type: "CACHE_UPDATED" }); });
-      });
     })
   );
 });
