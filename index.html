@@ -5958,26 +5958,16 @@ window.__catalogReady = true;
   setInterval(tickGiveaway, 30000);
 })();
 
-/* ================= PWA: регистрация service worker ================= */
-if ("serviceWorker" in navigator && window.location.protocol === "https:") {
-  navigator.serviceWorker.register("./sw.js").catch(function (e) {
-    console.warn("[pwa] SW registration failed", e);
+/* ================= PWA: отключаем service worker, чтобы никогда не было
+   закэшированной старой версии. Сайт всегда берётся свежим с сервера. ================= */
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(function (regs) {
+    regs.forEach(function (r) { r.unregister(); });
   });
-  /* Автообновление: если появился новый service worker — сразу перехватываем
-     управление и перезагружаем страницу, чтобы никто не сидел на старом кэше */
-  var refreshing = false;
-  navigator.serviceWorker.addEventListener("controllerchange", function () {
-    if (refreshing) return;
-    refreshing = true;
-    window.location.reload();
+  navigator.serviceWorker.getRegistration && navigator.serviceWorker.getRegistration().then(function (r) {
+    if (r) r.unregister();
   });
-  navigator.serviceWorker.addEventListener("message", function (e) {
-    if (e.data && e.data.type === "CACHE_UPDATED") {
-      if (refreshing) return;
-      refreshing = true;
-      window.location.reload();
-    }
-  });
+  try { window.caches && window.caches.keys().then(function (keys) { keys.forEach(function (k) { window.caches.delete(k); }); }); } catch (e) {}
 }
 
 /* ================= Скачивание приложения (APK) ================= */
