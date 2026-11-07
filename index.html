@@ -1800,62 +1800,136 @@
   /* ---------- Розыгрыши ---------- */
   .giveaway-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 18px;
     margin-top: 10px;
   }
   .giveaway-card {
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 26px 24px 22px;
-    border: 1px solid var(--border-soft);
-    border-radius: var(--radius);
-    background: linear-gradient(180deg, var(--panel-hover), var(--panel));
+    gap: 14px;
+    padding: 28px 26px 24px;
+    border: 1px solid rgba(237, 201, 160, 0.18);
+    border-radius: 26px;
+    background: linear-gradient(165deg, rgba(255, 250, 240, 0.06), rgba(255, 250, 240, 0.02) 55%, rgba(224, 177, 120, 0.05));
     overflow: hidden;
     transition: border-color 0.35s, box-shadow 0.5s var(--ease), transform 0.4s var(--ease);
   }
   .giveaway-card:hover {
-    border-color: rgba(255, 245, 230, 0.2);
-    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55);
+    border-color: rgba(237, 201, 160, 0.4);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5), 0 8px 30px rgba(224, 177, 120, 0.12);
     transform: translateY(-3px);
   }
-  .giveaway-card .g-icon {
-    width: 62px;
-    height: 62px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, rgba(237, 201, 160, 0.2), rgba(237, 201, 160, 0.06));
-    border: 1px solid rgba(237, 201, 160, 0.22);
-    display: grid;
-    place-items: center;
-    box-shadow: 0 0 24px rgba(224, 177, 120, 0.12);
+  .g-glow {
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(224, 177, 120, 0.16), transparent 70%);
+    pointer-events: none;
   }
-  .giveaway-card .g-icon svg {
-    width: 44px;
-    height: 44px;
-    display: block;
-  }
-  .giveaway-card h3 { font-size: 19px; font-weight: 800; letter-spacing: -0.02em; color: var(--creme); }
-  .giveaway-card .g-desc { color: var(--text-dim); font-size: 14px; line-height: 1.55; }
-  .g-meta {
+  .g-top {
+    position: relative;
     display: flex;
     align-items: center;
+    gap: 16px;
+  }
+  .giveaway-card .g-icon {
+    width: 68px;
+    height: 68px;
+    flex: none;
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(237, 201, 160, 0.24), rgba(237, 201, 160, 0.07));
+    border: 1px solid rgba(237, 201, 160, 0.3);
+    display: grid;
+    place-items: center;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -8px 18px rgba(0, 0, 0, 0.25),
+      0 12px 26px -10px rgba(224, 177, 120, 0.5);
+    transition: transform 0.4s var(--ease), box-shadow 0.4s;
+  }
+  .giveaway-card:hover .g-icon {
+    transform: translateY(-3px) rotate(-3deg);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -8px 18px rgba(0, 0, 0, 0.2),
+      0 18px 34px -10px rgba(224, 177, 120, 0.65);
+  }
+  .giveaway-card .g-icon svg {
+    width: 46px;
+    height: 46px;
+    display: block;
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.3));
+  }
+  .g-head { min-width: 0; }
+  .giveaway-card h3 { font-size: 20px; font-weight: 800; letter-spacing: -0.02em; color: var(--creme); line-height: 1.2; }
+  .giveaway-card .g-desc { color: var(--text-dim); font-size: 14px; line-height: 1.55; position: relative; }
+  .g-meta {
+    display: flex;
+    align-items: stretch;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
     flex-wrap: wrap;
     margin-top: auto;
     padding-top: 6px;
-    color: var(--text-dim);
-    font-size: 13px;
+  }
+  .g-timer-wrap,
+  .g-count-wrap {
+    flex: 1 1 160px;
+    min-width: 0;
+    padding: 10px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    background: rgba(255, 250, 240, 0.03);
+  }
+  .g-timer-label {
+    display: block;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 3px;
+  }
+  .g-timer {
+    display: block;
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--creme);
+    font-variant-numeric: tabular-nums;
   }
   .g-timer b { color: var(--creme); font-weight: 700; }
+  .g-count {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
   .g-count b { color: var(--creme); font-weight: 700; transition: color 0.3s; }
+  .g-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(255, 250, 240, 0.08);
+    overflow: hidden;
+  }
+  .g-bar-fill {
+    display: block;
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #e0b178, #f2d9a8);
+    box-shadow: 0 0 10px rgba(224, 177, 120, 0.5);
+    transition: width 0.8s var(--ease);
+  }
   .g-join-row {
     display: flex;
     align-items: center;
     gap: 12px;
     margin-top: 4px;
+    position: relative;
   }
   .g-join { flex: 1; text-align: center; }
   .g-side-count {
@@ -1878,17 +1952,30 @@
   .g-side-num { font-weight: 800; color: var(--creme); }
   .g-count.pulse b { color: #5ec27b; }
   .g-status {
-    position: absolute;
-    top: 16px;
-    right: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 10.5px;
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 4px 10px;
+    padding: 5px 12px;
     border-radius: 999px;
+    margin-bottom: 7px;
   }
-  .g-status.active { background: rgba(237, 201, 160, 0.12); color: var(--creme); border: 1px solid rgba(237, 201, 160, 0.3); }
+  .g-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 10px currentColor;
+    animation: gDotPulse 2s ease-in-out infinite;
+  }
+  @keyframes gDotPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+  .g-status.active { background: rgba(127, 211, 150, 0.14); color: #7fd396; border: 1px solid rgba(127, 211, 150, 0.35); }
   .g-status.soon { background: rgba(237, 201, 160, 0.12); color: var(--creme); border: 1px solid rgba(237, 201, 160, 0.3); }
   .g-status.done { background: rgba(255, 255, 255, 0.05); color: var(--text-dim); border: 1px solid var(--border); }
 
@@ -3247,26 +3334,37 @@
     <div class="giveaway-grid">
 
       <article class="giveaway-card reveal" data-giveaway="bears-10">
-        <div class="g-status active">В процессе</div>
-        <span class="g-icon">
-          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
-            <circle cx="32" cy="40" r="18" fill="#e9c88f"/>
-            <circle cx="14" cy="18" r="10" fill="#e9c88f"/>
-            <circle cx="50" cy="18" r="10" fill="#e9c88f"/>
-            <circle cx="14" cy="14" r="4.2" fill="#f3e0b8"/>
-            <circle cx="50" cy="14" r="4.2" fill="#f3e0b8"/>
-            <circle cx="26" cy="38" r="1.8" fill="#2a1e10"/>
-            <circle cx="38" cy="38" r="1.8" fill="#2a1e10"/>
-            <path d="M27 44.5c3 2.2 7 2.2 10 0" stroke="#2a1e10" stroke-width="2" stroke-linecap="round"/>
-            <ellipse cx="32" cy="48.5" rx="5" ry="3.4" fill="#2a1e10"/>
-            <path d="M29 51.5 27 58l5 1.5 5-1.5-2-6.5z" fill="#2a1e10"/>
-          </svg>
-        </span>
-        <h3>10 мишек Telegram</h3>
+        <div class="g-glow" aria-hidden="true"></div>
+        <div class="g-top">
+          <span class="g-icon">
+            <svg viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <circle cx="32" cy="40" r="18" fill="#e9c88f"/>
+              <circle cx="14" cy="18" r="10" fill="#e9c88f"/>
+              <circle cx="50" cy="18" r="10" fill="#e9c88f"/>
+              <circle cx="14" cy="14" r="4.2" fill="#f3e0b8"/>
+              <circle cx="50" cy="14" r="4.2" fill="#f3e0b8"/>
+              <circle cx="26" cy="38" r="1.8" fill="#2a1e10"/>
+              <circle cx="38" cy="38" r="1.8" fill="#2a1e10"/>
+              <path d="M27 44.5c3 2.2 7 2.2 10 0" stroke="#2a1e10" stroke-width="2" stroke-linecap="round"/>
+              <ellipse cx="32" cy="48.5" rx="5" ry="3.4" fill="#2a1e10"/>
+              <path d="M29 51.5 27 58l5 1.5 5-1.5-2-6.5z" fill="#2a1e10"/>
+            </svg>
+          </span>
+          <div class="g-head">
+            <div class="g-status active"><span class="g-dot"></span>В процессе</div>
+            <h3>10 мишек Telegram</h3>
+          </div>
+        </div>
         <p class="g-desc">Все 10 подарков будут отданы 10-ти рандомным людям после выполнения условий</p>
         <div class="g-meta">
-          <span class="g-timer">Осталось: 0 дней 0 часов 0 минут</span>
-          <span class="g-count">Участвуют: <b id="gCount">0</b></span>
+          <div class="g-timer-wrap">
+            <span class="g-timer-label">Осталось</span>
+            <span class="g-timer" id="gTimer2">0 дней:0 часов:0 минут</span>
+          </div>
+          <div class="g-count-wrap">
+            <span class="g-count">Участвуют: <b id="gCount">0</b></span>
+            <div class="g-bar"><span class="g-bar-fill" id="gBarFill" style="width:0%"></span></div>
+          </div>
         </div>
         <div class="g-join-row">
           <button type="button" class="btn btn-warm g-join" id="gJoinBtn">Участвовать</button>
@@ -5589,9 +5687,14 @@ window.__catalogReady = true;
     var joined = getGiveawayJoined();
     var base = Math.max(getGiveawayBase(), joined ? 1 : 0);
     var n = base + (joined ? 1 : 0);
+    var barFill = document.getElementById("gBarFill");
     function render() {
       if (countEl) countEl.textContent = n;
       if (sideNum) sideNum.textContent = n;
+      if (barFill) {
+        var pct = Math.min(100, Math.round(n / 10 * 100));
+        barFill.style.width = pct + "%";
+      }
     }
     render();
     if (joined && sideEl) {
