@@ -121,10 +121,15 @@
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  html {
+    scroll-behavior: auto;
+    scroll-padding-top: 0;
+    height: 100%;
+  }
 
   /* Полоса прогресса чтения */
   .scroll-progress {
+    display: none;
     position: fixed;
     top: 0; left: 0;
     height: 3px;
@@ -158,12 +163,13 @@
     line-height: 1.6;
     overflow-x: hidden;
     min-height: 100vh;
+    height: 100%;
     -webkit-font-smoothing: antialiased;
     cursor: default;
-    touch-action: pan-y pinch-zoom;
+    touch-action: pan-x pinch-zoom;
   }
   @media (pointer: coarse), (hover: none) {
-    body { touch-action: pan-y; }
+    body { touch-action: pan-x; }
   }
 
   ::selection { background: rgba(214, 224, 240, 0.3); color: #fff; }
@@ -370,6 +376,8 @@
     margin: 0 auto;
     padding: 0 24px;
   }
+  /* в режиме колоды секции сами полноэкранные — паддинги wrap не нужны */
+  .deck > .wrap { max-width: none; padding: 0; }
 
   /* ---------- Header ---------- */
   header.site {
@@ -1121,6 +1129,44 @@
   @media (max-width: 600px) {
     section.block { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); padding-bottom: calc(88px + 12px); }
   }
+
+  /* ================= КОЛОДА: горизонтальные экраны ================= */
+  .deck {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    will-change: transform;
+    transition: transform 0.9s var(--ease);
+  }
+  .deck > section,
+  .deck > .hero {
+    position: relative;
+    flex: 0 0 100vw;
+    width: 100vw;
+    height: 100vh;
+    min-height: 100svh;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(232, 238, 246, 0.25) transparent;
+  }
+  /* внутренние пады для полноэкранности */
+  .deck > .hero { display: flex; flex-direction: column; justify-content: center; padding: 96px 4vw 72px; }
+  .deck > section.block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 96px 4vw 80px;
+    clip-path: none !important;
+  }
+  .deck > .hero > .hero-right,
+  .deck > .hero > * { max-width: 1200px; margin-left: auto; margin-right: auto; }
+  .deck > .hero > .ribbon { max-width: none; }
 
   /* Шторка-переход секций */
   .js section.block {
@@ -3057,6 +3103,7 @@
 
   /* ---------- Кнопка «Наверх» ---------- */
   #backTop {
+    display: none;
     position: fixed;
     bottom: 24px;
     left: 50%;
@@ -3289,8 +3336,63 @@
     }
   }
 
-  /* ---------- Браузерная оптимизация отрисовки ---------- */
-  section.block { content-visibility: auto; contain-intrinsic-size: auto 600px; }
+  /* Браузерная оптимизация */
+  footer.site { display: none; }
+
+  /* ---------- Навигация колоды: стрелки + точки ---------- */
+  .deck-nav {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    z-index: 60;
+    padding: 8px 12px;
+    border: 1px solid rgba(214, 224, 240, 0.2);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  }
+  .deck-prev, .deck-next {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(214, 224, 240, 0.25);
+    background: transparent;
+    color: var(--creme);
+    cursor: pointer;
+    transition: background 0.25s, border-color 0.25s, transform 0.2s;
+  }
+  .deck-prev svg, .deck-next svg { width: 16px; height: 16px; pointer-events: none; }
+  .deck-prev:hover, .deck-next:hover { background: rgba(214, 224, 240, 0.12); border-color: rgba(232, 238, 246, 0.6); transform: scale(1.08); }
+  .deck-prev:disabled, .deck-next:disabled { opacity: 0.35; cursor: default; transform: none; }
+  .deck-dots { display: flex; gap: 9px; align-items: center; }
+  .deck-dots button {
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border: none;
+    border-radius: 999px;
+    background: rgba(214, 224, 240, 0.28);
+    cursor: pointer;
+    transition: width 0.35s var(--ease), background 0.3s, box-shadow 0.3s;
+  }
+  .deck-dots button.on {
+    width: 26px;
+    background: linear-gradient(90deg, #e8eef6, #b9c6d6);
+    box-shadow: 0 0 14px rgba(232, 238, 246, 0.6);
+  }
+  @media (max-width: 600px) {
+    .deck-nav { bottom: 14px; gap: 12px; }
+    .deck-dots button { width: 7px; height: 7px; }
+    .deck-dots button.on { width: 20px; }
+  }
   .bento, .giveaway-grid, .rules-grid, .feats, .faq, .timeline {
     content-visibility: auto; contain-intrinsic-size: auto 380px;
   }
@@ -3383,6 +3485,7 @@
 </div>
 
 <main id="top">
+  <div class="deck" id="deck">
   <!-- HERO -->
   <section class="hero wrap">
     <div>
@@ -4025,6 +4128,7 @@
       </div>
     </div>
   </section>
+  </div><!-- /deck -->
 </main>
 
 <div class="m-cta" id="mobileCta" role="region" aria-label="Быстрые действия" hidden>
@@ -4062,6 +4166,17 @@
 </footer>
 
 <div id="toast" role="status" aria-live="polite"></div>
+
+<!-- Навигация колоды -->
+<nav class="deck-nav" id="deckNav" aria-label="Переключение экранов">
+  <button type="button" class="deck-prev" id="deckPrev" aria-label="Назад">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <div class="deck-dots" id="deckDots" role="tablist" aria-label="Экраны"></div>
+  <button type="button" class="deck-next" id="deckNext" aria-label="Вперёд">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
+</nav>
 <button type="button" id="backTop" aria-label="Наверх" title="Наверх">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>
 </button>
@@ -4705,6 +4820,34 @@ window.__catalogReady = true;
   mobileMenu.querySelectorAll("a").forEach(function (a) {
     a.addEventListener("click", function () { setMenu(false); });
   });
+
+  /* ================= Якоря → переключение колоды ================= */
+  (function () {
+    if (!window.__deckGo) return;
+    var anchors = document.querySelectorAll('a[href^="#"], .jump-btns a, .hero-actions a, .m-cta a');
+    anchors.forEach(function (a) {
+      var href = a.getAttribute("href");
+      if (!href || href.charAt(0) !== "#" || href.length < 2) return;
+      var id = href.slice(1);
+      if (id === "top") {
+        a.addEventListener("click", function (e) {
+          e.preventDefault();
+          window.__deckGo(0);
+          if (history.replaceState) history.replaceState(null, "", "#top");
+        });
+        return;
+      }
+      if (id === "pluginGrid") return;
+      a.addEventListener("click", function (e) {
+        var idx = window.__deckIndex(id);
+        if (idx >= 0) {
+          e.preventDefault();
+          window.__deckGo(idx);
+          if (history.replaceState) history.replaceState(null, "", "#" + id);
+        }
+      });
+    });
+  })();
 
   /* ================= Themes tabs ================= */
   var themeTabs = document.querySelectorAll("[data-ttab]");
@@ -6389,6 +6532,90 @@ if ("serviceWorker" in navigator && window.location.protocol === "https:") {
     });
   });
 }
+
+/* ================= КОЛОДА: навигация ================= */
+(function () {
+  var deck = document.getElementById("deck");
+  if (!deck) return;
+  var slides = Array.prototype.slice.call(deck.children);
+  var dotsWrap = document.getElementById("deckDots");
+  var prevBtn = document.getElementById("deckPrev");
+  var nextBtn = document.getElementById("deckNext");
+  var idx = 0;
+  var LE = 0.9;
+  var locked = false;
+  if (!dotsWrap) return;
+
+  slides.forEach(function (s, i) {
+    var d = document.createElement("button");
+    d.type = "button";
+    d.setAttribute("role", "tab");
+    d.setAttribute("aria-label", "Экран " + (i + 1));
+    d.addEventListener("click", function () { goTo(i); });
+    dotsWrap.appendChild(d);
+  });
+  function goTo(i, instant) {
+    if (locked || i < 0 || i >= slides.length || i === idx) return;
+    locked = true;
+    idx = i;
+    deck.style.transition = instant ? "none" : "";
+    deck.style.transform = "translateX(-" + (idx * 100) + "vw)";
+    updateUI();
+    fireReveal();
+    setTimeout(function () { locked = false; }, instant ? 60 : LE * 1000 + 60);
+  }
+  function updateUI() {
+    var dots = dotsWrap.children;
+    for (var i = 0; i < dots.length; i++) dots[i].classList.toggle("on", i === idx);
+    if (prevBtn) prevBtn.disabled = idx === 0;
+    if (nextBtn) nextBtn.disabled = idx === slides.length - 1;
+  }
+  function fireReveal() {
+    var cur = slides[idx];
+    var els = cur.querySelectorAll(".reveal:not(.in)");
+    for (var i = 0; i < els.length; i++) {
+      (function (el, k) {
+        setTimeout(function () { el.classList.add("in"); }, 120 + k * 70);
+      })(els[i], i);
+    }
+  }
+  if (prevBtn) prevBtn.addEventListener("click", function () { goTo(idx - 1); });
+  if (nextBtn) nextBtn.addEventListener("click", function () { goTo(idx + 1); });
+  window.addEventListener("keydown", function (e) {
+    if (e.target && /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+    if (e.key === "ArrowRight" || e.key === "PageDown") goTo(idx + 1);
+    else if (e.key === "ArrowLeft" || e.key === "PageUp") goTo(idx - 1);
+  });
+  var wheelLock = false;
+  window.addEventListener("wheel", function (e) {
+    if (wheelLock) return;
+    var v = Math.abs(e.deltaX) >= Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(v) < 18) return;
+    wheelLock = true;
+    if (v > 0) goTo(idx + 1); else goTo(idx - 1);
+    setTimeout(function () { wheelLock = false; }, 620);
+  }, { passive: true });
+  var sx = null;
+  window.addEventListener("pointerdown", function (e) { sx = e.clientX; }, { passive: true });
+  window.addEventListener("pointerup", function (e) {
+    if (sx === null) return;
+    var dx = e.clientX - sx;
+    if (Math.abs(dx) > 60) { if (dx < 0) goTo(idx + 1); else goTo(idx - 1); }
+    sx = null;
+  }, { passive: true });
+  updateUI();
+  setTimeout(function () { deck.style.transform = "translateX(0)"; fireReveal(); }, 60);
+
+  window.__deckGo = goTo;
+  window.__deckIndex = function (id) {
+    for (var i = 0; i < slides.length; i++) {
+      var el = slides[i];
+      if (el.id === id || (el.getAttribute && el.getAttribute("data-target") === id)) return i;
+      if (el.querySelector && el.querySelector("#" + id)) return i;
+    }
+    return -1;
+  };
+})();
 
 /* ================= Скачивание приложения (APK) ================= */
 </script>
