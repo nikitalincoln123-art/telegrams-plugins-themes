@@ -1164,6 +1164,18 @@
     padding: 96px 4vw 80px;
     clip-path: none !important;
   }
+  /* когда контента больше экрана — центрирование обрезает верх; отключаем его */
+  .deck > .hero,
+  .deck > section.block { justify-content: safe center; }
+  .deck > .hero { justify-content: flex-start; }
+  @supports not (justify-content: safe center) {
+    .deck > .hero,
+    .deck > section.block { justify-content: flex-start; }
+  }
+  @media (max-height: 700px) {
+    .deck > .hero,
+    .deck > section.block { justify-content: flex-start; }
+  }
   .deck > .hero > .hero-right,
   .deck > .hero > * { max-width: 1200px; margin-left: auto; margin-right: auto; }
   .deck > .hero > .ribbon { max-width: none; }
