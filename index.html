@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Lincoln-Plugin — плагины и темы для Telegram</title>
 <meta name="description" content="Lincoln-Plugin — коллекция красивых тем и полезных плагинов для Telegram. Установка в один клик, локальная кастомизация профиля.">
 <meta property="og:title" content="Lincoln-Plugin — плагины и темы для Telegram">
@@ -155,6 +155,10 @@
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     cursor: default;
+    touch-action: pan-y pinch-zoom;
+  }
+  @media (pointer: coarse), (hover: none) {
+    body { touch-action: pan-y; }
   }
 
   ::selection { background: rgba(232, 185, 138, 0.3); color: #fff; }
@@ -1729,7 +1733,19 @@
   }
   .lightbox-close:hover { border-color: rgba(237, 201, 160, 0.5); transform: rotate(90deg); }
   @media (max-width: 560px) {
-    .lightbox { padding: 14px; }
+    .lightbox { padding: 8px; }
+    .lightbox img {
+      max-width: 96vw;
+      max-height: 86vh;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+    .lightbox-close {
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+    }
     .modal-overlay { padding: 12px; align-items: flex-end; }
     .modal {
       max-height: 92vh;
@@ -2918,10 +2934,12 @@
     .giveaway-card, .theme-preview, .feat, .step, .rule, .faq-item {
       will-change: auto;
     }
-    .ribbon-track { animation-duration: 45s; }
     .ribbon-track, .ribbon, .term, .term-wrap, .news-glow, .warm-glow {
       will-change: auto;
     }
+    /* Бегущая строка и светящиеся слои дёргают скролл на мобильных — выключаем */
+    .ribbon-track { animation: none !important; }
+    .news-glow, .warm-glow, .vignette { opacity: 0.3; }
     /* Не показываем тяжёлые canvas-эффекты на мобильных, чтобы скролл был плавным */
     #space { display: none; }
     .vignette { opacity: 0.5; }
@@ -4424,7 +4442,9 @@ window.__catalogReady = true;
     })();
   }
   var _orbTicking = false;
+  var _isTouchDev = window.matchMedia("(pointer: coarse), (hover: none)").matches;
   function orbOnScroll() {
+    if (_isTouchDev) return;
     if (_orbTicking) return;
     _orbTicking = true;
     window.requestAnimationFrame(function () {
@@ -4884,11 +4904,23 @@ window.__catalogReady = true;
     document.body.style.overflow = "";
   }
   document.addEventListener("click", function (e) {
-    var shot = e.target.closest("[data-lightbox]");
+    var t = e.target && e.target.closest ? e.target : (e.target && e.target.parentNode ? e.target.parentNode : null);
+    var shot = t && t.closest ? t.closest("[data-lightbox]") : null;
     if (shot) {
       e.preventDefault();
       openLightbox(shot.getAttribute("href"));
       return;
+    }
+  });
+  /* Мобильные: открытие по тапу без задержки (иногда click не приходит на дивайсах
+     из-за SVG-вложенности — дублируем через pointerup с защитой от двойного срабатывания) */
+  document.addEventListener("pointerup", function (e) {
+    if (e.pointerType !== "touch") return;
+    var t = e.target && e.target.closest ? e.target : (e.target && e.target.parentNode ? e.target.parentNode : null);
+    var shot = t && t.closest ? t.closest("[data-lightbox]") : null;
+    if (shot) {
+      e.preventDefault();
+      openLightbox(shot.getAttribute("href"));
     }
   });
   var lightboxClose = document.getElementById("lightboxClose");
