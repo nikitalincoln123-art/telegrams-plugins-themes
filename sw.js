@@ -1,5 +1,5 @@
 ﻿/* Lincoln-Plugin вЂ” service worker (РєСЌС€ РґР»СЏ РѕС„Р»Р°Р№РЅ-СЂРµР¶РёРјР°) */
-var CACHE = "lincoln-plugin-v62";
+var CACHE = "lincoln-plugin-v63";
 var CORE = [
   "./",
   "./index.html",
