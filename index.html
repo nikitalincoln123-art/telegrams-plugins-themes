@@ -79,7 +79,7 @@
     --toast-border: rgba(255, 255, 255, 0.3);
   }
 
-  /* Светлая тема: лёгкий холодный фон, тёмный текст, фиолетовые акценты */
+  /* Светлая тема: чистый бело-серебряный фон, тёмный текст, серебряные акценты */
   [data-theme="light"] {
     --bg: #e8ebf2;
     --bg-soft: #d9dee8;
@@ -110,6 +110,45 @@
     --toast-border: rgba(0, 0, 0, 0.3);
   }
 
+  /* Светлая тема: планета и фоновые слои становятся серебряными */
+  [data-theme="light"] .cosmo-planet {
+    background:
+      radial-gradient(circle at 30% 26%, rgba(255, 255, 255, 0.9), transparent 24%),
+      radial-gradient(circle at 32% 28%, #f7f9fc, #e2e6ee 55%, #c9d0dc 100%);
+    box-shadow:
+      inset -22px -26px 52px rgba(120, 132, 150, 0.35),
+      inset 8px 10px 22px rgba(255, 255, 255, 0.85),
+      0 0 60px rgba(120, 135, 160, 0.28),
+      0 0 140px rgba(140, 155, 180, 0.16);
+  }
+  [data-theme="light"] .cosmo-planet::before {
+    background:
+      radial-gradient(12% 9% at 42% 58%, rgba(120, 132, 150, 0.5), transparent 70%),
+      radial-gradient(9% 7% at 62% 34%, rgba(120, 132, 150, 0.45), transparent 70%),
+      radial-gradient(6% 5% at 34% 70%, rgba(120, 132, 150, 0.4), transparent 70%),
+      radial-gradient(11% 8% at 70% 62%, rgba(120, 132, 150, 0.45), transparent 70%),
+      radial-gradient(7% 6% at 26% 40%, rgba(120, 132, 150, 0.4), transparent 70%),
+      radial-gradient(5% 4% at 48% 24%, rgba(120, 132, 150, 0.38), transparent 70%),
+      radial-gradient(8% 6% at 76% 78%, rgba(120, 132, 150, 0.42), transparent 70%);
+  }
+  [data-theme="light"] .cosmo-planet::after {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.95), transparent 70%);
+  }
+  [data-theme="light"] .cosmo-ring,
+  [data-theme="light"] .cosmo-ring2 {
+    border-color: rgba(90, 104, 125, 0.18) rgba(150, 163, 182, 0.55) rgba(70, 82, 102, 0.14) rgba(170, 180, 196, 0.45);
+    box-shadow:
+      0 0 30px rgba(120, 135, 160, 0.18),
+      inset 0 0 18px rgba(120, 135, 160, 0.22);
+  }
+  [data-theme="light"] .bg-waves { opacity: 0.5; }
+  [data-theme="light"] .bg-waves {
+    background:
+      radial-gradient(34% 28% at 18% 22%, rgba(190, 200, 214, 0.55), transparent 70%),
+      radial-gradient(30% 26% at 82% 34%, rgba(170, 182, 200, 0.5), transparent 70%),
+      radial-gradient(36% 30% at 50% 80%, rgba(150, 164, 185, 0.45), transparent 70%);
+  }
+
   :root {
     --radius: 20px;
     --radius-sm: 12px;
@@ -120,6 +159,51 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  .noscript-banner {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    background:
+      linear-gradient(135deg, rgba(214, 224, 240, 0.14), rgba(190, 205, 225, 0.05)),
+      #0a0a10;
+    border-bottom: 1px solid rgba(214, 224, 240, 0.28);
+    color: #eef2f8;
+    font-family: var(--font);
+  }
+  .noscript-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 14px 22px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    font-size: 14px;
+  }
+  .noscript-inner b { color: var(--peach); font-weight: 800; letter-spacing: 0.02em; }
+  .noscript-inner span { color: var(--text-dim); }
+  .noscript-link {
+    margin-left: auto;
+    color: var(--creme);
+    font-weight: 700;
+    font-size: 13px;
+    text-decoration: none;
+    border: 1px solid rgba(214, 224, 240, 0.35);
+    border-radius: 999px;
+    padding: 7px 15px;
+    transition: border-color 0.3s, color 0.3s;
+    white-space: nowrap;
+  }
+  .noscript-link:hover { border-color: rgba(214, 224, 240, 0.7); color: var(--peach); }
+  [data-theme="light"] .noscript-banner {
+    background: linear-gradient(135deg, rgba(120, 135, 160, 0.1), rgba(160, 172, 190, 0.06)), #f4f6fa;
+    border-bottom-color: rgba(0, 0, 0, 0.16);
+  }
+  @media (max-width: 640px) {
+    .noscript-inner { font-size: 13px; padding: 12px 16px; }
+    .noscript-link { margin-left: 0; }
+  }
 
   html { scroll-behavior: smooth; scroll-padding-top: 84px; }
 
@@ -167,6 +251,7 @@
   }
 
   ::selection { background: rgba(214, 224, 240, 0.3); color: #fff; }
+  [data-theme="light"] ::selection { background: rgba(58, 68, 84, 0.25); color: #14181f; }
 
   /* ---------- Canvas backdrop: quiet warm star web ---------- */
   #space {
@@ -311,7 +396,6 @@
       radial-gradient(30% 26% at 82% 34%, rgba(24, 28, 38, 0.45), transparent 70%),
       radial-gradient(36% 30% at 50% 80%, rgba(18, 22, 32, 0.4), transparent 70%);
     filter: blur(50px);
-    animation: auroraDrift 44s ease-in-out infinite alternate;
     will-change: transform;
   }
   @keyframes auroraDrift {
@@ -510,13 +594,13 @@
   box-shadow: 0 12px 40px rgba(214, 224, 240, 0.5);
 }
 [data-theme="light"] .btn-warm {
-  background: linear-gradient(135deg, #3a4454, #5a3fb0);
-  color: #fdf9f0;
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+  background: linear-gradient(135deg, #fbfcfe, #d5dbe4);
+  color: #13181f;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
 }
 [data-theme="light"] .btn-warm:hover {
-  background: linear-gradient(135deg, #cfd8e6, #6a4ecf);
-  color: #fff;
+  background: linear-gradient(135deg, #ffffff, #c6cdd8);
+  color: #0c1118;
 }
 
   .nav-cta { padding: 10px 20px; font-size: 14px; }
@@ -834,7 +918,7 @@
     box-shadow:
       0 0 30px rgba(190, 205, 225, 0.14),
       inset 0 0 18px rgba(190, 205, 225, 0.2);
-    animation: ringSpin 30s linear infinite;
+    animation: ringSpin 22s linear infinite;
   }
   .cosmo-ring::before {
     content: "";
@@ -876,9 +960,15 @@
     100% { transform: translate(-4px, -8px); }
   }
   @keyframes planetFloat {
-    from { transform: translate(-50%, -50%) translateY(-7px); }
-    to { transform: translate(-50%, -50%) translateY(11px); }
+    from { transform: translate(-50%, -50%) translateY(-9px) scale(0.985); }
+    to { transform: translate(-50%, -50%) translateY(13px) scale(1.02); }
   }
+  /* планета оживает при скролле в районе hero */
+  .cosmo-scrolled .cosmo-planet { animation-duration: 5.5s; filter: brightness(1.12); }
+  .cosmo-scrolled .cosmo-planet::after { filter: blur(4px) brightness(1.3); opacity: 1; }
+  .cosmo-scrolled .cosmo-atmo { animation-duration: 2.6s; }
+  .cosmo-scrolled .cosmo-ring { animation-duration: 8s; }
+  .cosmo-scrolled .cosmo-ring2 { animation-duration: 13s; }
 
   /* ---------- Метеоры ---------- */
   .meteor {
@@ -1086,6 +1176,9 @@
   .t-out { color: var(--text-faint); }
   .t-line.ok { color: #b8c4d2; }
   .t-line.ok .t-out { color: #9aa4b6; }
+  [data-theme="light"] .t-cmd { color: #3a4452; }
+  [data-theme="light"] .t-line.ok { color: #4a5563; }
+  [data-theme="light"] .t-line.ok .t-out { color: #5f6b7a; }
   .t-caret { color: var(--peach); animation: caretBlink 1.1s steps(1) infinite; font-size: 14px; }
   @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 
@@ -1279,6 +1372,33 @@
   .card > * { transform: translateZ(22px); }
 
   .card .top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .card-shot {
+    position: relative;
+    margin: -8px -6px 4px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(214, 224, 240, 0.14);
+    background:
+      radial-gradient(120% 120% at 50% 0%, rgba(214, 224, 240, 0.1), transparent 60%),
+      linear-gradient(150deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+    aspect-ratio: 16 / 10;
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+  }
+  .card-shot-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    border: 0;
+    transition: transform 0.6s var(--ease), opacity 0.4s ease;
+    opacity: 0;
+  }
+  .card-shot-img.loaded { opacity: 1; }
+  .card:hover .card-shot-img { transform: scale(1.045); }
+  @media (pointer: coarse), (prefers-reduced-motion: reduce) {
+    .card:hover .card-shot-img { transform: none; }
+  }
   .card .icon {
     width: 48px; height: 48px;
     border-radius: 14px;
@@ -1571,8 +1691,19 @@
     font-weight: 600;
   }
   .owner-warning-text a:hover { text-decoration: underline; }
-  [data-theme="light"] .owner-warning { color: #6a5c8f; }
-  [data-theme="light"] .owner-warning-text b { color: #8f6fd6; }
+  [data-theme="light"] .owner-warning { color: #3f4652; }
+  [data-theme="light"] .owner-warning-text b { color: #14181f; }
+  [data-theme="light"] .fav-btn {
+    background: rgba(255, 255, 255, 0.6);
+    color: rgba(40, 48, 62, 0.75);
+  }
+  [data-theme="light"] .modal {
+    background: linear-gradient(175deg, rgba(255, 255, 255, 0.94), rgba(235, 238, 244, 0.97));
+  }
+  [data-theme="light"] .toast {
+    background: rgba(255, 255, 255, 0.95);
+    color: #14181f;
+  }
 
   /* ---------- Панель каталога ---------- */
   .catalog-bar {
@@ -1613,6 +1744,31 @@
     font-size: 12.5px;
     font-weight: 500;
     white-space: nowrap;
+  }
+  .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 18px 34px;
+    margin-top: 34px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(214, 224, 240, 0.12);
+  }
+  .hstat {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .hstat .counter {
+    color: var(--text);
+    letter-spacing: 0.02em;
+    text-shadow: 0 0 22px rgba(210, 220, 235, 0.28);
+  }
+  .hstat-label {
+    color: var(--text-dim);
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    max-width: 170px;
   }
   .catalog-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
   .search-box {
@@ -1896,6 +2052,83 @@
     color: #d8d2c4;
     white-space: pre-wrap;
     word-break: break-word;
+  }
+
+  /* ---------- Живой пример .plugin в «Установке» ---------- */
+  .live-plugin {
+    margin: 34px 0 0;
+    border: 1px solid rgba(214, 224, 240, 0.16);
+    border-radius: 16px;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 80% at 80% 0%, rgba(214, 224, 240, 0.07), transparent 55%),
+      linear-gradient(160deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+    clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+  }
+  .live-plugin-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    flex-wrap: wrap;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    background: rgba(255, 255, 255, 0.02);
+  }
+  .lp-title {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-dim);
+    letter-spacing: 0.02em;
+  }
+  .lp-dl {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 15px;
+    border-radius: 999px;
+    border: 1px solid rgba(214, 224, 240, 0.35);
+    background: transparent;
+    color: var(--creme);
+    font-size: 12.5px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.3s;
+  }
+  .lp-dl:hover {
+    border-color: rgba(214, 224, 240, 0.7);
+    color: var(--peach);
+    box-shadow: 0 0 24px rgba(214, 224, 240, 0.12);
+  }
+  .lp-code {
+    margin: 0;
+    padding: 16px 20px;
+    max-height: 340px;
+    overflow: auto;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: #c9d2de;
+    white-space: pre;
+    tab-size: 2;
+  }
+  .lp-note {
+    padding: 0 20px 18px;
+    margin: -4px 0 0;
+    font-size: 12.5px;
+    color: var(--text-faint);
+    line-height: 1.6;
+  }
+  @media (max-width: 640px) {
+    .lp-code { font-size: 11px; padding: 14px 16px; }
+    .live-plugin-head { padding: 12px 14px; }
+  }
+  [data-theme="light"] .lp-code { color: #3a4452; }
+  [data-theme="light"] .live-plugin {
+    background:
+      radial-gradient(120% 80% at 80% 0%, rgba(120, 135, 160, 0.08), transparent 55%),
+      linear-gradient(160deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.015));
   }
 
   /* ---------- Галерея превью в модалке ---------- */
@@ -3079,6 +3312,46 @@
   #backTop:hover { border-color: rgba(190, 205, 225, 0.7); color: var(--peach); }
   #backTop.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+  /* ---------- Плавающая кнопка «Помощь» ---------- */
+  .help-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    z-index: 92;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 20px;
+    border-radius: 999px;
+    border: 1px solid rgba(190, 205, 225, 0.4);
+    background: var(--panel-solid);
+    color: var(--creme);
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.07),
+      0 14px 38px rgba(0, 0, 0, 0.55),
+      0 0 30px rgba(190, 205, 225, 0.10);
+    clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+    transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s, color 0.3s;
+  }
+  .help-fab:hover {
+    transform: translateY(-3px);
+    border-color: rgba(190, 205, 225, 0.75);
+    color: var(--peach);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.1),
+      0 18px 46px rgba(0, 0, 0, 0.6),
+      0 0 40px rgba(190, 205, 225, 0.18);
+  }
+  .help-fab svg { flex: none; }
+  @media (max-width: 640px) {
+    .help-fab { right: 14px; bottom: 74px; padding: 12px 15px; }
+    .help-fab span { font-size: 13px; }
+  }
+
   /* ---------- Плавающая CTA-панель (мобильные) ---------- */
   .m-cta {
     position: fixed;
@@ -3303,6 +3576,16 @@
 </head>
 <body>
 
+<noscript>
+  <div class="noscript-banner" role="alert">
+    <div class="noscript-inner">
+      <b>Каталог требует включённый JavaScript.</b>
+      <span>Карточки плагинов, превью и кнопки установки загружаются скриптом — включите JS или откройте сайт в другом браузере.</span>
+      <a class="noscript-link" href="#install">Как установить плагин без каталога</a>
+    </div>
+  </div>
+</noscript>
+
 <div class="scroll-progress" id="scrollProgress" aria-hidden="true"></div>
 <div class="bg-constellation" aria-hidden="true"></div>
 <div class="bg-waves" aria-hidden="true"></div>
@@ -3395,6 +3678,20 @@
         </a>
         <a href="#plugins" class="btn float-btn hero-btn ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 4v11m0 0 4.5-4.5M12 15l-4.5-4.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="hero_pick">Выбрать плагин</span></a>
         <a href="#install" class="btn float-btn hero-btn ghost"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 8v5m0 0 2.5-2.5M12 13l-2.5-2.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="hero_howto">Как установить</span></a>
+      </div>
+      <div class="hero-stats" aria-label="Статистика каталога">
+        <div class="hstat">
+          <span class="hstat-num counter" id="hsPlugins" data-target="11">0</span>
+          <span class="hstat-label" data-i18n="hs_plugins">Плагинов в каталоге</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-num counter" id="hsUpdates" data-target="8">0</span>
+          <span class="hstat-label" data-i18n="hs_updates">Обновлений в ноябре</span>
+        </div>
+        <div class="hstat">
+          <span class="hstat-num counter" id="hsCats" data-target="3">0</span>
+          <span class="hstat-label" data-i18n="hs_cats">Категории: Полезные · Фан · Другие</span>
+        </div>
       </div>
     </div>
 
@@ -3861,6 +4158,51 @@
       <div class="step reveal"><span class="tick">3</span><b data-i18n="inst_s3t">Откройте настройки плагинов</b><p data-i18n="inst_s3s">В ExtraGram: Настройки → Плагины → «+» → выберите скачанный .plugin файл.</p></div>
       <div class="step reveal"><span class="tick">4</span><b data-i18n="inst_s4t">Включите и настройте</b><p data-i18n="inst_s4s">Перезапустите клиент, включите плагин и настройте под себя. Всё работает — готово!</p></div>
     </div>
+    <div class="live-plugin reveal" id="livePlugin">
+      <div class="live-plugin-head">
+        <span class="lp-title">Живой пример · Lincoln-Tools.plugin</span>
+        <a class="lp-dl" href="plugins/Lincoln-Tools.plugin" download>Скачать .plugin</a>
+      </div>
+      <pre class="lp-code"><code>__id__ = "lincoln_tools"
+__name__ = "Lincoln Tools"
+__description__ = "Локальная визуальная подмена баланса звёзд и TON в профиле."
+__author__ = "Lincoln"
+__version__ = "2.0"
+__icon__ = "msg_star"
+__app_version__ = ">=12.5.1"
+__sdk_version__ = ">=1.4.4.3"
+
+from decimal import Decimal, getcontext
+from base_plugin import BasePlugin, MethodReplacement
+from ui.settings import Header, Switch, Input, Divider, Text
+from hook_utils import find_class
+
+getcontext().prec = 12
+
+
+class ReplaceBalance(MethodReplacement):
+    """Подменяет возвращаемое значение StarsController.getBalance."""
+
+    def __init__(self, plugin):
+        super().__init__()
+        self.plugin = plugin
+
+    def replace_hooked_method(self, param):
+        try:
+            this = param.thisObject
+            is_ton = bool(getattr(this, "ton", False))
+            value = Decimal(str(self.plugin._tons if is_ton else self.plugin._stars))
+            stars = find_class("org.telegram.tgnet.tl.TL_stars$StarsAmount")
+            ton_amount = find_class("org.telegram.tgnet.tl.TL_stars$TL_starsTonAmount")
+            if is_ton:
+                if ton_amount is None:
+                    return param.getResult()
+                amount = ton_amount()
+                amount.amount = int(value * Decimal("1000000000"))
+                return amount
+            # ... и это реальный код из нашего каталога</code></pre>
+      <p class="lp-note">Это настоящий файл из каталога: прозрачный, без скрытых сетевых блоков — можно посмотреть код каждого плагина кнопкой «Показать код» в карточке.</p>
+    </div>
   </section>
 
   <!-- FAQ -->
@@ -4062,6 +4404,10 @@
 </footer>
 
 <div id="toast" role="status" aria-live="polite"></div>
+<a href="https://t.me/LincolnWasted" target="_blank" rel="noopener" class="help-fab" id="helpFab" aria-label="Помощь от Lincoln">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><path d="M9.5 9.2a2.6 2.6 0 1 1 4.3 2c-1.3 1-2.3 1.7-2.3 3"/><circle cx="12" cy="17.6" r="0.4" fill="currentColor"/></svg>
+  <span data-i18n="help_fab">Помощь</span>
+</a>
 <button type="button" id="backTop" aria-label="Наверх" title="Наверх">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5m0 0-6 6m6-6 6 6"/></svg>
 </button>
@@ -4161,6 +4507,9 @@
       return '<article class="card reveal" style="--ic:' + p.color + '" data-pcat="' + (p.cat || "other") + '" data-name="' + p.name + '" data-version="' + p.version + '" data-date="' + p.date + '"' +
         ' data-date-iso="' + p.date + '" data-changelog="' + p.changelog + '" data-shots="' + p.shots + '" data-long="' + p.long + '"' +
         ' data-file="' + p.file + '">' +
+        '<div class="card-shot">' +
+        '<img src="' + p.shots + '" alt="" loading="lazy" decoding="async" class="card-shot-img" aria-hidden="true">' +
+        '</div>' +
         '<div class="top">' +
         '<span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + p.icon + '"/>' + extra + '</svg></span>' +
         '<span class="top-right">' +
@@ -4170,9 +4519,9 @@
         '<h3>' + p.name + '</h3>' +
         '<p class="desc">' + p.desc + '</p>' +
         '<div class="card-actions">' +
-        '<a class="btn card-download" href="plugins/' + p.file + '" download>Скачать</a>' +
-        '<button type="button" class="btn btn-info" data-copy>Копировать</button>' +
-        '<button type="button" class="btn btn-info" data-detail>Подробнее</button></div>' +
+        '<a class="btn card-download" href="plugins/' + p.file + '" download aria-label="Скачать ' + p.name + '">Скачать</a>' +
+        '<button type="button" class="btn btn-info" data-copy aria-label="Копировать ' + p.name + '">Копировать</button>' +
+        '<button type="button" class="btn btn-info" data-detail aria-label="Подробнее о ' + p.name + '">Подробнее</button></div>' +
         '<span class="installed-tag" aria-hidden="true">\u2713 уже ставил(а)</span>' +
         '<span class="crystal-shine" aria-hidden="true"></span>' +
         '</article>';
@@ -4180,6 +4529,10 @@
     function render(list) {
       grid.innerHTML = list.map(cardHtml).join("");
       PLUGIN_DATA = list;
+      grid.querySelectorAll("img.card-shot-img").forEach(function (img) {
+        if (img.complete) { img.classList.add("loaded"); }
+        else img.addEventListener("load", function () { img.classList.add("loaded"); }, { once: true });
+      });
       var els = grid.querySelectorAll(".card.reveal");
       for (var i = 0; i < els.length; i++) {
         (function (el, idx) {
@@ -4553,6 +4906,32 @@ window.__catalogReady = true;
     });
   }
 
+  /* ================= Параллакс фона при скролле (глубина) ================= */
+  (function () {
+    var spaceCv = document.getElementById("space");
+    var dustCv = document.getElementById("dust");
+    var waves = document.querySelector(".bg-waves");
+    var constel = document.querySelector(".bg-constellation");
+    var els = [spaceCv, dustCv, waves, constel].filter(Boolean);
+    if (!els.length) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var y = 0, target = 0, raf = null;
+    window.addEventListener("scroll", function () {
+      target = window.scrollY || window.pageYOffset || 0;
+      if (!raf) raf = requestAnimationFrame(loop);
+    }, { passive: true });
+    function loop() {
+      y += (target - y) * 0.08;
+      var shift = -y * 0.16;
+      if (spaceCv) spaceCv.style.transform = "translateY(" + shift.toFixed(2) + "px)";
+      if (dustCv) dustCv.style.transform = "translateY(" + (shift * 0.7).toFixed(2) + "px)";
+      if (waves) waves.style.transform = "translateY(" + (shift * 0.45).toFixed(2) + "px)";
+      if (constel) constel.style.transform = "translateY(" + (shift * 0.3).toFixed(2) + "px)";
+      raf = null;
+      if (Math.abs(target - y) > 0.5) raf = requestAnimationFrame(loop);
+    }
+  })();
+
   /* ================= Custom cursor warm glow ================= */
   var cursorGlow = document.getElementById("cursorGlow");
   var glowX = -200, glowY = -200, gx = -200, gy = -200;
@@ -4690,6 +5069,30 @@ window.__catalogReady = true;
     });
   })();
 
+  /* ================= Реакция планеты на скролл (район hero) ================= */
+  (function () {
+    var c = document.getElementById("cosmo");
+    if (!c) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var hero = document.querySelector(".hero");
+    if (!hero) return;
+    var rings = c.querySelectorAll(".cosmo-ring, .cosmo-ring2");
+    var raf = null, going = false;
+    window.addEventListener("scroll", function () {
+      var r = hero.getBoundingClientRect();
+      var visible = r.bottom > 0 && r.top < window.innerHeight;
+      if (visible && !going) {
+        going = true;
+        c.classList.add("cosmo-scrolled");
+        rings.forEach(function (ring) { ring.style.animationDuration = "8s"; });
+      } else if (!visible && going) {
+        going = false;
+        c.classList.remove("cosmo-scrolled");
+        rings.forEach(function (ring) { ring.style.animationDuration = ""; });
+      }
+    }, { passive: true });
+  })();
+
   /* ================= Mobile menu ================= */
   var burger = document.getElementById("burger");
   var mobileMenu = document.getElementById("mobileMenu");
@@ -4705,6 +5108,28 @@ window.__catalogReady = true;
   mobileMenu.querySelectorAll("a").forEach(function (a) {
     a.addEventListener("click", function () { setMenu(false); });
   });
+
+  /* ================= Магнитные заголовки секций ================= */
+  (function () {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    var heads = document.querySelectorAll(".section-head h2, .hero h1, .cta-banner h2");
+    heads.forEach(function (h) {
+      var wrap = h.closest(".section-head") || h.closest(".hero") || h.closest(".cta-banner");
+      wrap.addEventListener("pointermove", function (e) {
+        var r = wrap.getBoundingClientRect();
+        var dx = e.clientX - (r.left + r.width / 2);
+        var dy = e.clientY - (r.top + r.height / 2);
+        h.style.transform = "translate(" + (dx * 0.04).toFixed(1) + "px, " + (dy * 0.06).toFixed(1) + "px)";
+        h.style.textShadow = "0 0 26px rgba(232,238,246,0.22)";
+        h.style.transition = "transform 0.3s var(--ease)";
+      });
+      wrap.addEventListener("pointerleave", function () {
+        h.style.transform = "translate(0,0)";
+        h.style.textShadow = "";
+      });
+    });
+  })();
 
   /* ================= Themes tabs ================= */
   var themeTabs = document.querySelectorAll("[data-ttab]");
@@ -4888,6 +5313,23 @@ window.__catalogReady = true;
     }
     requestAnimationFrame(step);
   }
+
+  /* Счётчики в hero: набегают один раз при появлении */
+  var heroCounters = [].slice.call(document.querySelectorAll(".hero-stats .counter"));
+  var heroCounterDone = false;
+  function maybeHeroCount() {
+    if (heroCounterDone || !heroCounters.length) return;
+    var r = heroCounters[0].getBoundingClientRect();
+    if (r.top < window.innerHeight - 40) {
+      heroCounterDone = true;
+      heroCounters.forEach(function (el) {
+        animateCounter(el, parseInt(el.getAttribute("data-target"), 10) || 0);
+      });
+      window.removeEventListener("scroll", maybeHeroCount);
+    }
+  }
+  window.addEventListener("scroll", maybeHeroCount, { passive: true });
+  maybeHeroCount();
   var counterDone = false;
   function maybeCount() {
     if (counterDone || !countEl) return;
@@ -5280,9 +5722,10 @@ window.__catalogReady = true;
   /* Лайтбокс просмотра скриншота */
   var lightbox = document.getElementById("shotLightbox");
   var lightboxImg = document.getElementById("lightboxImg");
-  function openLightbox(src) {
+  function openLightbox(src, alt) {
     if (!lightbox || !lightboxImg) return;
     lightboxImg.src = src;
+    if (alt) lightboxImg.alt = alt;
     lightbox.classList.add("open");
     lightbox.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
@@ -5299,7 +5742,8 @@ window.__catalogReady = true;
     var shot = t && t.closest ? t.closest("[data-lightbox]") : null;
     if (shot) {
       e.preventDefault();
-      openLightbox(shot.getAttribute("href"));
+      var shotImg = shot.querySelector("img");
+      openLightbox(shot.getAttribute("href"), shotImg ? shotImg.alt : "");
       return;
     }
   });
@@ -5311,7 +5755,8 @@ window.__catalogReady = true;
     var shot = t && t.closest ? t.closest("[data-lightbox]") : null;
     if (shot) {
       e.preventDefault();
-      openLightbox(shot.getAttribute("href"));
+      var shotImg2 = shot.querySelector("img");
+      openLightbox(shot.getAttribute("href"), shotImg2 ? shotImg2.alt : "");
     }
   });
   var lightboxClose = document.getElementById("lightboxClose");
@@ -5675,6 +6120,7 @@ window.__catalogReady = true;
       hero_h1: "Сделано <span class='grad-text'>от Lincoln</span>",
       hero_sub: "Темы и плагины для Telegram — отобранные вручную, проверенные и готовые к установке в один клик. Без лишнего шума.",
       hero_extera: "Скачать ExtraGram", hero_pick: "Выбрать плагин", hero_howto: "Как установить",
+      hs_plugins: "Плагинов в каталоге", hs_updates: "Обновлений в ноябре", hs_cats: "Категории: Полезные · Фан · Другие",
       cat_eyebrow: "Каталог", cat_sub: "Делает работу комфортной, плавной. И не только...)", cat_counter: "плагинов",
       cat_of_label: "из",
       cat_search: "Поиск по каталогу...", sort_default: "По умолчанию", sort_name: "По алфавиту", sort_date: "Сначала новые",
@@ -5726,6 +6172,7 @@ window.__catalogReady = true;
       about_eyebrow: "О проекте", about_title: "Сделано от Lincoln", about_h3: "Lincoln-Plugin — каталог плагинов для exteraGram", about_p: "Привет! Я Lincoln. Собираю и делаю плагины для exteraGram: локальная кастомизация профиля, ghost-режим, визуальные фейки и инструменты для комфорта. Всё, что здесь есть, проверено вручную и очищено от скрытых сетевых блоков.",
       cta_title: "Готовы сделать Telegram <span class='grad-text'>своим</span>?", cta_sub: "Начните с популярных плагинов — это займёт меньше минуты.", cta_pick: "Выбрать плагин", cta_howto: "Как установить",
       foot_help: "Помощь", foot_top: "Наверх", foot_reset: "Сбросить историю установок",
+      help_fab: "Помощь",
       donate_btn: "Поддержать автора", donate_btn_foot: "Поддержать",
       dl: "Скачать", copy: "Копировать", details: "Подробнее", mcopy: "Копировать ссылку"
     },
@@ -5735,6 +6182,7 @@ window.__catalogReady = true;
       hero_h1: "Made <span class='grad-text'>by Lincoln</span>",
       hero_sub: "Themes and plugins for Telegram — hand-picked, verified and ready to install in one click. No noise.",
       hero_extera: "Get ExtraGram", hero_pick: "Pick a plugin", hero_howto: "How to install",
+      hs_plugins: "Plugins in catalog", hs_updates: "Updates in November", hs_cats: "Categories: Useful · Fun · Other",
       cat_eyebrow: "Catalog", cat_sub: "Makes your experience comfortable and smooth. And more...)", cat_counter: "plugins",
       cat_of_label: "of",
       cat_search: "Search catalog...", sort_default: "Default", sort_name: "By name", sort_date: "Newest first",
@@ -5786,6 +6234,7 @@ window.__catalogReady = true;
       about_eyebrow: "About", about_title: "Made by Lincoln", about_h3: "Lincoln-Plugin — plugin catalog for exteraGram", about_p: "Hi! I'm Lincoln. I collect and build exteraGram plugins: local profile customization, ghost mode, visual fakes and comfort tools. Everything here is manually verified and cleaned from hidden network blocks.",
       cta_title: "Ready to make Telegram <span class='grad-text'>yours</span>?", cta_sub: "Start with the popular plugins — it takes less than a minute.", cta_pick: "Pick a plugin", cta_howto: "How to install",
       foot_help: "Help", foot_top: "Top", foot_reset: "Reset install history",
+      help_fab: "Help",
       donate_btn: "Support the author", donate_btn_foot: "Support",
       dl: "Download", copy: "Copy", details: "Details", mcopy: "Copy link"
     }
