@@ -9,8 +9,8 @@
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#070604",
-  "theme_color": "#070604",
+  "background_color": "#000000",
+  "theme_color": "#000000",
   "launch_handler": {
     "client_mode": "navigate-existing"
   },
