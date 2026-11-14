@@ -247,7 +247,24 @@
     touch-action: pan-y pinch-zoom;
   }
   @media (pointer: coarse), (hover: none) {
-    body { touch-action: pan-y; }
+    body { touch-action: pan-y pinch-zoom; }
+  }
+
+  /* Тапы без задержки: убираем двойной тап-зум на элементах управления */
+  button,
+  a,
+  .btn,
+  .fav-btn,
+  .chip,
+  .pk-opt,
+  .share-btn,
+  .theme-toggle,
+  .lang-toggle,
+  .burger,
+  .foot-reset,
+  .card-actions {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
   ::selection { background: rgba(214, 224, 240, 0.3); color: #fff; }
@@ -3606,7 +3623,19 @@
     }
     .js .card { will-change: auto; }
     .card::before { display: none; }
-    .card { transform: none !important; transition: border-color 0.25s, box-shadow 0.25s; }
+    /* ВАЖНО: убираем 3D-проекцию — иначе палец попадает в карточку, а не в кнопку */
+    .card,
+    .js .card {
+      transform: none !important;
+      transform-style: flat !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      transition: border-color 0.25s, box-shadow 0.25s;
+    }
+    .card > * { transform: none !important; }
+    .card::after { animation: none !important; opacity: 0.3; }
+    .card-shot-img { transform: none !important; }
+    .card .card-glow { display: none; }
     .giveaway-card, .theme-preview, .feat, .step, .rule, .faq-item {
       will-change: auto;
     }
@@ -5790,6 +5819,8 @@ window.__catalogReady = true;
   (function () {
     function maybeOpen() {
       try {
+        /* На телефоне не открываем сами: модалка может перехватить тап по карточке */
+        if (window.matchMedia("(pointer: coarse), (hover: none)").matches) return;
         if (location.hash && location.hash.indexOf("#/plugin/") === 0) return;
         if (localStorage.getItem("lincoln-first-open-done")) return;
         var firstCard = document.querySelector('#pluginGrid .card[data-name]');
